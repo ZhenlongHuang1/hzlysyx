@@ -18,7 +18,7 @@ int main(int argc,char**argv){
     tfp=new VerilatedVcdC;
     dut->trace(tfp,99);
     tfp->open("simx.vcd");
-    int sim_time=99;
+    int sim_time=99000;
     nvboard_bind_all_pins(dut);
     nvboard_init();
     while(!contextp->gotFinish()&&contextp->time()<sim_time){
@@ -29,7 +29,7 @@ int main(int argc,char**argv){
         dut->b=b;
         contextp->timeInc(1);
         dut->eval();
-        tfp->dump(contextp->time());
+        //tfp->dump(contextp->time());
         printf("a=%d,b=%d,g=%d\n",a,b,dut->f);
         assert(dut->f==a^b);
     }
