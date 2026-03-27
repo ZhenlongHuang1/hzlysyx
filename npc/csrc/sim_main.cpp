@@ -21,7 +21,7 @@ int main(int argc,char**argv){
     int sim_time=9900000;
     nvboard_bind_all_pins(dut);
     nvboard_init();
-    while(!contextp->gotFinish()&&contextp->time()<sim_time){
+    while(1||!contextp->gotFinish()&&contextp->time()<sim_time){
         nvboard_update();
         contextp->timeInc(1);
         dut->eval();
