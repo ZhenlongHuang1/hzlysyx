@@ -18,7 +18,7 @@ int main(int argc,char**argv){
     tfp=new VerilatedVcdC;
     dut->trace(tfp,99);
     tfp->open("simx.vcd");
-    int sim_time=99000;
+    int sim_time=9900000;
     nvboard_bind_all_pins(dut);
     nvboard_init();
     while(!contextp->gotFinish()&&contextp->time()<sim_time){
