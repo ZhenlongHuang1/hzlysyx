@@ -23,15 +23,10 @@ int main(int argc,char**argv){
     nvboard_init();
     while(!contextp->gotFinish()&&contextp->time()<sim_time){
         nvboard_update();
-        int a=rand()&1;
-        int b=rand()&1;
-        dut->a=a;
-        dut->b=b;
         contextp->timeInc(1);
         dut->eval();
         //tfp->dump(contextp->time());
-        printf("a=%d,b=%d,g=%d\n",a,b,dut->f);
-        assert(dut->f==a^b);
+        //assert(dut->f==a^b);
     }
     delete dut;
     delete contextp;
