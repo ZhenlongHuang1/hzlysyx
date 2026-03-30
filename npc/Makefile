@@ -1,4 +1,4 @@
-TOPNAME=ex2
+TOPNAME=ysyx_ALU4
 #NXDC_FILES=constr/test.nxdc
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=

@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<assert.h>
-#include<Vex2.h>
+#include<Vysyx_ALU4.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>
@@ -33,14 +33,14 @@ int main(int argc,char**argv){
     dut=new TOP_NAME(contextp);
     contextp->traceEverOn(true);
     tfp=new VerilatedVcdC;
-    dut->trace(tfp,300);
+    dut->trace(tfp,100);
     tfp->open("simx.vcd");
-    int sim_time=300;
+    int sim_time=100;
     nvboard_bind_all_pins(dut);
     nvboard_init();
 //    reset(10);
-    dut->en=1;
-    while(1||!contextp->gotFinish()&&contextp->time()<sim_time){
+    int i=0;
+    while(!contextp->gotFinish()&&contextp->time()<sim_time){
         nvboard_update();
         single_cycle0();
     }
