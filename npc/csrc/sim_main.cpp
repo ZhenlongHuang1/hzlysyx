@@ -1,10 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<assert.h>
-#include<Vysyx_LFshifter.h>
+//#include<Vysyx_bshifter.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>
+#define _MKSTR(s) #s
+#define MKSTR(s) _MKSTR(s)
+#include MKSTR(TOP_NAME.h)
 #define USE_NVBOARD 1
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
