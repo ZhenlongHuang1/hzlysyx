@@ -5,6 +5,7 @@
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>
+#define USE_NVBOARD 1
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
@@ -40,7 +41,7 @@ int main(int argc,char**argv){
     nvboard_init();
 //    reset(10);
     int i=0;
-    while(!contextp->gotFinish()&&contextp->time()<sim_time){
+    while(USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time){
         nvboard_update();
         single_cycle0();
     }
