@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<assert.h>
-#include<Vlight.h>
+#include<Vtop.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>
@@ -30,11 +30,13 @@ int main(int argc,char**argv){
     tfp=new VerilatedVcdC;
     dut->trace(tfp,99);
     tfp->open("simx.vcd");
-    int sim_time=9900000;
+    int sim_time=99;
     nvboard_bind_all_pins(dut);
     nvboard_init();
+    dut->in=0;
     reset(10);
-    while(1||!contextp->gotFinish()&&contextp->time()<sim_time){
+    while(!contextp->gotFinish()&&contextp->time()<sim_time){
+        dut->in=!dut->in;
         nvboard_update();
         single_cycle();
     }
