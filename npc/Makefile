@@ -6,6 +6,8 @@ VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert --trace-vcd
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
+SYN_DIR=$(abspath $(BUILD_DIR)/syn)
+YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 BIN = $(BUILD_DIR)/$(TOPNAME)
 default: $(BIN)
 $(shell mkdir -p $(BUILD_DIR))
@@ -34,3 +36,12 @@ sim: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
+sta:
+	@mkdir -p $(SYN_DIR)
+	$(MAKE) -C $(YOSYS_HOME) sta DESIGN=$(TOPNAME) \
+		RTL_FILES=$(VSRCS) O=$(SYN_DIR)
+syn:
+	@mkdir -p $(SYN_DIR)
+	$(MAKE) -C $(YOSYS_HOME) syn DESIGN=$(TOPNAME) \
+		RTL_FILES="$(VSRCS)" O=$(SYN_DIR)
+
