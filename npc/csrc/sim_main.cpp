@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<assert.h>
-#include<Vysyx_encode83.h>
+#include<Vex2.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>
@@ -40,14 +40,9 @@ int main(int argc,char**argv){
     nvboard_init();
 //    reset(10);
     dut->en=1;
-    while(!contextp->gotFinish()&&contextp->time()<sim_time){
-        dut->x=dut->x+1;
+    while(1||!contextp->gotFinish()&&contextp->time()<sim_time){
         nvboard_update();
         single_cycle0();
-        if(dut->x>200&&dut->x<=230)
-            dut->en=0;
-        else if(dut->x>230)
-            dut->en=1;
     }
     delete dut;
     delete contextp;
