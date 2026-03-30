@@ -1,5 +1,6 @@
-TOPNAME=top
-NXDC_FILES=constr/$(TOPNAME).nxdc
+TOPNAME=ysyx_encode83
+NXDC_FILES=constr/test.nxdc
+#NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
