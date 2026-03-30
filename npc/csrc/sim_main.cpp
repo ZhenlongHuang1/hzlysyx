@@ -44,9 +44,9 @@ int main(int argc,char**argv){
         dut->x=dut->x+1;
         nvboard_update();
         single_cycle0();
-        if(dut->x>200)
+        if(dut->x>200&&dut->x<=230)
             dut->en=0;
-        else if(dut->x>270)
+        else if(dut->x>230)
             dut->en=1;
     }
     delete dut;
