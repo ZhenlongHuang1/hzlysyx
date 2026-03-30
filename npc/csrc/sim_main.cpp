@@ -33,9 +33,9 @@ int main(int argc,char**argv){
     dut=new TOP_NAME(contextp);
     contextp->traceEverOn(true);
     tfp=new VerilatedVcdC;
-    dut->trace(tfp,99);
+    dut->trace(tfp,256);
     tfp->open("simx.vcd");
-    int sim_time=99;
+    int sim_time=256;
     nvboard_bind_all_pins(dut);
     nvboard_init();
 //    reset(10);
@@ -44,6 +44,8 @@ int main(int argc,char**argv){
         dut->x=dut->x+1;
         nvboard_update();
         single_cycle0();
+        if(dut->x>200)
+            dut->en=0;
     }
     delete dut;
     delete contextp;
