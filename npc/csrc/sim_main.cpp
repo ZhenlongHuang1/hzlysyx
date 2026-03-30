@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<assert.h>
-#include<Vysyx_ALU4.h>
+#include<Vysyx_LFshifter.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>

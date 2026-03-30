@@ -1,4 +1,4 @@
-TOPNAME=ysyx_ALU4
+TOPNAME=ysyx_LFshifter
 #NXDC_FILES=constr/test.nxdc
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=
