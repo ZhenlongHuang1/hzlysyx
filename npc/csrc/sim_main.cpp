@@ -14,10 +14,10 @@ static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
 void nvboard_bind_all_pins(TOP_NAME*top);
 void single_cycle(){
-//    dut->clk=0;dut->eval();
+    dut->clk=0;dut->eval();
     tfp->dump(contextp->time());
     contextp->timeInc(1);
-//    dut->clk=1;dut->eval();
+    dut->clk=1;dut->eval();
     tfp->dump(contextp->time());
     contextp->timeInc(1);
 }
@@ -27,9 +27,9 @@ void single_cycle0(){
     contextp->timeInc(1);
 }
 void reset(int n){
-//    dut->rst=1;
+    dut->rst=1;
     while(n-->0)single_cycle();
-//    dut->rst=0;
+    dut->rst=0;
 }
 int main(int argc,char**argv){
     contextp=new VerilatedContext;
@@ -42,11 +42,11 @@ int main(int argc,char**argv){
     int sim_time=100;
     nvboard_bind_all_pins(dut);
     nvboard_init();
-//    reset(10);
+    reset(10);
     int i=0;
     while(USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time){
         nvboard_update();
-        single_cycle0();
+        single_cycle();
     }
     delete dut;
     delete contextp;
