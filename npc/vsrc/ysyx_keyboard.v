@@ -10,11 +10,11 @@ module ysyx_keyboard(clk,rst,ps2_clk,ps2_data,h8,h7,h4,h3,h2,h1,overflow);
     ysyx_Reg reg1(.clk(clk),.rst(rst),.din(~ready),.dout(nextdata_n),.wen(1'b1));//show right away
     assign read_flag=ready&(~nextdata_n);
     assign key_down=read_flag&(data0!=8'hf0)&(data1!=8'hf0)&((data0!=data1)|data2==8'hf0);
-    ysyx_Reg reg2(.clk(clk),.rst(data0==8'hf0),.din(1'b0),.dout(key_up),.wen(key_down));
+    ysyx_Reg reg2(.clk(clk),.rst(data0==8'hf0),.din(1'b1),.dout(key_up),.wen(key_down));
     ysyx_Reg #(.WIDTH(8)) reg3 (.clk(clk),.rst(rst),.din(data0),.dout(data1),.wen(read_flag));     
     ysyx_Reg #(.WIDTH(8),.RESET_VAL(8'hf0)) reg4 (.clk(clk),.rst(rst),.din(data1),.dout(data2),.wen(read_flag)); 
     ysyx_Reg #(.WIDTH(8)) icount1(.clk(clk),.rst(rst),.din(count+8'd1),.dout(count),.wen(key_down));    
-    assign data_output=data1&{8{~key_up}};
+    assign data_output=data1&{8{key_up}};
     ysyx_bcd7seg bcd1(data_output[7:4],h2);    
     ysyx_bcd7seg bcd2(data_output[3:0],h1);
     ysyx_bcd7seg bcd3(count[7:4],h8);
