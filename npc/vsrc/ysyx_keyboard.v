@@ -17,6 +17,6 @@ module ysyx_keyboard(clk,rst,ps2_clk,ps2_data,h8,h7,h4,h3,h2,h1,overflow);
     assign data_output=data1&{8{key_up}};
     ysyx_bcd7seg bcd1(data_output[7:4],h2,~key_up);    
     ysyx_bcd7seg bcd2(data_output[3:0],h1,~key_up);
-    ysyx_bcd7seg bcd3(count[7:4],h8,~key_up);
-    ysyx_bcd7seg bcd4(count[3:0],h7,~key_up);
+    ysyx_bcd7seg bcd3(count[7:4],h8,0);
+    ysyx_bcd7seg bcd4(count[3:0],h7,0);
 endmodule
