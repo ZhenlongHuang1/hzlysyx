@@ -8,7 +8,7 @@
 #define _MKSTR(s) #s
 #define MKSTR(s) _MKSTR(s)
 #include MKSTR(TOP_NAME.h)
-#define USE_NVBOARD 0
+#define USE_NVBOARD 1
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
