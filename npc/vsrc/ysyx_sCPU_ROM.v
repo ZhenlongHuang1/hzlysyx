@@ -12,8 +12,8 @@ module ysyx_sCPU_ROM #(ADDR_LENGTH=12)(a,z);
         rom[4]=8'b00010111;
         rom[5]=8'b00101001;
         rom[6]=8'b11010001;
-        rom[6]=8'b01000010;
-        rom[7]=8'b11100011;
+        rom[7]=8'b01000010;
+        rom[8]=8'b11100011;
     end
     assign z=rom[a[ADDR_LENGTH-1:0]];
 endmodule
