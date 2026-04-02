@@ -86,10 +86,9 @@ static int cmd_x(char *args){
     }
     int j;word_t value;
     for(j=0;j<i;j++){
-        value=vaddr_read(p+j*4,4);
-        printf("%08X\t",value);
+        value=vaddr_read(p+j*1,1);
+        printf("%08X\n",value);
     }
-    printf("\n");
     return 0;
 }
 static struct {
