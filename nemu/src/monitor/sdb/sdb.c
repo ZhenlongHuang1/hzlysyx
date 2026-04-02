@@ -17,6 +17,9 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <stdint.h>
+#include <memory/vaddr.h>
+#include <stdio.h>
 #include "sdb.h"
 
 static int is_batch_mode = false;
@@ -75,6 +78,20 @@ static int cmd_info(char *args){
     }
     return 0;
 }
+static int cmd_x(char *args){
+    int i;vaddr_t p;
+    int ret=sscanf(args,"%d %x",&i,&p);
+    if(ret!=2){
+        printf("please input: x n expr\n");
+    }
+    int j;word_t value;
+    for(j=0;j<i;j++){
+        value=vaddr_read(p+j*4,4);
+        printf("%X\t",value);
+    }
+    printf("\n");
+    return 0;
+}
 static struct {
   const char *name;
   const char *description;
@@ -85,6 +102,7 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   {"si","Execute the program n times",cmd_si},
   {"info","Print registers",cmd_info},
+  {"x","Scan the memory",cmd_x},
   /* TODO: Add more commands */
 
 };
