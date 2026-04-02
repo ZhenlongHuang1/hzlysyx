@@ -87,7 +87,7 @@ static int cmd_x(char *args){
     int j;word_t value;
     for(j=0;j<i;j++){
         value=vaddr_read(p+j*4,4);
-        printf("%X\t",value);
+        printf("%08X\t",value);
     }
     printf("\n");
     return 0;
