@@ -44,7 +44,7 @@ static struct rule {
     {"/",'/'},
     {"\\(",'('},
     {"\\)",')'},
-    {"[0-9]+",TK_DIGIT},
+    {"[0-9]+u?",TK_DIGIT},
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -102,13 +102,13 @@ static bool make_token(char *e) {
          */
         if(rules[i].token_type==TK_NOTYPE)
             break;
-        if(nr_token>=32){
+        if(nr_token>=65536){
             printf("Error expression: too many tokens\n");
             return false;
         }
         tokens[nr_token].type=rules[i].token_type;
         switch (rules[i].token_type) {
-            case TK_DIGIT:  if(substr_len>=32){
+            case TK_DIGIT:  if(substr_len>=65536){
                                 printf("Error expression: substr too long\n");
                                 return false;
                             }
