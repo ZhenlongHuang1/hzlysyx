@@ -31,20 +31,22 @@ int main(int argc, char *argv[]) {
     FILE *fp=fopen("/home/hzl/Desktop/ysyx-workbench/nemu/input","r");
     char ptr[65536],str[65536];
     bool success;
+    int i=0,sum=0;
     word_t result;
     while(fgets(ptr,65536,fp)){
         sscanf(ptr,"%u %[^\n]",&result,str);
-        printf("%s",ptr);
         word_t ret=expr(str,&success);
         if(success==false){
             printf("Error express:%u %s\n",result,str);
         }else if(ret!=result){
             printf("Wrong function:%u\n%u\n%s\n",ret,result,str);
             return 0;
-        }
+        }else
+            i++;
+        sum++;
     }
     fclose(fp);
-    printf("Right expression execuation\n");
+    printf("Right expression execuation:%d/%d\n",i,sum);
   /* Start engine. */
   engine_start();
 
