@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "common.h"
 #include <isa.h>
 
 /* We use the POSIX regex functions to process regular expressions.
@@ -75,7 +76,7 @@ static bool express_error_flag=0;
 static Token tokens[65536] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 int check_parentheses(int p, int q);
-int eval(int p, int q);
+word_t eval(int p, int q);
 
 static bool make_token(char *e) {
   int position = 0;
@@ -169,7 +170,7 @@ int main_operator(int p,int q){
 
     return flag;
 }
-int eval(int p, int q) {
+word_t eval(int p, int q) {
     if (p > q) {
         express_error_flag=1;
         return 0;
@@ -205,8 +206,8 @@ int eval(int p, int q) {
                 return eval(q,q);
             else return -eval(q,q);
         }
-        int val1 = eval(p, op - 1);
-        int val2 = eval(op + 1, q);
+        word_t val1 = eval(p, op - 1);
+        word_t val2 = eval(op + 1, q);
         switch (tokens[op].type) {
         case '+': return val1+val2;
         case '-': return val1-val2;
@@ -255,7 +256,7 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
     express_error_flag=0;
-    int t=eval(0,nr_token-1);
+    word_t t=eval(0,nr_token-1);
     if(express_error_flag==1){
         *success=false;
     }else{
