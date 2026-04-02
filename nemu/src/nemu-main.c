@@ -31,14 +31,16 @@ int main(int argc, char *argv[]) {
     FILE *fp=fopen("/home/hzl/Desktop/ysyx-workbench/nemu/input","r");
     char ptr[65536],str[65536];
     bool success;
-    int result;
+    word_t result;
     while(fgets(ptr,65536,fp)){
         sscanf(ptr,"%u %[^\n]",&result,str);
-        int ret=expr(str,&success);
+        word_t ret=expr(str,&success);
         if(success==false){
-            printf("Error express:%s\n",str);
+            printf("Error express:%u %s\n",result,str);
+            return 0;
         }else if(ret!=result){
-            printf("Wrong function\n");
+            printf("Wrong function:%u\n%u\n%s",ret,result,str);
+            return 0;
         }
     }
     fclose(fp);
