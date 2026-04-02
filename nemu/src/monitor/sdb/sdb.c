@@ -87,7 +87,7 @@ static int cmd_x(char *args){
     int j;word_t value;
     for(j=0;j<i;j++){
         value=vaddr_read(p+j*4,4);
-        printf("%02X %02X %02X %02X\n",value&0xff,(value>>8)&0xff,(value>>16)&0xff,(value>>24)&0xff);
+        printf("%02X %02X %02X %02X\n",(value>>24)&0xff,(value>>16)&0xff,(value>>8)&0xff,value&0xff);
     }
     return 0;
 }
