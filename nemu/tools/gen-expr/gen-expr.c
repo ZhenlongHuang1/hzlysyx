@@ -32,7 +32,7 @@ static char *code_format =
 "}";
 int buf_index=0;
 void gen_num(){
-    uint32_t num=rand()%1000000000;//10
+    uint32_t num=rand()%10;//10
     int length=sprintf(buf+buf_index,"%uu",num);
     buf_index+=length;     
 }
@@ -53,7 +53,7 @@ void gen_rand_op(){
     }
 }
 static void gen_rand_expr() {
-    if(buf_index>10000){
+    if(buf_index>100){
         gen_num();
         return ;
     }
