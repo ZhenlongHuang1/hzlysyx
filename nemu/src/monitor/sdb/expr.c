@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_EQ,TK_DIGIT,
 
   /* TODO: Add more token types */
 
@@ -39,12 +39,17 @@ static struct rule {
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
+    {"\\-",'-'},
+    {"\\*",'*'},
+    {"/",'/'},
+    {"\\(",'('},
+    {"\\)",')'},
+    {"\\d+",TK_DIGIT},
 };
 
 #define NR_REGEX ARRLEN(rules)
 
 static regex_t re[NR_REGEX] = {};
-
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
  */
@@ -66,9 +71,11 @@ typedef struct token {
   int type;
   char str[32];
 } Token;
-
+static bool express_error_flag=0;
 static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
+int check_parentheses(int p, int q);
+int eval(int p, int q);
 
 static bool make_token(char *e) {
   int position = 0;
@@ -93,11 +100,24 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
-
-        switch (rules[i].token_type) {
-          default: TODO();
+        if(rules[i].token_type==TK_NOTYPE)
+            break;
+        if(nr_token>=32){
+            printf("Error expression: too many tokens\n");
+            return false;
         }
-
+        tokens[nr_token].type=rules[i].token_type;
+        switch (rules[i].token_type) {
+            case TK_DIGIT:  if(substr_len>=32){
+                                printf("Error expression: substr too long\n");
+                                return false;
+                            }
+                            strncpy(tokens[nr_token].str,substr_start,substr_len);
+                            tokens[nr_token].str[substr_len]='\0';
+                            break;
+            default: ;
+        }
+        nr_token++;
         break;
       }
     }
@@ -110,16 +130,129 @@ static bool make_token(char *e) {
 
   return true;
 }
+int is_op(int type){
+    return (type=='+')|(type=='-')|(type=='*')|(type=='/');
+}
+int main_operator(int p,int q){
+    int ptype;
+    int right=0;int last_is_op=1;
+    int flag=-1;int op_rank=10;
+    for(;p<=q;p++){
+        ptype=tokens[p].type;
+        if(ptype=='('){
+            right++;
+        }else if(ptype==')'){
+            right--;
+        }else if(right==0){
+            if(ptype=='*'||ptype=='/'){
+                if(op_rank>=9){
+                    flag=p;
+                    op_rank=9;
+                }
+            }else if(ptype=='+'){
+                if(op_rank>=8){
+                    op_rank=8;
+                    flag=p;
+                }
+            }else if(ptype=='-'){
+                if(op_rank>=8&&last_is_op==0){
+                    op_rank=8;
+                    flag=p;
+                }
+            }                      
+        }
+        last_is_op=is_op(ptype);
+    }
 
-
-word_t expr(char *e, bool *success) {
-  if (!make_token(e)) {
-    *success = false;
-    return 0;
+    return flag;
+}
+int eval(int p, int q) {
+    if (p > q) {
+        express_error_flag=1;
+        return 0;
+    /* Bad expression */
+    }
+    else if (p == q) {
+        if(tokens[p].type!=TK_DIGIT){
+            express_error_flag=1;
+            return 0;
+        }
+        return atoi(tokens[p].str);
+    /* Single token.
+     * For now this token should be a number.
+     * Return the value of the number.
+     */
+    }
+    else if (check_parentheses(p, q) == true) {
+    /* The expression is surrounded by a matched pair of parentheses.
+     * If that is the case, just throw away the parentheses.
+     */
+        return eval(p + 1, q - 1);
+    }
+    else {
+        if(express_error_flag){
+            return 0;
+        }
+        int op = main_operator(p,q);
+        if(op==p||op==q){
+            express_error_flag=1;
+            return 0;
+        }else if(op==-1){
+            if((q-p)%2==0)
+                return eval(q,q);
+            else return -eval(q,q);
+        }
+        int val1 = eval(p, op - 1);
+        int val2 = eval(op + 1, q);
+        switch (tokens[op].type) {
+        case '+': return val1+val2;
+        case '-': return val1-val2;
+        case '*': return val1*val2;
+        case '/': return val1/val2;
+        default: assert(0);
+    }
   }
 
-  /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+}
+int check_parentheses(int p, int q){
+    int right=0;
+    int notflag=0;
+    while(p<=q){
+        if(tokens[p].type=='('){
+            right++;
+        }else if(tokens[p].type==')'){
+            right--;
+            if(right<0){
+                express_error_flag=1;
+                return false;
+            }else if(right==0&&p!=q){
+                notflag=1;
+            }
+        }
+        p++;
+    }
+    if(right!=0){
+        express_error_flag=1;
+        return false;
+    }
+    if(notflag)
+        return false;
+    return true;
+}
+word_t expr(char *e, bool *success) {
+    if (!make_token(e)) {
+        *success = false;
+        return 0;
+    }
 
-  return 0;
+  /* TODO: Insert codes to evaluate the expression. */
+    express_error_flag=0;
+    int t=check_parentheses(0,nr_token-1);
+    if(express_error_flag==1){
+        *success=false;
+    }else{
+        *success=true;
+        printf("%d\n",t);
+    }
+    return 0;
 }

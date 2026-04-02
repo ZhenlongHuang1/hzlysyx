@@ -17,7 +17,6 @@
 #define __ISA_RISCV_H__
 
 #include <common.h>
-
 typedef struct {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
   vaddr_t pc;
