@@ -228,9 +228,10 @@ int check_parentheses(int p, int q){
             if(right<0){
                 express_error_flag=1;
                 return false;
-            }else if(right==0&&p!=q){
-                notflag=1;
             }
+        }
+        if(right==0&&p!=q){
+            notflag=1;
         }
         p++;
     }
