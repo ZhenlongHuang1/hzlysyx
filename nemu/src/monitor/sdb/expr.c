@@ -247,7 +247,7 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
     express_error_flag=0;
-    int t=check_parentheses(0,nr_token-1);
+    int t=eval(0,nr_token-1);
     if(express_error_flag==1){
         *success=false;
     }else{
