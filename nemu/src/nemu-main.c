@@ -14,7 +14,7 @@
 ***************************************************************************************/
 
 #include <common.h>
-
+#include "monitor/sdb/sdb.h"
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
@@ -28,6 +28,21 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
+    FILE *fp=fopen("/home/hzl/Desktop/ysyx-workbench/nemu/input","r");
+    char ptr[65536],str[65536];
+    bool success;
+    int result;
+    while(fgets(ptr,65536,fp)){
+        sscanf(ptr,"%u %[^\n]",&result,str);
+        int ret=expr(str,&success);
+        if(success==false){
+            printf("Error express:%s\n",str);
+        }else if(ret!=result){
+            printf("Wrong function\n");
+        }
+    }
+    fclose(fp);
+    printf("Right expression execuation\n");
   /* Start engine. */
   engine_start();
 

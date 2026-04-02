@@ -69,10 +69,10 @@ void init_regex() {
 
 typedef struct token {
   int type;
-  char str[32];
+  char str[12];
 } Token;
 static bool express_error_flag=0;
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[65536] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 int check_parentheses(int p, int q);
 int eval(int p, int q);
@@ -256,7 +256,6 @@ word_t expr(char *e, bool *success) {
         *success=false;
     }else{
         *success=true;
-        printf("%d\n",t);
     }
-    return 0;
+    return t;
 }

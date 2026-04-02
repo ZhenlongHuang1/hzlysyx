@@ -30,9 +30,38 @@ static char *code_format =
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
-
+int buf_index=0;
+void gen_num(){
+    uint32_t num=rand()%1000000000;//10
+    int length=sprintf(buf+buf_index,"%uu",num);
+    buf_index+=length;     
+}
+void gen(char c){
+    int i;
+    for(i=0;i<rand()%3;i++)
+        buf[buf_index++]=' ';
+    buf[buf_index++]=c;
+    for(i=0;i<rand()%3;i++)
+        buf[buf_index++]=' ';
+}
+void gen_rand_op(){
+    switch(rand()%4){
+        case 0:gen('+');break;
+        case 1:gen('-');break;
+        case 2:gen('*');break;
+        default:gen('/');break;
+    }
+}
 static void gen_rand_expr() {
-  buf[0] = '\0';
+    if(buf_index>10000){
+        gen_num();
+        return ;
+    }
+    switch(rand()%3){
+        case 0:gen_num();break;
+        case 1:gen('('); gen_rand_expr(); gen(')'); break;
+        default:gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -44,8 +73,9 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+    buf_index=0;
     gen_rand_expr();
-
+    buf[buf_index]='\0';
     sprintf(code_buf, code_format, buf);
 
     FILE *fp = fopen("/tmp/.code.c", "w");
@@ -53,17 +83,18 @@ int main(int argc, char *argv[]) {
     fputs(code_buf, fp);
     fclose(fp);
 
-    int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
+    int ret = system("gcc /tmp/.code.c -o /tmp/.expr 2>/dev/null");
     if (ret != 0) continue;
 
     fp = popen("/tmp/.expr", "r");
-    assert(fp != NULL);
-
-    int result;
-    ret = fscanf(fp, "%d", &result);
-    pclose(fp);
-
-    printf("%u %s\n", result, buf);
+    //assert(fp != NULL);
+    if(fp!=NULL){
+        int result;
+        ret = fscanf(fp, "%d", &result);
+        int ret2=pclose(fp);
+        if(ret==1&&ret2==0)
+            printf("%u %s\n", result, buf);
+    }
   }
   return 0;
 }

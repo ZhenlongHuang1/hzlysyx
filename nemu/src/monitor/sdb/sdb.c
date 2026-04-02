@@ -21,6 +21,7 @@
 #include <memory/vaddr.h>
 #include <stdio.h>
 #include "sdb.h"
+#include "common.h"
 
 static int is_batch_mode = false;
 
@@ -93,9 +94,11 @@ static int cmd_x(char *args){
 }
 static int cmd_p(char *args){
     bool success;
-    expr(args,&success);
+    word_t ret=expr(args,&success);
     if(success==false){
         printf("Error expression\n");
+    }else{
+        printf("%u\n",ret); 
     }
     return 0;
 }
