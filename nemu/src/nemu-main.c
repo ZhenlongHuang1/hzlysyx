@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
     word_t result;
     while(fgets(ptr,65536,fp)){
         sscanf(ptr,"%u %[^\n]",&result,str);
+        printf("%s",ptr);
         word_t ret=expr(str,&success);
         if(success==false){
             printf("Error express:%u %s\n",result,str);
