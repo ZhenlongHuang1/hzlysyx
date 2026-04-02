@@ -147,17 +147,20 @@ int main_operator(int p,int q){
             if(ptype=='*'||ptype=='/'){
                 if(op_rank>=9){
                     flag=p;
+                    Log("flag in %d",flag);
                     op_rank=9;
                 }
             }else if(ptype=='+'){
                 if(op_rank>=8){
                     op_rank=8;
                     flag=p;
+                    Log("flag in %d",flag);
                 }
             }else if(ptype=='-'){
                 if(op_rank>=8&&last_is_op==0){
                     op_rank=8;
                     flag=p;
+                    Log("flag in %d",flag);
                 }
             }                      
         }
