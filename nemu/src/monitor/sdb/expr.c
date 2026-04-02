@@ -92,8 +92,8 @@ static bool make_token(char *e) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        //Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        //   i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         position += substr_len;
 
@@ -148,20 +148,17 @@ int main_operator(int p,int q){
             if(ptype=='*'||ptype=='/'){
                 if(op_rank>=9){
                     flag=p;
-                    Log("flag in %d",flag);
                     op_rank=9;
                 }
             }else if(ptype=='+'){
                 if(op_rank>=8){
                     op_rank=8;
                     flag=p;
-                    Log("flag in %d",flag);
                 }
             }else if(ptype=='-'){
                 if(op_rank>=8&&last_is_op==0){
                     op_rank=8;
                     flag=p;
-                    Log("flag in %d",flag);
                 }
             }                      
         }
