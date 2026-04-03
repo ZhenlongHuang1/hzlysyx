@@ -34,6 +34,7 @@ void init_wp_pool() {
 /* TODO: Implement the functionality of watchpoint */
 WP* new_wp(char *args,word_t result){
     int err=wp_pool[33].NO;
+    printf("%d\n",err);
     if(free_==NULL){
         assert(0);
     }
