@@ -66,3 +66,18 @@ void free_wp(WP *wp){
         }
     return ;
 }
+int Scan_WP(){
+    WP *wptr;bool success;word_t ret;
+    wptr=head;
+    while(wptr!=NULL){
+        ret=wptr->result;
+        wptr->result=expr(wptr->args,&success);
+        if(ret!=wptr->result){
+            printf("watchpoint %d:%s\n",wptr->NO,wptr->args);
+            printf("Old value: %u\n",ret);
+            printf("New value: %u",wptr->result);
+            return 1;
+        }
+    }
+    return 0;
+}
