@@ -33,23 +33,32 @@ static char *code_format =
 int buf_index=0;
 void gen_num(){
     uint32_t num=rand()%10000000;//10
-    int length=sprintf(buf+buf_index,"%uu",num);
+    int length=0;
+    switch(rand()%2){
+    case 0:length=sprintf(buf+buf_index,"%uu",num);
+    case 1:length=sprintf(buf+buf_index,"%#x",num);
+    }
     buf_index+=length;     
 }
-void gen(char c){
+void gen(char *c){
     int i;
+    int length;
     for(i=0;i<rand()%3;i++)
         buf[buf_index++]=' ';
-    buf[buf_index++]=c;
+    length=sprintf(buf+buf_index,"%s",c);
+    buf_index+=length;
     for(i=0;i<rand()%3;i++)
         buf[buf_index++]=' ';
 }
 void gen_rand_op(){
-    switch(rand()%4){
-        case 0:gen('+');break;
-        case 1:gen('-');break;
-        case 2:gen('*');break;
-        default:gen('/');break;
+    switch(rand()%7){
+        case 0:gen("+");break;
+        case 1:gen("-");break;
+        case 2:gen("*");break;
+        case 3:gen("/");break;
+        case 4:gen("==");break;
+        case 5:gen("!=");break;
+        case 6:gen("&&");break;
     }
 }
 static void gen_rand_expr() {
@@ -59,7 +68,7 @@ static void gen_rand_expr() {
     }
     switch(rand()%3){
         case 0:gen_num();break;
-        case 1:gen('('); gen_rand_expr(); gen(')'); break;
+        case 1:gen("("); gen_rand_expr(); gen(")"); break;
         default:gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
     }
 }
