@@ -17,7 +17,14 @@
 #define __SDB_H__
 
 #include <common.h>
-
+#define NR_WP_ARGS 128
+typedef struct watchpoint {
+  int NO;
+  struct watchpoint *next;
+  word_t result;
+  char args[NR_WP_ARGS]; 
+} WP;
 word_t expr(char *e, bool *success);
-
+WP* new_wp(char *args,word_t result);
+int Scan_WP();
 #endif

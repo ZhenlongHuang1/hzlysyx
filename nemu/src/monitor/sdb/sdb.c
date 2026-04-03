@@ -24,7 +24,7 @@
 #include "common.h"
 
 static int is_batch_mode = false;
-
+WP* new_wp(char *args,word_t result);
 void init_regex();
 void init_wp_pool();
 
@@ -102,6 +102,16 @@ static int cmd_p(char *args){
     }
     return 0;
 }
+static int cmd_w(char *args){
+    bool success;
+    word_t ret=expr(args,&success);
+    if(success==false){
+        printf("Error watch point expression\n");
+    }else{
+        new_wp(args,ret);
+    }
+    return 0;
+}
 static struct {
   const char *name;
   const char *description;
@@ -114,6 +124,7 @@ static struct {
   {"info","Print registers",cmd_info},
   {"x","Scan the memory",cmd_x},
   {"p","Evaluate expression",cmd_p},
+    {"x","Set up monitoring points",cmd_w},
   /* TODO: Add more commands */
 
 };
