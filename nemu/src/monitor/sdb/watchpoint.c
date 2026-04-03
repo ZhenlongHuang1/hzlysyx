@@ -21,7 +21,6 @@
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
 WP* new_wp(char * args,word_t result);
-void free_wp(WP *wp);
 void init_wp_pool() {
   int i;
   for (i = 0; i < NR_WP; i ++) {
@@ -47,8 +46,9 @@ WP* new_wp(char *args,word_t result){
     printf("watchpoint %d:%s\n",wptr->NO,wptr->args);
     return wptr;
 }
-void free_wp(WP *wp){
-    if(wp==NULL||head==NULL)
+void free_wp(int i){
+    WP* wp=wp_pool+i;
+    if(head==NULL)
         return ;
     WP * tmp=head;
     if(wp==tmp){
@@ -82,5 +82,9 @@ int Scan_WP(){
     return 0;
 }
 void show_WP(){
-
+    printf("%-8s %-16s %-5s %-4s %-10s %-s\n","Num","Type","Disp","Enb","Address","What");
+    WP*wptr=head;
+    while(wptr!=NULL){
+        printf("%-8d %-16s %-5s %-4s %-10s %-s\n",wptr->NO,"watchpoint","keep","y","",wptr->args);
+    }
 }

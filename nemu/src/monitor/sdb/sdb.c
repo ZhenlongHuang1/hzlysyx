@@ -114,6 +114,16 @@ static int cmd_w(char *args){
     }
     return 0;
 }
+static int cmd_d(char *args){
+    char *arg=strtok(NULL," ");
+    if(arg==NULL){
+        printf("delete what?\n");
+        return 0;
+    }else {
+        free_wp(atoi(arg));
+    }
+    return 0;
+}
 static struct {
   const char *name;
   const char *description;
@@ -126,7 +136,8 @@ static struct {
   {"info","Print registers",cmd_info},
   {"x","Scan the memory",cmd_x},
   {"p","Evaluate expression",cmd_p},
-    {"x","Set up monitoring points",cmd_w},
+  {"x","Set up monitoring points",cmd_w},
+  {"d","Delete watch point",cmd_d},
   /* TODO: Add more commands */
 
 };

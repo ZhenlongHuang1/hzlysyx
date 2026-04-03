@@ -26,6 +26,7 @@ typedef struct watchpoint {
 } WP;
 word_t expr(char *e, bool *success);
 WP* new_wp(char *args,word_t result);
+void free_wp(int i);
 int Scan_WP();
 void show_WP();
 #endif
