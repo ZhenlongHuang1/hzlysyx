@@ -40,8 +40,8 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-    {"0x[0-9a-fA-F]+",TK_HEX_DIGIT},
-    {"\\$[a-zA-Z0-9_]+u?",TK_REG_NAME},
+    {"0x[0-9a-fA-F]+u?",TK_HEX_DIGIT},
+    {"\\$[a-zA-Z0-9_]+",TK_REG_NAME},
   {"==", TK_EQ},        // equal
     {"!=",TK_NOTEQ},
     {"&&",TK_LOGIC_AND},
