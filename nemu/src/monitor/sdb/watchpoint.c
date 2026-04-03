@@ -78,6 +78,7 @@ int Scan_WP(){
             printf("New value: %u",wptr->result);
             return 1;
         }
+        wptr=wptr->next;
     }
     return 0;
 }
@@ -86,5 +87,6 @@ void show_WP(){
     WP*wptr=head;
     while(wptr!=NULL){
         printf("%-8d %-16s %-5s %-4s %-10s %-s\n",wptr->NO,"watchpoint","keep","y","",wptr->args);
+        wptr=wptr->next;
     }
 }
