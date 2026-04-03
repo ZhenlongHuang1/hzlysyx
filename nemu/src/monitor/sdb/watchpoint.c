@@ -74,8 +74,8 @@ int Scan_WP(){
         wptr->result=expr(wptr->args,&success);
         if(ret!=wptr->result){
             printf("watchpoint %d:%s\n",wptr->NO,wptr->args);
-            printf("Old value: %x\n",ret);
-            printf("New value: %x\n",wptr->result);
+            printf("Old value: %u\n",ret);
+            printf("New value: %u\n",wptr->result);
             return 1;
         }
         wptr=wptr->next;
