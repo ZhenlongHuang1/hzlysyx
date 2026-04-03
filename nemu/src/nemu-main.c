@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
         word_t ret=expr(str,&success);
         if(success==false){
             printf("Error express:%u %s\n",result,str);
+            return 0;
         }else if(ret!=result){
             printf("Wrong function:%u\n%u\n%s\n",ret,result,str);
             return 0;
