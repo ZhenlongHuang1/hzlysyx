@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include <isa.h>
+#include <math.h>
 #include <memory/vaddr.h>
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -40,7 +41,7 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
     {"0x[0-9a-fA-F]+",TK_HEX_DIGIT},
-    {"\\$[a-zA-Z_][a-zA-Z0-9_]*",TK_REG_NAME},
+    {"\\$[a-zA-Z0-9_]+",TK_REG_NAME},
   {"==", TK_EQ},        // equal
     {"!=",TK_NOTEQ},
     {"&&",TK_LOGIC_AND},
@@ -185,6 +186,9 @@ int main_operator(int p,int q){
     return flag;
 }
 word_t eval(int p, int q) {
+    if(express_error_flag){
+        return 0;
+    }
     if (p > q) {
         express_error_flag=1;
         return 0;
