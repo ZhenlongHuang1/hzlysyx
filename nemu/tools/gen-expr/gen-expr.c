@@ -83,14 +83,14 @@ int main(int argc, char *argv[]) {
     fputs(code_buf, fp);
     fclose(fp);
 
-    int ret = system("gcc /tmp/.code.c -o /tmp/.expr 2>/dev/null");
+    int ret = system("gcc -O0 -Werror=div-by-zero /tmp/.code.c -o /tmp/.expr 2>/dev/null");
     if (ret != 0) continue;
 
     fp = popen("/tmp/.expr", "r");
     //assert(fp != NULL);
     if(fp!=NULL){
-        int result;
-        ret = fscanf(fp, "%d", &result);
+        unsigned  result;
+        ret = fscanf(fp, "%u", &result);
         int ret2=pclose(fp);
         if(ret==1&&ret2==0)
             printf("%u %s\n", result, buf);
