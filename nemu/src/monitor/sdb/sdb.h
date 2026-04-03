@@ -20,6 +20,7 @@
 #define NR_WP_ARGS 128
 typedef struct watchpoint {
   int NO;
+  int times;
   struct watchpoint *next;
   word_t result;
   char args[NR_WP_ARGS]; 

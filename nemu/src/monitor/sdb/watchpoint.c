@@ -40,6 +40,7 @@ WP* new_wp(char *args,word_t result){
     free_=free_->next;
     wptr->next=head;
     head=wptr;
+    wptr->times=0;
     wptr->result=result;
     strncpy(wptr->args,args,NR_WP_ARGS);
     wptr->args[NR_WP_ARGS-1]='\0';
@@ -69,17 +70,21 @@ void free_wp(int i){
 int Scan_WP(){
     WP *wptr;bool success;word_t ret;
     wptr=head;
+    int flag=0;
     while(wptr!=NULL){
         ret=wptr->result;
         wptr->result=expr(wptr->args,&success);
         if(ret!=wptr->result){
+            wptr->times=wptr->times+1;
             printf("watchpoint %d:%s\n",wptr->NO,wptr->args);
             printf("Old value: %u\n",ret);
             printf("New value: %u\n",wptr->result);
-            return 1;
+            flag=1;
         }
         wptr=wptr->next;
     }
+    if(flag==1)
+        return 1;
     return 0;
 }
 void show_WP(){
@@ -87,6 +92,9 @@ void show_WP(){
     WP*wptr=head;
     while(wptr!=NULL){
         printf("%-8d %-16s %-5s %-4s %-10s %-s\n",wptr->NO,"watchpoint","keep","y","",wptr->args);
+        if(wptr->times!=0){
+            printf("%8s breakpoint already hit %d time\n","",wptr->times);
+        }
         wptr=wptr->next;
     }
 }
