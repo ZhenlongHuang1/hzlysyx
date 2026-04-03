@@ -78,7 +78,7 @@ typedef struct token {
   char str[32];
 } Token;
 static bool express_error_flag=0;
-static Token tokens[1024] __attribute__((used)) = {};
+static Token tokens[65536] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 int check_parentheses(int p, int q);
 word_t eval(int p, int q);
@@ -108,7 +108,7 @@ static bool make_token(char *e) {
          */
         if(rules[i].token_type==TK_NOTYPE)
             break;
-        if(nr_token>=1024){
+        if(nr_token>=65536){
             printf("Error expression: too many tokens\n");
             return false;
         }
