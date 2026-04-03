@@ -15,14 +15,15 @@
 
 #include "common.h"
 #include <isa.h>
-
+#include <memory/vaddr.h>
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,TK_DIGIT,
+  TK_NOTYPE = 256, TK_EQ,TK_NOTEQ,TK_LOGIC_AND,
+  TK_DIGIT,  TK_HEX_DIGIT,TK_REG_NAME,TK_DEREF,TK_NEGTIVE,
 
   /* TODO: Add more token types */
 
@@ -38,8 +39,12 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
+    {"0x[0-9a-fA-F]+",TK_HEX_DIGIT},
+    {"\\$[a-zA-Z_][a-zA-Z0-9_]*",TK_REG_NAME},
   {"==", TK_EQ},        // equal
+    {"!=",TK_NOTEQ},
+    {"&&",TK_LOGIC_AND},
+  {"\\+", '+'},         // plus
     {"\\-",'-'},
     {"\\*",'*'},
     {"/",'/'},
@@ -70,10 +75,10 @@ void init_regex() {
 
 typedef struct token {
   int type;
-  char str[12];
+  char str[32];
 } Token;
 static bool express_error_flag=0;
-static Token tokens[65536] __attribute__((used)) = {};
+static Token tokens[1024] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 int check_parentheses(int p, int q);
 word_t eval(int p, int q);
@@ -103,19 +108,22 @@ static bool make_token(char *e) {
          */
         if(rules[i].token_type==TK_NOTYPE)
             break;
-        if(nr_token>=65536){
+        if(nr_token>=1024){
             printf("Error expression: too many tokens\n");
             return false;
         }
         tokens[nr_token].type=rules[i].token_type;
         switch (rules[i].token_type) {
-            case TK_DIGIT:  if(substr_len>=65536){
+            case TK_REG_NAME:
+            case TK_HEX_DIGIT:
+            case TK_DIGIT:  if(substr_len>=32){
                                 printf("Error expression: substr too long\n");
                                 return false;
                             }
                             strncpy(tokens[nr_token].str,substr_start,substr_len);
                             tokens[nr_token].str[substr_len]='\0';
                             break;
+
             default: ;
         }
         nr_token++;
@@ -132,12 +140,12 @@ static bool make_token(char *e) {
   return true;
 }
 int is_op(int type){
-    return (type=='+')|(type=='-')|(type=='*')|(type=='/');
+    return (type!=TK_DIGIT)&&(type!=TK_HEX_DIGIT)&&(type!=TK_REG_NAME)&&(type!=')');
 }
 int main_operator(int p,int q){
     int ptype;
-    int right=0;int last_is_op=1;
-    int flag=-1;int op_rank=10;
+    int right=0;
+    int flag=-1;int op_rank=12;
     for(;p<=q;p++){
         ptype=tokens[p].type;
         if(ptype=='('){
@@ -150,19 +158,28 @@ int main_operator(int p,int q){
                     flag=p;
                     op_rank=9;
                 }
-            }else if(ptype=='+'){
+            }else if(ptype=='+'||ptype=='-'){
                 if(op_rank>=8){
                     op_rank=8;
                     flag=p;
                 }
-            }else if(ptype=='-'){
-                if(op_rank>=8&&last_is_op==0){
-                    op_rank=8;
+            }else if(ptype==TK_EQ||ptype==TK_NOTEQ){
+                if(op_rank>=5){
                     flag=p;
+                    op_rank=5;
                 }
-            }                      
+            }else if(ptype==TK_LOGIC_AND){
+                if(op_rank>=1){
+                    flag=p;
+                    op_rank=1;
+                }
+            }else if(ptype==TK_DEREF||ptype==TK_NEGTIVE){
+                if(op_rank>11){//从右到左
+                    flag=p;
+                    op_rank=11;
+                }
+            }   
         }
-        last_is_op=is_op(ptype);
     }
 
     return flag;
@@ -174,15 +191,20 @@ word_t eval(int p, int q) {
     /* Bad expression */
     }
     else if (p == q) {
-        if(tokens[p].type!=TK_DIGIT){
-            express_error_flag=1;
-            return 0;
+        int ptype=tokens[p].type;
+        if(ptype==TK_DIGIT){
+            return strtoul(tokens[p].str,NULL,10);
+        }else if(ptype==TK_HEX_DIGIT){
+            return strtoul(tokens[p].str,NULL,16);
+        }else if(ptype==TK_REG_NAME){
+            bool success;
+            word_t ret=isa_reg_str2val(tokens[p].str+1,&success);
+            if(success==true)
+                return ret;
         }
-        return atoi(tokens[p].str);
-    /* Single token.
-     * For now this token should be a number.
-     * Return the value of the number.
-     */
+        express_error_flag=1;
+        return 0;
+        
     }
     else if (check_parentheses(p, q) == true) {
     /* The expression is surrounded by a matched pair of parentheses.
@@ -195,13 +217,14 @@ word_t eval(int p, int q) {
             return 0;
         }
         int op = main_operator(p,q);
+        if(tokens[op].type==TK_DEREF){
+            return vaddr_read(eval(p+1,q),4);
+        }else if(tokens[op].type==TK_NEGTIVE){
+            return -eval(p+1,q);
+        }
         if(op==p||op==q){
             express_error_flag=1;
             return 0;
-        }else if(op==-1){
-            if((q-p)%2==0)
-                return eval(q,q);
-            else return -eval(q,q);
         }
         word_t val1 = eval(p, op - 1);
         word_t val2 = eval(op + 1, q);
@@ -214,6 +237,9 @@ word_t eval(int p, int q) {
                         return 0;
                     }else 
                     return val1/val2;
+        case TK_EQ:return val1==val2;
+        case TK_NOTEQ:return val1!=val2;
+        case TK_LOGIC_AND:return val1&&val2;
         default: assert(0);
     }
   }
@@ -252,6 +278,15 @@ word_t expr(char *e, bool *success) {
     }
 
   /* TODO: Insert codes to evaluate the expression. */
+    int i;
+    for (i = 0; i < nr_token; i ++) {
+        if (i == 0 || is_op(tokens[i - 1].type) ) {
+            if(tokens[i].type == '*')
+                tokens[i].type = TK_DEREF;
+            else if(tokens[i].type=='-')
+                tokens[i].type = TK_NEGTIVE;
+        }
+    }
     express_error_flag=0;
     word_t t=eval(0,nr_token-1);
     if(express_error_flag==1){
