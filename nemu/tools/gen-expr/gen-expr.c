@@ -32,11 +32,11 @@ static char *code_format =
 "}";
 int buf_index=0;
 void gen_num(){
-    uint32_t num=rand()%10000000;//10
+    uint32_t num=rand()%100000000;//10
     int length=0;
     switch(rand()%2){
-    case 0:length=sprintf(buf+buf_index,"%uu",num);
-    case 1:length=sprintf(buf+buf_index,"%#x",num);
+    case 0:length=sprintf(buf+buf_index,"%uu",num);break;
+    case 1:length=sprintf(buf+buf_index,"0x%xu",num);break;
     }
     buf_index+=length;     
 }
