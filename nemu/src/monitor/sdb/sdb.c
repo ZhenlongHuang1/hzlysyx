@@ -136,7 +136,7 @@ static struct {
   {"info","Print registers",cmd_info},
   {"x","Scan the memory",cmd_x},
   {"p","Evaluate expression",cmd_p},
-  {"x","Set up monitoring points",cmd_w},
+  {"w","Set up monitoring points",cmd_w},
   {"d","Delete watch point",cmd_d},
   /* TODO: Add more commands */
 
