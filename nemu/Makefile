@@ -62,3 +62,8 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+count:
+	@echo ".c.h文件所有行数"
+	@find . -name "*.[ch]" | xargs wc -l|tail -n1|awk '{print $$1}'
+	@echo ".c.h文件所有不包含空行的行数"
+	@find . -name "*.[ch]" | xargs cat| grep -v '^$$'|wc -l
