@@ -1,4 +1,4 @@
-TOPNAME=ysyx_sCPU
+TOPNAME=ex2
 #NXDC_FILES=constr/test.nxdc
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=
