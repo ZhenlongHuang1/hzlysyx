@@ -1,4 +1,4 @@
-TOPNAME=ysyx_bshifter
+TOPNAME=ysyx_keyboard
 #NXDC_FILES=constr/test.nxdc
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=
