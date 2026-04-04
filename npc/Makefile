@@ -1,4 +1,4 @@
-TOPNAME=ysyx_LFshifter
+TOPNAME=ysyx_bshifter
 #NXDC_FILES=constr/test.nxdc
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=
