@@ -45,6 +45,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     case TYPE_N: break;
     default: panic("unsupported type = %d", type);
   }
+  printf("%u %d %u %u %u\n",s->pc,type,*src1,*src2,*imm);
 }
 
 static int decode_exec(Decode *s) {
