@@ -122,7 +122,12 @@ static int decode_exec(Decode *s) {
                                                                     }else if(src2==0xffffffff&&src1==0x80000000){
                                                                         R(rd) = 0;    
                                                                     }else{
-                                                                        R(rd) = (sword_t)src1 % (sword_t)src2;
+                                                                        R(rd) = (sword_t)src1 % abs((sword_t)src2);
+                                                                    });
+  INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu   , R, if(src2==0){
+                                                                        R(rd) = src1;
+                                                                    }else{
+                                                                        R(rd) = src1 % src2;
                                                                     });
 
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
