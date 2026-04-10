@@ -1,4 +1,4 @@
-TOPNAME=ysyx_vga_top
+TOPNAME=ysyx_keyboard
 #NXDC_FILES=constr/test.nxdc
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=

@@ -15,10 +15,10 @@ static VerilatedVcdC* tfp;
 void nvboard_bind_all_pins(TOP_NAME*top);
 void single_cycle(){
     dut->clk=0;dut->eval();
-    tfp->dump(contextp->time());
+//    tfp->dump(contextp->time());
     contextp->timeInc(1);
     dut->clk=1;dut->eval();
-    tfp->dump(contextp->time());
+//    tfp->dump(contextp->time());
     contextp->timeInc(1);
 }
 void single_cycle0(){
