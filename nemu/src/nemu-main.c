@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-#if 1
+#if 0
     FILE *fp=fopen("/home/hzl/Desktop/ysyx-workbench/nemu/input","r");
     char ptr[65536],str[65536];
     bool success;
