@@ -67,7 +67,7 @@ void *memset(void *s, int c, size_t n) {
     assert(s);
     size_t i;
     for(i=0;i<n;i++){
-        *((char *)s+1)=c;
+        *((char *)s+i)=c;
     }
     return s;
 }
