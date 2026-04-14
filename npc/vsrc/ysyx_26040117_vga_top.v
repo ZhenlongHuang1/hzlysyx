@@ -1,4 +1,4 @@
-module ysyx_vga_top(
+module ysyx_26040117_vga_top(
     input clk,
     input rst,
     output VGA_CLK,
@@ -16,7 +16,7 @@ wire [9:0] h_addr;
 wire [9:0] v_addr;
 wire [23:0] vga_data;
 
-ysyx_vga_ctrl my_vga_ctrl(
+ysyx_26040117_vga_ctrl my_vga_ctrl(
     .pclk(clk),
     .reset(rst),
     .vga_data(vga_data),

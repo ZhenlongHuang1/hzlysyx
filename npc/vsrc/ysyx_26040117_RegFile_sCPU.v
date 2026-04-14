@@ -1,4 +1,4 @@
-module ysyx_RegFile_sCPU #(REG_LENGTH=32,REG_INDEX_LENGTH=5,DATA_LENGTH=32)(clk,rst,wen,rd,rs1,rs2,r0,wdata,rdata1,rdata2,rdata0);
+module ysyx_26040117_RegFile_sCPU #(REG_LENGTH=32,REG_INDEX_LENGTH=5,DATA_LENGTH=32)(clk,rst,wen,rd,rs1,rs2,r0,wdata,rdata1,rdata2,rdata0);
     input clk,rst,wen;
     input[REG_INDEX_LENGTH-1:0] rd,rs1,rs2,r0;
     input[DATA_LENGTH-1:0] wdata;

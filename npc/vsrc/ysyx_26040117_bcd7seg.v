@@ -1,4 +1,4 @@
-module ysyx_bcd7seg(
+module ysyx_26040117_bcd7seg(
   input  [3:0] b,
   output [7:0] h,
   input rst

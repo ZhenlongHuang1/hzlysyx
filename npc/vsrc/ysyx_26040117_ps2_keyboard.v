@@ -1,4 +1,4 @@
-module ysyx_ps2_keyboard(clk,rst,ps2_clk,ps2_data,data,
+module ysyx_26040117_ps2_keyboard(clk,rst,ps2_clk,ps2_data,data,
                     ready,nextdata_n,overflow);
     input clk,rst,ps2_clk,ps2_data;
     input nextdata_n;

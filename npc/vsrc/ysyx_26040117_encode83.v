@@ -1,4 +1,4 @@
-module ysyx_encode83(
+module ysyx_26040117_encode83(
     input [7:0] x,
     input en,
     output [2:0] y,

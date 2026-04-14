@@ -1,4 +1,4 @@
-module ysyx_ALU4 #(SEL_LENGTH=3,DATA_LENGTH=4)(
+module ysyx_26040117_ALU4 #(SEL_LENGTH=3,DATA_LENGTH=4)(
     input[SEL_LENGTH-1:0] sel,
     input[DATA_LENGTH-1:0] A,
     input[DATA_LENGTH-1:0] B,
@@ -15,7 +15,7 @@ module ysyx_ALU4 #(SEL_LENGTH=3,DATA_LENGTH=4)(
     assign overflow=(A[DATA_LENGTH-1]==t_no_cin[DATA_LENGTH-1])&&(result[DATA_LENGTH-1]!=A[DATA_LENGTH-1]);
     assign zero=~(|result);
     assign less=overflow^result[DATA_LENGTH-1];//unsigned less=~carry
-    ysyx_MuxKey #(8,SEL_LENGTH,DATA_LENGTH) i0(out,sel,{
+    ysyx_26040117_MuxKey #(8,SEL_LENGTH,DATA_LENGTH) i0(out,sel,{
     3'b000,result,
     3'b001,result,
     3'b010,~A,

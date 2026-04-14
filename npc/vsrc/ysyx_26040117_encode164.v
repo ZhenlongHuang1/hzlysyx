@@ -1,4 +1,4 @@
-module ysyx_encode164(in,out);
+module ysyx_26040117_encode164(in,out);
     input[15:0] in;
     output [3:0] out;
     assign out[3]=|in[15:8];

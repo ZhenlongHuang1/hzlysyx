@@ -1,4 +1,4 @@
-module ysyx_vga_ctrl(
+module ysyx_26040117_vga_ctrl(
     input           pclk,     //25MHz时钟
     input           reset,    //置位
     input  [23:0]   vga_data, //上层模块提供的VGA颜色数据

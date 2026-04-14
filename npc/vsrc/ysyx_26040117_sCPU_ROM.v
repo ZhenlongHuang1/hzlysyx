@@ -1,4 +1,4 @@
-module ysyx_sCPU_ROM #(ADDR_LENGTH=12)(a,z);
+module ysyx_26040117_sCPU_ROM #(ADDR_LENGTH=12)(a,z);
     input[ADDR_LENGTH-1:0] a;
     output[7:0] z;
     (*synthesis, rom_block*) reg[7:0] rom[(1<<(ADDR_LENGTH))-1:0];

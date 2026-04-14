@@ -1,0 +1,25 @@
+module ysyx_26040117_WBU(clk,rst,br_token,snpc,dnpc,result,ramdata,mytype,srcd,pc);
+    input clk,rst,br_token;
+    input[8:0]mytype;
+    input[31:0] dnpc,snpc,result,ramdata;
+    output[31:0] srcd;
+    output reg[31:0] pc;
+    wire[31:0]pc_next;
+    wire notjump;
+    assign srcd=({32{mytype[5]}}&ramdata)|
+                ({32{(|mytype[8:7])||mytype[0]}}&result)|
+                ({32{|mytype[3:2]}}&snpc)|
+                ({32{|mytype[1]}}&dnpc);
+    assign notjump=~((|mytype[3:2])||(mytype[4]&&br_token));
+    assign pc_next=({32{notjump}}&snpc)|
+                    ({32{mytype[2]||(mytype[4]&&br_token)}}&dnpc)|
+                    ({{31{mytype[3]}},1'b0}&dnpc);
+    always@(posedge clk)begin
+        if(rst)
+            pc<=32'd0;
+        else begin
+            pc<=pc_next;
+        end
+    end
+
+endmodule

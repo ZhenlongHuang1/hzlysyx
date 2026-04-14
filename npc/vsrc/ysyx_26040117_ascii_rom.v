@@ -1,4 +1,4 @@
-module ysyx_ascii_rom(a,z);
+module ysyx_26040117_ascii_rom(a,z);
     input[7:0] a;
     output reg[7:0] z;
     always@(*)
