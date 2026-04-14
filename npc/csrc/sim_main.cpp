@@ -32,7 +32,8 @@ void reset(int n){
     while(n-->0)single_cycle();
     dut->rst=0;
 }
-uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0x00a50513,0x00008067};
+//uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0x00a50513,0x00008067};
+uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0xFF750513,0xFF750513,0xFF750513,0x00008067};
 uint32_t pmem_read(uint32_t pc){
     
     return pmem[pc/4];
