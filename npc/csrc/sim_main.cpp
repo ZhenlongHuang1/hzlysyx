@@ -14,6 +14,11 @@ static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
 static int npc_state=1;
+//uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0x00a50513,0x00008067};
+uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
+uint32_t pmem_read(uint32_t pc){
+    return pmem[pc/4];
+}
 extern "C" void npc_trap(){
     printf("\ntest over\n");
 //    exit(0);
@@ -25,6 +30,7 @@ void single_cycle(){
     tfp->dump(contextp->time());
     contextp->timeInc(1);
     dut->clk=1;dut->eval();
+    dut->inst = pmem_read(dut->pc);dut->eval();
     tfp->dump(contextp->time());
     contextp->timeInc(1);
 }
@@ -37,12 +43,7 @@ void reset(int n){
     dut->rst=1;
     while(n-->0)single_cycle();
     dut->rst=0;
-}
-//uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0x00a50513,0x00008067};
-uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
-uint32_t pmem_read(uint32_t pc){
-    
-    return pmem[pc/4];
+    dut->inst = pmem_read(dut->pc);dut->eval();
 }
 int main(int argc,char**argv){
     contextp=new VerilatedContext;
@@ -59,7 +60,6 @@ int main(int argc,char**argv){
     int i=0;
     while(USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time&&npc_state==1){
         //nvboard_update();
-        dut->inst = pmem_read(dut->pc);
         single_cycle();
     }
 
