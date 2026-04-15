@@ -1,5 +1,5 @@
-module ysyx_26040117_WBU(clk,rst,br_token,snpc,dnpc,result,ramdata,mytype,srcd,pc);
-    input clk,rst,br_token;
+module ysyx_26040117_WBU(clk,rst,br_token,ebreak,snpc,dnpc,result,ramdata,mytype,srcd,pc);
+    input clk,rst,br_token,ebreak;
     input[8:0]mytype;
     input[31:0] dnpc,snpc,result,ramdata;
     output[31:0] srcd;
@@ -21,5 +21,10 @@ module ysyx_26040117_WBU(clk,rst,br_token,snpc,dnpc,result,ramdata,mytype,srcd,p
             pc<=pc_next;
         end
     end
-
+    import "DPI-C" function void npc_trap();
+    always@(posedge clk)begin
+        if(ebreak&&!rst)begin
+            npc_trap();
+        end
+    end
 endmodule

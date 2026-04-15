@@ -1,5 +1,6 @@
-module ysyx_26040117_IDU(inst,rs1,rs2,rd,imm,op,mytype);
+module ysyx_26040117_IDU(inst,ebreak,rs1,rs2,rd,imm,op,mytype);
     input [31:0] inst;
+    output ebreak;
     output [3:0] op;
     output [4:0] rs1,rs2,rd;
     output[31:0] imm;
@@ -7,6 +8,7 @@ module ysyx_26040117_IDU(inst,rs1,rs2,rd,imm,op,mytype);
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD;
     wire [6:0]opcode;
     wire [31:0]immI,immS,immB,immU,immJ;
+    assign ebreak=inst==32'b00000000000100000000000001110011;
     assign opcode=inst[6:0];
     assign rd=inst[11:7];
     assign rs1=inst[19:15];
