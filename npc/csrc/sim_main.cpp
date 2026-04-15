@@ -1,4 +1,6 @@
+#include <cstdint>
 #include<stdlib.h>
+#include<stdio.h>
 #include<assert.h>
 //#include<Vysyx_bshifter.h>
 #include<verilated.h>
@@ -10,14 +12,33 @@
 #define MKSTR(s) _MKSTR(s)
 #include MKSTR(TOP_NAME.h)
 #define USE_NVBOARD 0
+#define MAX_LENGTH 16777216
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
 static int npc_state=1;
 //uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0x00a50513,0x00008067};
-uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
-uint32_t pmem_read(uint32_t pc){
-    return pmem[pc/4];
+//uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
+uint32_t pmem[MAX_LENGTH];
+extern "C" int pmem_read(int raddr){
+    uint32_t index=(uint32_t)raddr;
+    return pmem[index>>2];
+}
+extern "C" void pmem_write(int waddr, int wdata, char wmask) {
+    uint32_t index=(uint32_t)waddr;
+    int addr_shift=index%4;
+    int wdata1,wdata2,mask;
+    if(wmask==1){
+        mask=0x000000ff;
+    }else if(wmask==3){
+        mask=0x0000ffff;
+    }else{
+        mask=0xffffffff;
+    }
+    wdata1=wdata&mask;
+    wdata1=wdata1<<(addr_shift*8);
+    wdata2=pmem[index>>2]&~(mask<<(addr_shift*8));
+    pmem[index>>2]=wdata1|wdata2;
 }
 extern "C" void npc_trap(){
     printf("\ntest over\n");
@@ -30,7 +51,6 @@ void single_cycle(){
     tfp->dump(contextp->time());
     contextp->timeInc(1);
     dut->clk=1;dut->eval();
-    dut->inst = pmem_read(dut->pc);dut->eval();
     tfp->dump(contextp->time());
     contextp->timeInc(1);
 }
@@ -43,9 +63,13 @@ void reset(int n){
     dut->rst=1;
     while(n-->0)single_cycle();
     dut->rst=0;
-    dut->inst = pmem_read(dut->pc);dut->eval();
 }
 int main(int argc,char**argv){
+    FILE*fp;
+    char binname[]="resource/sum.bin";
+    assert((fp=fopen(binname,"r"))!=NULL);
+    fread(pmem,4,MAX_LENGTH,fp);
+    pmem[0x22400213]=0x00100073;
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
     dut=new TOP_NAME(contextp);
@@ -62,10 +86,10 @@ int main(int argc,char**argv){
         //nvboard_update();
         single_cycle();
     }
-
+    tfp->close();
+    fclose(fp);
     delete dut;
     delete contextp;
-    tfp->close();
     delete tfp;
     return 0;
 
