@@ -9,7 +9,7 @@
 #define _MKSTR(s) #s
 #define MKSTR(s) _MKSTR(s)
 #include MKSTR(TOP_NAME.h)
-#define USE_NVBOARD 1
+#define USE_NVBOARD 0
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
@@ -48,9 +48,9 @@ int main(int argc,char**argv){
     dut=new TOP_NAME(contextp);
     contextp->traceEverOn(true);
     tfp=new VerilatedVcdC;
-    dut->trace(tfp,9999);
+    dut->trace(tfp,300);
     tfp->open("simx.vcd");
-    int sim_time=9999;
+    int sim_time=300;
     //nvboard_bind_all_pins(dut);
     //nvboard_init();
     reset(10);
