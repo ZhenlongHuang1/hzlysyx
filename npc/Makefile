@@ -1,7 +1,7 @@
 TOPNAME=ysyx_26040117_top
-#NXDC_FILES=constr/test.nxdc
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH ?=
+ARGS ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert --trace-vcd
@@ -33,7 +33,7 @@ lint:
 all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$(BIN)
+	@$(BIN) $(ARGS)
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile

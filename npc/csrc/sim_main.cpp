@@ -21,11 +21,11 @@ static int npc_state=1;
 //uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
 uint32_t pmem[MAX_LENGTH];
 extern "C" int pmem_read(int raddr){
-    uint32_t index=(uint32_t)raddr;
+    uint32_t index=(uint32_t)(raddr-0x80000000);
     return pmem[index>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
-    uint32_t index=(uint32_t)waddr;
+    uint32_t index=(uint32_t)(waddr-0x80000000);
     int addr_shift=index%4;
     int wdata1,wdata2,mask;
     if(wmask==1){
@@ -70,7 +70,7 @@ int main(int argc,char**argv){
     assert((fp=fopen(binname,"r"))!=NULL);
     fread(pmem,4,MAX_LENGTH,fp);
     //pmem[0x224/4]=0x00100073;//sum
-    pmem[0x1218/4]=0x00100073;
+    //pmem[0x1218/4]=0x00100073;
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
     dut=new TOP_NAME(contextp);

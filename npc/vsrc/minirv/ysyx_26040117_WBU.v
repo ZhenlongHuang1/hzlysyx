@@ -17,7 +17,7 @@ module ysyx_26040117_WBU(clk,rst,br_token,ebreak,imm,snpc,dnpc,result,ramdata,my
                     ({{31{mytype[3]}},1'b0}&dnpc);
     always@(posedge clk)begin
         if(rst)
-            pc<=32'd0;
+            pc<=32'h8000000;
         else begin
             pc<=pc_next;
         end
