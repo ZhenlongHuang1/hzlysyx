@@ -13,9 +13,11 @@
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
+static int npc_state=1;
 extern "C" void npc_trap(){
     printf("\ntest over\n");
-    exit(0);
+//    exit(0);
+    npc_state=0;
 }
 void nvboard_bind_all_pins(TOP_NAME*top);
 void single_cycle(){
@@ -55,11 +57,12 @@ int main(int argc,char**argv){
     //nvboard_init();
     reset(10);
     int i=0;
-    while(USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time){
+    while(USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time&&npc_state==1){
         //nvboard_update();
         dut->inst = pmem_read(dut->pc);
         single_cycle();
     }
+
     delete dut;
     delete contextp;
     tfp->close();
