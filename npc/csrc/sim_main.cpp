@@ -12,7 +12,7 @@
 #define MKSTR(s) _MKSTR(s)
 #include MKSTR(TOP_NAME.h)
 #define USE_NVBOARD 1
-#define MAX_LENGTH 167772
+#define MAX_LENGTH 16777216
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
@@ -69,7 +69,8 @@ int main(int argc,char**argv){
     char binname[]="resource/sum.bin";
     assert((fp=fopen(binname,"r"))!=NULL);
     fread(pmem,4,MAX_LENGTH,fp);
-    pmem[0x224/4]=0x00100073;
+    //pmem[0x224/4]=0x00100073;//sum
+    pmem[0x1218/4]=0x00100073;
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
     dut=new TOP_NAME(contextp);
