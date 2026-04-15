@@ -66,7 +66,7 @@ void reset(int n){
 }
 int main(int argc,char**argv){
     FILE*fp;
-    char binname[]="resource/sum.bin";
+    char binname[]="resource/mem.bin";
     assert((fp=fopen(binname,"r"))!=NULL);
     fread(pmem,4,MAX_LENGTH,fp);
     //pmem[0x224/4]=0x00100073;//sum
