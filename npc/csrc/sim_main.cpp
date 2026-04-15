@@ -82,7 +82,7 @@ int main(int argc,char**argv){
     //nvboard_init();
     reset(10);
     int i=0;
-    while(USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time&&npc_state==1){
+    while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1){
         //nvboard_update();
         single_cycle();
     }
