@@ -12,7 +12,7 @@
 #define MKSTR(s) _MKSTR(s)
 #include MKSTR(TOP_NAME.h)
 #define USE_NVBOARD 0
-#define MAX_LENGTH 16777216
+#define MAX_LENGTH 167772
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
