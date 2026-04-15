@@ -69,7 +69,7 @@ int main(int argc,char**argv){
     char binname[]="resource/sum.bin";
     assert((fp=fopen(binname,"r"))!=NULL);
     fread(pmem,4,MAX_LENGTH,fp);
-    pmem[0x22400213]=0x00100073;
+    pmem[0x224/4]=0x00100073;
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
     dut=new TOP_NAME(contextp);
