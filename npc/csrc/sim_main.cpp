@@ -26,11 +26,21 @@ static struct{
 //uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
 uint32_t pmem[MAX_LENGTH];
 extern "C" int pmem_read(int raddr){
-    uint32_t index=(uint32_t)raddr-0x80000000u;
+    uint32_t index=(uint32_t)raddr;
+    if(index<0x80000000u){
+        return 0;
+    }else {
+        index-=0x80000000u;
+    }
     return pmem[index>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
-    uint32_t index=(uint32_t)waddr-0x80000000u;
+    uint32_t index=(uint32_t)waddr;
+    if(index<0x80000000u){
+        return ;
+    }else {
+        index-=0x80000000u;
+    }
     int addr_shift=index%4;
     uint32_t wdata1,wdata2,mask;
     if(wmask==1){
