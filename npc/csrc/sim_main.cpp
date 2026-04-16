@@ -13,6 +13,9 @@
 #include MKSTR(TOP_NAME.h)
 #define USE_NVBOARD 1
 #define MAX_LENGTH 16777216
+#define ANSI_FG_GREEN "\e[1;32m"
+#define ANSI_FG_RED "\e[1;31m"
+#define ANSI_NONE "\e[0m"
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
@@ -114,9 +117,9 @@ int main(int argc,char**argv){
     }
     if(npc_state.state==NPC_END){
         if(npc_state.halt_ret==0){
-            printf("HIT GOOD TRAP\n");
+            printf(ANSI_FG_GREEN"HIT GOOD TRAP" ANSI_NONE "\n");
         }else{
-            printf("HIT BAD TRAP\n");
+            printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE "\n");
         }
     }
     tfp->close();
