@@ -90,9 +90,7 @@ void reset(int n){
 }
 int main(int argc,char**argv){
     FILE*fp;
-    printf("IMG=%s\n",argv[1]);
     assert((fp=fopen(argv[1],"rb"))!=NULL);
-    printf("Load IMG successfully\n");
     fseek(fp,0,SEEK_END);
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
