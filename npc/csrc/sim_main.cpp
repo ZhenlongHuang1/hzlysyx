@@ -87,8 +87,6 @@ int main(int argc,char**argv){
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
     fread(pmem,1,fpsize,fp);
-    //pmem[0x224/4]=0x00100073;//sum
-    //pmem[0x1218/4]=0x00100073;
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
     dut=new TOP_NAME(contextp);
