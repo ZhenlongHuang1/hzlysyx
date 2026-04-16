@@ -15,4 +15,8 @@ module ysyx_26040117_RegisterFile #(ADDR_WIDTH = 5, DATA_WIDTH = 32) (
     end
     assign rdata1=nequal1?rf[raddr1]:{DATA_WIDTH{1'b0}};
     assign rdata2=nequal2?rf[raddr2]:{DATA_WIDTH{1'b0}};
+    export "DPI-C" function get_a0;
+    function int get_a0;
+        return rf[10];
+    endfunction
 endmodule

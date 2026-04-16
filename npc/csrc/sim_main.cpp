@@ -16,7 +16,12 @@
 static TOP_NAME* dut;
 static VerilatedContext*contextp;
 static VerilatedVcdC* tfp;
-static int npc_state=1;
+enum NPC_STATE{NPC_RUNNING,NPC_END
+};
+static struct{
+    enum NPC_STATE state;
+    int halt_ret;
+}npc_state={NPC_RUNNING,0};
 //uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0x00a50513,0x00008067};
 //uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
 uint32_t pmem[MAX_LENGTH];
@@ -27,7 +32,7 @@ extern "C" int pmem_read(int raddr){
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
     uint32_t index=(uint32_t)(waddr-0x80000000);
     int addr_shift=index%4;
-    int wdata1,wdata2,mask;
+    uint32_t wdata1,wdata2,mask;
     if(wmask==1){
         mask=0x000000ff;
     }else if(wmask==3){
@@ -35,15 +40,24 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
     }else{
         mask=0xffffffff;
     }
-    wdata1=wdata&mask;
+    wdata1=(uint32_t)wdata&mask;
     wdata1=wdata1<<(addr_shift*8);
     wdata2=pmem[index>>2]&~(mask<<(addr_shift*8));
     pmem[index>>2]=wdata1|wdata2;
 }
 extern "C" void npc_trap(){
-    printf("\ntest over\n");
-//    exit(0);
-    npc_state=0;
+    npc_state.state=NPC_END;
+    svScope scope=svGetScopeFromName("TOP.ysyx_26040117_top.Register1");
+    if(scope){
+        svSetScope(scope);
+        npc_state.halt_ret=get_a0();
+    }else{
+        printf("get incorrect name\n");
+    }
+}
+int is_exit_status_bad() {
+    int good=(npc_state.state==NPC_END&&npc_state.halt_ret==0);
+    return !good;
 }
 void nvboard_bind_all_pins(TOP_NAME*top);
 void single_cycle(){
@@ -66,9 +80,11 @@ void reset(int n){
 }
 int main(int argc,char**argv){
     FILE*fp;
-    char binname[]="resource/mem.bin";
-    assert((fp=fopen(binname,"r"))!=NULL);
-    fread(pmem,4,MAX_LENGTH,fp);
+    assert((fp=fopen(argv[1],"rb"))!=NULL);
+    fseek(fp,0,SEEK_END);
+    long fpsize=ftell(fp);
+    fseek(fp,0,SEEK_SET);
+    fread(pmem,1,fpsize,fp);
     //pmem[0x224/4]=0x00100073;//sum
     //pmem[0x1218/4]=0x00100073;
     contextp=new VerilatedContext;
@@ -83,15 +99,23 @@ int main(int argc,char**argv){
     //nvboard_init();
     reset(10);
     int i=0;
-    while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1){
+    //while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1){
+    while((!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state.state==NPC_RUNNING){
         //nvboard_update();
         single_cycle();
+    }
+    if(npc_state.state==NPC_END){
+        if(npc_state.halt_ret==0){
+            printf("HIT GOOD TRAP\n");
+        }else{
+            printf("HIT BAD TRAP\n");
+        }
     }
     tfp->close();
     fclose(fp);
     delete dut;
     delete contextp;
     delete tfp;
-    return 0;
+    return is_exit_status_bad();
 
 }
