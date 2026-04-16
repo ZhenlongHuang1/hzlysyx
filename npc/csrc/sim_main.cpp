@@ -25,8 +25,6 @@ static struct{
     enum NPC_STATE state;
     int halt_ret;
 }npc_state={NPC_RUNNING,0};
-//uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00c00067,0x00a50513,0x00008067};
-//uint32_t pmem[36]={0x01400513,0x010000e7,0x00c000e7,0x00100073,0xFF750513,0xFF750513,0xFF750513,0x00008067};
 uint32_t pmem[MAX_LENGTH];
 extern "C" int pmem_read(int raddr){
     uint32_t index=(uint32_t)raddr;
@@ -111,7 +109,7 @@ int main(int argc,char**argv){
     reset(10);
     int i=0;
     //while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1){
-    while((!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state.state==NPC_RUNNING){
+    while(npc_state.state==NPC_RUNNING){
         //nvboard_update();
         single_cycle();
     }
