@@ -42,8 +42,13 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                                 flag=0;
                                 break;
                         case 's':string=va_arg(ap,char*);
+                                assert(fc==' '&&width==0);
                                 strcpy(out+num,string);
                                 num+=strlen(string);
+                                flag=0;
+                                break;
+                        case 'c':out[num++]=(char)va_arg(ap,int);
+                                assert(fc==' '&&width==0);
                                 flag=0;
                                 break;
                         case '%':out[num++]='%';
