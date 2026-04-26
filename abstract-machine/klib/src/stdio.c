@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
-int intcatstr(char *str,int num,char fc,int width);
+int intcatstr(char *str,int num,char fc,int width,int cardinal,int signornot);
 int printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap,fmt);
@@ -37,8 +37,10 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                                     width=width*10;
                                 }
                                 break;
+                        case 'x':
+                        case 'o':
                         case 'd':tmp=va_arg(ap,int);
-                                num+=intcatstr(out+num,tmp,fc,width);
+                                num+=intcatstr(out+num,tmp,fc,width,(*ptr)=='d'?10:((*ptr=='x')?16:8),(*ptr)=='d'?1:0);
                                 flag=0;
                                 break;
                         case 's':string=va_arg(ap,char*);
@@ -91,18 +93,18 @@ int snprintf(char *out, size_t n, const char *fmt, ...) {
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   panic("Not implemented");
 }
-int intcatstr(char *str,int num,char fc,int width){
+int intcatstr(char *str,int num,char fc,int width,int cardinal,int signornot){
     int i=0,j=0,is_neg=0,pad_len,total_len;
     unsigned int unum,t;
     int length=num==0?1:0;
-    if(num<0){
+    if(num<0&&signornot){
         is_neg=1;
         unum=(unsigned int)-(num+1)+1;
     }else{
         unum=(unsigned int)num;
     }
     t=unum;
-    while(t>0){length+=1;t/=10;}
+    while(t>0){length+=1;t/=cardinal;}
     total_len=length+is_neg;
     pad_len=(width>total_len)?width-total_len:0;
     if(fc==' '){
@@ -122,11 +124,12 @@ int intcatstr(char *str,int num,char fc,int width){
         *(str++)='0';
         return total_len+pad_len;
     }
-    char buf[12];
+    char buf[16];
     i=0;
     while(unum>0){
-        buf[i++]=unum%10+'0';
-        unum=unum/10;
+        unsigned int tmp=unum%cardinal;
+        buf[i++]=tmp<10?tmp+'0':tmp+'a'-10;
+        unum=unum/cardinal;
     }
     for(j=i-1;j>=0;j--){
         *(str++)=buf[j];
