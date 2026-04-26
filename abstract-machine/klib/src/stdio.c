@@ -53,6 +53,8 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                                     width=width*10+*ptr-'0';
                                     break;
                                 }else{
+                                    putch(*ptr);
+                                    putch('\n');
                                     assert(0);
                                 }
                     }
