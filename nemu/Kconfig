@@ -199,6 +199,15 @@ config WATCHPOINT
 config DTRACE
     bool "open dtrace"
     default y
+config DTRACE_START
+  depends on DTRACE
+  hex "When dtracing is enabled (address of device)"
+  default 0xa0000048
+
+config DTRACE_END
+  depends on DTRACE
+  hex "When dtracing is disabled (address of device)"
+  default 0xa0000088
 
 endmenu
 
