@@ -197,7 +197,9 @@ config WATCHPOINT
     help
         may cause performance overload if open it    
 endmenu
-
+config DTRACE
+    bool "open dtrace"
+    default y
 
 if MODE_SYSTEM
 source "src/memory/Kconfig"
