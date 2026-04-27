@@ -196,10 +196,11 @@ config WATCHPOINT
     default y
     help
         may cause performance overload if open it    
-endmenu
 config DTRACE
     bool "open dtrace"
     default y
+
+endmenu
 
 if MODE_SYSTEM
 source "src/memory/Kconfig"

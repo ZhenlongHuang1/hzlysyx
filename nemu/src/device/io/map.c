@@ -71,6 +71,6 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
 #ifdef CONFIG_DTRACE
-  Log("device write of %s, addr=" FMT_PADDR ",data=" FMT_WORD,map->name,addr,ret);
+  Log("device write of %s, addr=" FMT_PADDR ",data=" FMT_WORD,map->name,addr,data);
 #endif
 }
