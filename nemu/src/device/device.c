@@ -35,6 +35,14 @@ void vga_update_screen();
 
 void device_update() {
   static uint64_t last = 0;
+  //gettime per 1000 times
+  static uint64_t count = 0;
+  if (++count < 10000) {
+    return;
+  }
+  count = 0;
+//end
+
   uint64_t now = get_time();
   if (now - last < 1000000 / TIMER_HZ) {
     return;
