@@ -1,7 +1,5 @@
-#include "riscv/riscv.h"
 #include <am.h>
 #include <nemu.h>
-#include <stdint.h>
 void __am_timer_init() {
     inl(RTC_ADDR+4);
 }
