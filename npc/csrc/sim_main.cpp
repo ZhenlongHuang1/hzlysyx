@@ -79,6 +79,7 @@ int main(int argc,char**argv){
     //nvboard_bind_all_pins(dut);
     //nvboard_init();
     reset(10);
+    printf("begin\n");
     int i=0;
     //while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1){
     while(npc_state.state==NPC_RUNNING){
