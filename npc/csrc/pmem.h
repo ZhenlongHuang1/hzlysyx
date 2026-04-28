@@ -37,6 +37,7 @@ extern "C" int pmem_read(int raddr){
         }
         return pmem[index];
     }
+    return 0;
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
     uint32_t index=(uint32_t)waddr;
