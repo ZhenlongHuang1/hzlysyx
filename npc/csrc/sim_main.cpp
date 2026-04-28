@@ -24,7 +24,9 @@ static struct{
     enum NPC_STATE state;
     int halt_ret;
 }npc_state={NPC_RUNNING,0};
+
 uint32_t pmem[MAX_LENGTH];
+
 extern "C" void npc_trap(){
     npc_state.state=NPC_END;
     svScope scope=svGetScopeFromName("TOP.ysyx_26040117_top.Register1");
