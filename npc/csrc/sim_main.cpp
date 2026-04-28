@@ -1,12 +1,9 @@
 #include<stdlib.h>
-#include<stdio.h>
 #include<assert.h>
 //#include<Vysyx_bshifter.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>
-#include "svdpi.h"
-#include "Vysyx_26040117_top__Dpi.h"
 #include "pmem.h"
 #define _MKSTR(s) #s
 #define MKSTR(s) _MKSTR(s)

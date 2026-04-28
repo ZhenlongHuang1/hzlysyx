@@ -32,6 +32,9 @@ extern "C" int pmem_read(int raddr){
         }
     }else if(index>=PEME_START){
         index=(index-PEME_START)>>2;
+        if (index >= MAX_LENGTH) {
+            printf("\n[FATAL] Out of bounds! raddr = 0x%08x, array_index = %u\n", raddr, index);
+        }
         return pmem[index];
     }
 }
