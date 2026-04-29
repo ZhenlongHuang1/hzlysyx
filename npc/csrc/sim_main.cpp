@@ -54,7 +54,8 @@ void reset(int n){
 }
 int main(int argc,char**argv){
     FILE*fp;
-    assert((fp=fopen(argv[1],"rb"))!=NULL);
+    fp=fopen(argv[1],"rb");
+    assert(fp!=NULL);
     fseek(fp,0,SEEK_END);
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);

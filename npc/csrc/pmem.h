@@ -3,7 +3,7 @@
 #include "svdpi.h"
 #include "Vysyx_26040117_top__Dpi.h"
 
-#define MAX_LENGTH 16777216
+#define MAX_LENGTH 134217728
 #define SERIAL_PORT 0x10000000u
 #define PEME_START 0x80000000u
 #define RTC_ADDR 0x10000048u
