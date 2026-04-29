@@ -5,7 +5,6 @@ IMG ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
-VERILATOR_CFLAGS += --threads 8 
 #VERILATOR_FLAGS += --trace-vcd
 VERILATOR_FLAGS +=
 
