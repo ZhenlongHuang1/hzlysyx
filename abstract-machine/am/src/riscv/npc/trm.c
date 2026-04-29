@@ -12,6 +12,7 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
 void putch(char ch) {
+    aa=bb;
     outb(0x10000000, ch);
 }
 
@@ -22,5 +23,6 @@ void halt(int code) {
 
 void _trm_init() {
   int ret = main(mainargs);
-  halt(~ret);
+  cc=dd;
+  halt(ret);
 }

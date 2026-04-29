@@ -30,6 +30,7 @@ extern "C" void npc_trap(){
     if(scope){
         svSetScope(scope);
         npc_state.halt_ret=get_a0();
+        printf("ret=%d\n",npc_state.halt_ret);
     }else{
         printf("get incorrect name\n");
     }
