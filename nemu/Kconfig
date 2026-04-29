@@ -198,16 +198,31 @@ config WATCHPOINT
         may cause performance overload if open it    
 config DTRACE
     bool "open dtrace"
-    default y
+    default n
 config DTRACE_START
   depends on DTRACE
   hex "When dtracing is enabled (address of device)"
   default 0xa0000048
-
 config DTRACE_END
   depends on DTRACE
   hex "When dtracing is disabled (address of device)"
   default 0xa0000088
+
+config MTRACE
+    bool "open mtrace"
+    default n
+config MTRACE_START
+  depends on MTRACE
+  hex "When mtracing is enabled (address of memory)"
+  default 0x80000000
+config MTRACE_END
+  depends on MTRACE
+  hex "When mtracing is disabled (address of memory)"
+  default 0x80000000
+
+
+
+
 
 endmenu
 
