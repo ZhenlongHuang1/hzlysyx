@@ -2,7 +2,7 @@
 #include<assert.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
-#include<nvboard.h>
+//#include<nvboard.h>
 #include "pmem.h"
 #define _MKSTR(s) #s
 #define MKSTR(s) _MKSTR(s)

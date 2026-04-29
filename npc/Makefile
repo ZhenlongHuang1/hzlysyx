@@ -5,12 +5,8 @@ IMG ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
-TRACE=0
-ifeq ($(TRACE),1)
-VERILATOR_FLAGS += --trace-vcd
-else
+#VERILATOR_FLAGS += --trace-vcd
 VERILATOR_FLAGS +=
-endif
 
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -27,8 +23,8 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 CSRCS += $(SRC_AUTO_BIND)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -g -O3 -flto
-LDFLAGS += -flto
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -g -O3
+LDFLAGS += 
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VERILATOR_FLAGS)\
