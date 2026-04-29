@@ -42,15 +42,10 @@ int is_exit_status_bad() {
 void nvboard_bind_all_pins(TOP_NAME*top);
 void single_cycle(){
     dut->clk=0;dut->eval();
-    tfp->dump(contextp->time());
+    //tfp->dump(contextp->time());
     contextp->timeInc(1);
     dut->clk=1;dut->eval();
-    tfp->dump(contextp->time());
-    contextp->timeInc(1);
-}
-void single_cycle0(){
-    dut->eval();
-    tfp->dump(contextp->time());
+    //tfp->dump(contextp->time());
     contextp->timeInc(1);
 }
 void reset(int n){
@@ -71,7 +66,7 @@ int main(int argc,char**argv){
     contextp->traceEverOn(true);
     tfp=new VerilatedVcdC;
     dut->trace(tfp,300);
-    tfp->open("simx.vcd");
+    //tfp->open("simx.vcd");
     int sim_time=300;
     //nvboard_bind_all_pins(dut);
     //nvboard_init();
