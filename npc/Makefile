@@ -4,8 +4,7 @@ INC_PATH ?=
 IMG ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
-					-O3 --x-assign fast --x-initial fast --noassert\
-					--unroll-count 727
+					-O3 --x-assign fast --x-initial fast --noassert
 TRACE=0
 ifeq ($(TRACE),1)
 VERILATOR_FLAGS += --trace-vcd
