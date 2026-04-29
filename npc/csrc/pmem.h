@@ -23,9 +23,13 @@ static uint64_t get_time(){
 extern "C" int pmem_read(int raddr){
     uint32_t index=(uint32_t)raddr;
     static uint64_t us;
+    static uint32_t timer_gate = 0;
     if(index>=RTC_ADDR&&index<=RTC_ADDR+4){
+        if(timer_gate++ % 100 == 0&&index==RTC_ADDR+4){
+            us = get_time();
+        }
         if(index==RTC_ADDR+4){
-            us=get_time();
+            //us=get_time();
             return us>>32;
         }else {
             return (uint32_t)us;
