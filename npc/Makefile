@@ -4,7 +4,15 @@ INC_PATH ?=
 IMG ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
-					-O3 --x-assign fast --x-initial fast --noassert --trace-vcd
+					-O3 --x-assign fast --x-initial fast --noassert\
+					--unroll-count 727 --threads 1
+TRACE=0
+ifeq ($(TRACE),1)
+VERILATOR_FLAGS += --trace-vcd
+else
+VERILATOR_FLAGS +=
+endif
+
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
@@ -20,10 +28,11 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 CSRCS += $(SRC_AUTO_BIND)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -g -O3
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -O3 -flto -DNDEBUG#-g
+LDFLAGS += -flto
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
-	$(VERILATOR) $(VERILATOR_CFLAGS) \
+	$(VERILATOR) $(VERILATOR_CFLAGS) $(VERILATOR_FLAGS)\
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))

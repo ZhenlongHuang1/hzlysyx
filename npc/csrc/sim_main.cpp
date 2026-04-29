@@ -1,6 +1,5 @@
 #include<stdlib.h>
 #include<assert.h>
-//#include<Vysyx_bshifter.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include<nvboard.h>
@@ -43,10 +42,10 @@ void nvboard_bind_all_pins(TOP_NAME*top);
 void single_cycle(){
     dut->clk=0;dut->eval();
     //tfp->dump(contextp->time());
-    contextp->timeInc(1);
+    //contextp->timeInc(1);
     dut->clk=1;dut->eval();
     //tfp->dump(contextp->time());
-    contextp->timeInc(1);
+    //contextp->timeInc(1);
 }
 void reset(int n){
     dut->rst=1;
@@ -60,12 +59,13 @@ int main(int argc,char**argv){
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
     fread(pmem,1,fpsize,fp);
+
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
     dut=new TOP_NAME(contextp);
-    contextp->traceEverOn(true);
-    tfp=new VerilatedVcdC;
-    dut->trace(tfp,300);
+    //contextp->traceEverOn(true);
+    //tfp=new VerilatedVcdC;
+    //dut->trace(tfp,300);
     //tfp->open("simx.vcd");
     int sim_time=300;
     //nvboard_bind_all_pins(dut);
@@ -84,11 +84,11 @@ int main(int argc,char**argv){
             printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE "\n");
         }
     }
-    tfp->close();
+    //tfp->close();
     fclose(fp);
     delete dut;
     delete contextp;
-    delete tfp;
+    //delete tfp;
     return is_exit_status_bad();
 
 }

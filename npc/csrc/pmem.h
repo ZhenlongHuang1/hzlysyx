@@ -9,7 +9,7 @@
 #define RTC_ADDR 0x10000048u
 extern uint32_t pmem[MAX_LENGTH];
 static uint64_t get_time(){
-    struct timeval tv;
+    static struct timeval tv;
     static uint64_t bool_time=0;
     if(bool_time==0){
         gettimeofday(&tv, NULL);
@@ -32,9 +32,6 @@ extern "C" int pmem_read(int raddr){
         }
     }else if(index>=PEME_START){
         index=(index-PEME_START)>>2;
-        if (index >= MAX_LENGTH) {
-            printf("\n[FATAL] Out of bounds! raddr = 0x%08x, array_index = %u\n", raddr, index);
-        }
         return pmem[index];
     }
     return 0;
@@ -52,7 +49,7 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
     }
     wdata1=(uint32_t)wdata&mask;
     if(index==SERIAL_PORT){
-        putc(wdata1,stderr);
+        putc(wdata1,stdout);
     }else if(index>=PEME_START){
         addr_shift=index%4;
         index=(index-PEME_START)>>2;
