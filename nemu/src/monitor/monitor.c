@@ -43,6 +43,7 @@ static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static char *elf_file = NULL;
+Func_list func_list[1024];
 static int difftest_port = 1234;
 
 static long load_img() {
@@ -93,8 +94,12 @@ static void load_elf(){
         }
     }
     for(i=0;i<n;i++){
-        if(ELF32_ST_TYPE(sym[i].st_info)==STT_FUNC)
-        printf("\n%-3d %-38s %-16x %-16x",i,strtab+sym[i].st_name,sym[i].st_value,sym[i].st_size);
+        if(ELF32_ST_TYPE(sym[i].st_info)==STT_FUNC){
+            strncpy(func_list[i].name,strtab+sym[i].st_name,30);
+            func_list[i].name[29]='\0';
+            func_list[i].low=sym[i].st_value;
+            func_list[i].high=sym[i].st_value+sym[i].st_size;
+        }
     }
 }
 static int parse_args(int argc, char *argv[]) {
