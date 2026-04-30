@@ -82,12 +82,20 @@ static void load_elf(){
     assert(ret==1);
     Elf32_Ehdr *ehdr=(Elf32_Ehdr*)buf;
     Elf32_Shdr *section=(Elf32_Shdr*)(ehdr->e_shoff+buf);
-    Elf32_Shdr *strSectionHeader=section+ehdr->e_shstrndx;
-    char * strSection = buf+strSectionHeader->sh_offset;
-    Elf32_Sym *sym=(Elf32_Sym*)(buf+section->sh_offset);
-    int n=section->sh_size/section->sh_entsize;
-    for(int i=0;i<n;i++){
-        printf("\n%-3d %-38s %-8x %-16x %-16x",i,strSection+sym[i].st_name,sym[i].st_info,sym[i].st_value,sym[i].st_size);
+    char * strSection = buf+section[ehdr->e_shstrndx].sh_offset;
+    Elf32_Sym *sym=NULL;
+    int i;char * strtab=NULL;int n=0;
+    for(i=0;i<ehdr->e_shnum;i++){
+        if(strcmp(strSection+section[i].sh_name,".strtab")==0){
+            sym=(Elf32_Sym*)(buf+section[i].sh_offset);
+            n=section[i].sh_size/section[i].sh_entsize;
+            strtab=buf+section[i].sh_offset;
+            break;
+        }
+    }
+    for(i=0;i<n;i++){
+        if(ELF32_ST_TYPE(sym[i].st_info)==STT_FUNC)
+        printf("\n%-3d %-38s %-8x %-16x %-16x",i,strtab+sym[i].st_name,sym[i].st_info,sym[i].st_value,sym[i].st_size);
     }
 }
 static int parse_args(int argc, char *argv[]) {
