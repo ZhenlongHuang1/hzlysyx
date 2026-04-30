@@ -67,7 +67,6 @@ static long load_img() {
   return size;
 }
 static void load_elf(){
-    printf("load elf\n");
     if(elf_file==NULL){
         Log("No elf is given");
         return ;
@@ -86,6 +85,7 @@ static void load_elf(){
     Elf32_Sym *sym=NULL;
     int i;char * strtab=NULL;int n=0;
     for(i=0;i<ehdr->e_shnum;i++){
+        printf("%s\n",strSection+section[i].sh_name);
         if(strcmp(strSection+section[i].sh_name,".strtab")==0){
             sym=(Elf32_Sym*)(buf+section[i].sh_offset);
             n=section[i].sh_size/section[i].sh_entsize;
