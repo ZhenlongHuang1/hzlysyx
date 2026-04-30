@@ -15,7 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
-
+#include <elf.h>
 void init_rand();
 void init_log(const char *log_file);
 void init_mem();
@@ -42,6 +42,7 @@ void sdb_set_batch_mode();
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
+static char *elf_file = NULL;
 static int difftest_port = 1234;
 
 static long load_img() {
@@ -65,7 +66,29 @@ static long load_img() {
   fclose(fp);
   return size;
 }
-
+static void load_elf(){
+    if(elf_file==NULL){
+        Log("No elf is given");
+        return ;
+    }
+    FILE *fp=fopen(elf_file,"rb");
+    Assert(fp,"Can not open '%s'",elf_file);
+    fseek(fp,0,SEEK_END);
+    long size=ftell(fp);
+    fseek(fp,0,SEEK_SET);
+    char *buf=(char*)malloc(size);
+    int ret=fread(buf,size,1,fp);
+    assert(ret==1);
+    Elf32_Ehdr *ehdr=(Elf32_Ehdr*)buf;
+    Elf32_Shdr *section=(Elf32_Shdr*)(ehdr->e_shoff+buf);
+    Elf32_Shdr *strSectionHeader=section+ehdr->e_shstrndx;
+    char * strSection = buf+strSectionHeader->sh_offset;
+    Elf32_Sym *sym=(Elf32_Sym*)(buf+section->sh_offset);
+    int n=section->sh_size/section->sh_entsize;
+    for(int i=0;i<n;i++){
+        printf("\n%-3d %-38s %-8x %-16x %-16x",i,strSection+sym[i].st_name,sym[i].st_info,sym[i].st_value,sym[i].st_size);
+    }
+}
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
@@ -73,6 +96,7 @@ static int parse_args(int argc, char *argv[]) {
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
+    {"elf"      , required_argument, NULL, 'e'},
     {0          , 0                , NULL,  0 },
   };
   int o;
@@ -82,6 +106,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
+      case 'e': elf_file=optarg; break;
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -119,7 +144,7 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
-
+  load_elf();
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
 
