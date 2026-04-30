@@ -85,17 +85,16 @@ static void load_elf(){
     Elf32_Sym *sym=NULL;
     int i;char * strtab=NULL;int n=0;
     for(i=0;i<ehdr->e_shnum;i++){
-        printf("%s\n",strSection+section[i].sh_name);
         if(strcmp(strSection+section[i].sh_name,".symtab")==0){
             sym=(Elf32_Sym*)(buf+section[i].sh_offset);
             n=section[i].sh_size/section[i].sh_entsize;
+        }else if(strcmp(strSection+section[i].sh_name,".strtab")==0){
             strtab=buf+section[i].sh_offset;
-            break;
         }
     }
     for(i=0;i<n;i++){
         if(ELF32_ST_TYPE(sym[i].st_info)==STT_FUNC)
-        printf("\n%-3d %-38s %-8x %-16x %-16x",i,strtab+sym[i].st_name,sym[i].st_info,sym[i].st_value,sym[i].st_size);
+        printf("\n%-3d %-38s %-16x %-16x",i,strtab+sym[i].st_name,sym[i].st_value,sym[i].st_size);
     }
 }
 static int parse_args(int argc, char *argv[]) {
