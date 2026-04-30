@@ -22,7 +22,16 @@ void cpu_exec(uint64_t n);
 
 void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 void invalid_inst(vaddr_t thispc);
-
+#define MAX_FUNC_CNT 1024
+typedef struct{
+    char name[32];
+    vaddr_t low;
+    vaddr_t high;
+}Func_list;
+extern Func_list func_list[MAX_FUNC_CNT];
+extern int func_cnt;
+void ftrace_record(vaddr_t pc,vaddr_t dnpc,int is_return);
+void ftrace_print();
 #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
 #define INV(thispc) invalid_inst(thispc)
 

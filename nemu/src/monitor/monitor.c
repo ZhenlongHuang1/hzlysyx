@@ -16,6 +16,7 @@
 #include <isa.h>
 #include <memory/paddr.h>
 #include <elf.h>
+#include <cpu/cpu.h>
 void init_rand();
 void init_log(const char *log_file);
 void init_mem();
@@ -44,6 +45,7 @@ static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static char *elf_file = NULL;
 Func_list func_list[1024];
+int func_cnt=0;
 static int difftest_port = 1234;
 
 static long load_img() {
@@ -67,7 +69,7 @@ static long load_img() {
   fclose(fp);
   return size;
 }
-static void load_elf(){
+static void init_func(){
     if(elf_file==NULL){
         Log("No elf is given");
         return ;
@@ -95,12 +97,15 @@ static void load_elf(){
     }
     for(i=0;i<n;i++){
         if(ELF32_ST_TYPE(sym[i].st_info)==STT_FUNC){
-            strncpy(func_list[i].name,strtab+sym[i].st_name,30);
-            func_list[i].name[29]='\0';
-            func_list[i].low=sym[i].st_value;
-            func_list[i].high=sym[i].st_value+sym[i].st_size;
+            strncpy(func_list[func_cnt].name,strtab+sym[i].st_name,31);
+            func_list[func_cnt].name[31]='\0';
+            func_list[func_cnt].low=sym[i].st_value;
+            func_list[func_cnt].high=sym[i].st_value+sym[i].st_size;
+            func_cnt++;
+            assert(func_cnt<=MAX_FUNC_CNT);
         }
     }
+    free(buf);
 }
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
@@ -158,7 +163,7 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
-  load_elf();
+  init_func();
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
 

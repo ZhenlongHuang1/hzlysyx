@@ -77,9 +77,11 @@ static int cmd_info(char *args){
             isa_reg_display();
         }else if(strcmp(arg,"w")==0){
             show_WP();
-        }else if(strcmp(arg,"b")==0){
+        }else if(strcmp(arg,"i")==0){
             extern void iringbuf_print();
             iringbuf_print();
+        }else if(strcmp(arg,"f")==0){
+            ftrace_print();
         }
     }
     return 0;
