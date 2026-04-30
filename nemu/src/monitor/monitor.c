@@ -67,6 +67,7 @@ static long load_img() {
   return size;
 }
 static void load_elf(){
+    printf("load elf\n");
     if(elf_file==NULL){
         Log("No elf is given");
         return ;
