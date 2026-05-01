@@ -142,9 +142,9 @@ void ftrace_record(vaddr_t pc,vaddr_t dnpc,int is_return){
         }
     }
     if(is_return){
-        sprintf(ftrace_buf[ftrace_cnt],FMT_PADDR ":%sret %s to %s",pc,space,index1>=0?func_list[index1].name:"???",index2>=0?func_list[index2].name:"???"); 
+        sprintf(ftrace_buf[ftrace_cnt],FMT_PADDR ":%sret [%s] to [%s]",pc,space,index1>=0?func_list[index1].name:"???",index2>=0?func_list[index2].name:"???"); 
     }else{
-        sprintf(ftrace_buf[ftrace_cnt],FMT_PADDR ":%scall %s@" FMT_PADDR " from %s",pc,space,index2>=0?func_list[index2].name:"???",dnpc,index1>=0?func_list[index1].name:"???");  
+        sprintf(ftrace_buf[ftrace_cnt],FMT_PADDR ":%scall [%s@" FMT_PADDR "], from [%s]",pc,space,index2>=0?func_list[index2].name:"???",dnpc,index1>=0?func_list[index1].name:"???");  
     }
     ftrace_cnt=(ftrace_cnt+1)%1024;
 }
