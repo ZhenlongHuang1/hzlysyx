@@ -133,14 +133,14 @@ void ftrace_record(vaddr_t pc,vaddr_t dnpc,int is_return){
     space[space_len]='\0';
     if(is_return){
         for(i=0;i<func_cnt;i++){
-            if(pc>=func_list[i].low&&pc<func_list[i].high){
+            if(pc>=func_list[i].low&&pc<=func_list[i].high){
                 index=i;break;
             }
         }
         sprintf(ftrace_buf[ftrace_cnt],FMT_PADDR ":%sret [%s]",pc,space,index>=0?func_list[index].name:"???"); 
     }else{
         for(i=0;i<func_cnt;i++){
-            if(dnpc>=func_list[i].low&&dnpc<func_list[i].high){
+            if(dnpc>=func_list[i].low&&dnpc<=func_list[i].high){
                 index=i;break;
             }
         }

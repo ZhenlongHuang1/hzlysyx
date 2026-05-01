@@ -100,7 +100,7 @@ static void init_func(){
             strncpy(func_list[func_cnt].name,strtab+sym[i].st_name,31);
             func_list[func_cnt].name[31]='\0';
             func_list[func_cnt].low=sym[i].st_value;
-            func_list[func_cnt].high=sym[i].st_value+sym[i].st_size;
+            func_list[func_cnt].high=sym[i].st_value+sym[i].st_size-4;
             func_cnt++;
             assert(func_cnt<=MAX_FUNC_CNT);
         }
