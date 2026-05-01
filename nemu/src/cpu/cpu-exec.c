@@ -129,7 +129,7 @@ void ftrace_record(vaddr_t pc,vaddr_t dnpc,int is_return){
     if(!is_return) depth++;
     int space_len=depth>31?31:depth;
     if(is_return) {depth--; if(depth<0) depth=0;}
-    memset(space,'|',space_len);
+    memset(space,' ',space_len);
     space[space_len]='\0';
     for(i=0;i<func_cnt;i++){
         if(pc>=func_list[i].low&&pc<=func_list[i].high){
