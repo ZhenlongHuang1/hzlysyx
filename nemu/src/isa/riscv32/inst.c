@@ -81,6 +81,9 @@ static int decode_exec(Decode *s) {
                                                                         ftrace_record(s->pc,s->dnpc,0);
                                                                     else if(BITS(INSTPAT_INST(s), 19, 15)==1)
                                                                         ftrace_record(s->pc,s->dnpc,1);
+                                                                    else{
+                                                                        ftrace_record(s->pc,s->dnpc,0);
+                                                                    }
                                                                     );
   INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq    , B, if(src1==src2){s->dnpc=imm+s->pc;});
   INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne    , B, if(src1!=src2){s->dnpc=imm+s->pc;});
