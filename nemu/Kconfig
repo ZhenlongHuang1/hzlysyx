@@ -219,6 +219,9 @@ config MTRACE_END
   depends on MTRACE
   hex "When mtracing is disabled (address of memory)"
   default 0x80000000
+config FTRACE
+    bool "open ftrace"
+    default n
 
 
 
