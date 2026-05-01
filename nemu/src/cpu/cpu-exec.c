@@ -144,7 +144,7 @@ void ftrace_record(vaddr_t pc,vaddr_t dnpc,int is_return){
                 index=i;break;
             }
         }
-        sprintf(ftrace_buf[ftrace_cnt],FMT_PADDR ":%scall [%s" FMT_PADDR "]",pc,space,index>=0?func_list[index].name:"???",dnpc);  
+        sprintf(ftrace_buf[ftrace_cnt],FMT_PADDR ":%scall [%s@" FMT_PADDR "]",pc,space,index>=0?func_list[index].name:"???",dnpc);  
     }
     ftrace_cnt=(ftrace_cnt+1)%1024;
 }
