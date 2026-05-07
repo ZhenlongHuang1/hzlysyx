@@ -7,6 +7,7 @@
 #include "memory/pmem.h"
 #include "cpu/cpu.h"
 #include "include/debug.h"
+#include "include/autoconf.h"
 void init_disasm();
 void sdb_set_batch_mode();
 static char * img_file=NULL;

@@ -56,7 +56,7 @@ sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN) $(ARGS) $(IMG)
 gdb: $(BIN)
-	gdb --args $(BIN) $(IMG)
+	gdb --args $(BIN) $(ARGS) $(IMG)
 
 clean:
 	rm -rf $(BUILD_DIR)
