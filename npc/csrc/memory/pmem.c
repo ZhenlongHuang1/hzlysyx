@@ -1,13 +1,11 @@
 #include<stdio.h>
-#include <sys/time.h>
-#include "svdpi.h"
-#include "Vysyx_26040117_top__Dpi.h"
+#include "include/mydpi.h"
+#include "memory/pmem.h"
 
-#define MAX_LENGTH 134217728
 #define SERIAL_PORT 0x10000000u
 #define PEME_START 0x80000000u
 #define RTC_ADDR 0x10000048u
-extern uint32_t pmem[MAX_LENGTH];
+uint32_t pmem[MAX_LENGTH];
 static uint64_t get_time(){
     static struct timeval tv;
     static uint64_t bool_time=0;
@@ -20,7 +18,7 @@ static uint64_t get_time(){
 
     return now-bool_time;
 }
-extern "C" int pmem_read(int raddr){
+extern "C" uint32_t pmem_read(uint32_t raddr){
     uint32_t index=(uint32_t)raddr;
     static uint64_t us=0;
     if(index>=RTC_ADDR&&index<=RTC_ADDR+4){
@@ -36,7 +34,7 @@ extern "C" int pmem_read(int raddr){
     }
     return 0;
 }
-extern "C" void pmem_write(int waddr, int wdata, char wmask) {
+extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, char wmask) {
     uint32_t index=(uint32_t)waddr;
     int addr_shift;
     uint32_t wdata1,wdata2,mask;

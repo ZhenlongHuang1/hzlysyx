@@ -7,9 +7,9 @@ module ysyx_26040117_LSU (clk,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
     wire[31:0] bitmask,bitnmask;
     wire[1:0] raddr_shift;
     wire signbit;
-    import "DPI-C" function int pmem_read(input int raddr);
+    import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
     import "DPI-C" function void pmem_write(
-        input int waddr, input int wdata, input byte wmask);
+        input int unsigned waddr, input int unsigned wdata, input byte wmask);
     assign bitmask={{8{wmask[3]}},{8{wmask[2]}},{8{wmask[1]}},{8{wmask[0]}}};
     assign bitnmask={{8{~wmask[3]&&ifsigned}},{8{~wmask[2]&&ifsigned}},{8{~wmask[1]&&ifsigned}},{8{~wmask[0]&&ifsigned}}};
     assign raddr_shift=raddr[1:0];

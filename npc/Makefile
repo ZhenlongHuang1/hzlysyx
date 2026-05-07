@@ -1,6 +1,6 @@
 TOPNAME=ysyx_26040117_top
 NXDC_FILES=constr/$(TOPNAME).nxdc
-INC_PATH ?=
+INC_PATH +=$(abspath ./csrc)
 IMG ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
@@ -24,7 +24,7 @@ CSRCS += $(SRC_AUTO_BIND)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -g -O3 -flto
-LDFLAGS += -flto
+LDFLAGS += -lreadline -flto
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VERILATOR_FLAGS)\
