@@ -104,6 +104,7 @@ static void ftrace_call(uint32_t pc,uint32_t inst,uint32_t dnpc){
 
 void ftrace_print(){
     int i;
+    printf("print ftrace\n");
     for(i=0;i<ftrace_cnt;i++){
         printf("id:%s\n",ftrace_buf[i]);
     }
