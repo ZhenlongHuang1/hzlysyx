@@ -2,6 +2,7 @@
 #include "memory/pmem.h"
 #include "include/mydpi.h"
 #include "include/macro.h"
+#include "include/autoconf.h"
 #define ANSI_FG_GREEN "\e[1;32m"
 #define ANSI_FG_RED "\e[1;31m"
 #define ANSI_NONE "\e[0m"
