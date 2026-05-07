@@ -4,7 +4,7 @@
 #include<stdlib.h>
 #include "memory/pmem.h"
 #include "cpu/cpu.h"
-int isa_reg_display(){return 1;}
+#include "isa/reg.h"
 static int is_batch_mode=false;
 static char* rl_gets(){
     static char * line_read=NULL;
