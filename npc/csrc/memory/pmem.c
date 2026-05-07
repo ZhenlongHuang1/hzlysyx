@@ -3,18 +3,29 @@
 #include "include/debug.h"
 #include "include/macro.h"
 #include "memory/pmem.h"
-
+#include "include/autoconf.h"
 uint32_t pmem[MAX_LENGTH];
 static uint32_t pmem_read(uint32_t addr){
-    addr=(addr-PMEM_START)>>2;
-    return pmem[addr];
+    uint32_t raddr=(addr-PMEM_START)>>2;
+    uint32_t ret=pmem[raddr];
+#ifdef CONFIG_MTRACE
+    if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
+        Log("Read memory at addr=0x%08x,data=%08x",addr,ret);
+#endif
+    return ret;
 }
 static void pmem_write(uint32_t addr,uint32_t data,uint32_t mask){
     uint32_t addr_shift=addr%4;
-    addr=(addr-PMEM_START)>>2;
+    uint32_t raddr=(addr-PMEM_START)>>2;
     uint32_t wdata1=data<<(addr_shift*8);
-    uint32_t wdata2=pmem[addr]&~(mask<<(addr_shift*8));
-    pmem[addr]=wdata1|wdata2; 
+    uint32_t wdata2=pmem[raddr]&~(mask<<(addr_shift*8));
+    pmem[raddr]=wdata1|wdata2; 
+#ifdef CONFIG_MTRACE
+    if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
+        Log("Write memory at addr=0x%08x,data=%08x",addr,data);
+#endif
+
+
 }
 static uint64_t get_time(){
     static struct timeval tv;
