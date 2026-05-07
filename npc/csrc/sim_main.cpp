@@ -28,7 +28,6 @@ int main(int argc,char**argv){
     //nvboard_bind_all_pins(dut);
     //nvboard_init();
     reset(10);
-    int i=0;
     //while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1){
     sdb_main_loop();
     //nvboard_update();
