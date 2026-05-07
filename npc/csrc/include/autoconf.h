@@ -7,6 +7,6 @@
 //itrace
 #define CONFIG_ITRACE
 //ftrace
-#define CONFIG_FTRACE
+//#define CONFIG_FTRACE
 
 #endif
