@@ -18,6 +18,10 @@ static char* rl_gets(){
     }
     return line_read;
 }
+static int cmd_q(char *args){
+    npc_state.state=NPC_QUIT;
+    return -1;
+}
 static int cmd_c(char *args){
     cpu_exec(-1);
     return 0;
@@ -65,6 +69,7 @@ static struct{
     {"si","Execute the program n times",cmd_si},
     {"info","Print registers",cmd_info},
     {"x","Scan the memory",cmd_x},
+    {"q","Exit NEMU",cmd_q},
 };
 #define NR_CMD (int)(sizeof(cmd_table)/sizeof(cmd_table[0]))
 
