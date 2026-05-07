@@ -52,8 +52,7 @@ void reset(int n){
 static void itrace_record(uint32_t pc,uint32_t inst){
 #ifdef CONFIG_ITRACE
     char *p=logbuf;
-    p+=snprintf(p,sizeof(logbuf),"0x%08x",pc);
-    p+=snprintf(p,4,"0x%08x",inst);
+    p+=snprintf(p,sizeof(logbuf),"0x%08x %08x",pc,inst);
     memset(p,' ',1);
     p+=1;
     void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
