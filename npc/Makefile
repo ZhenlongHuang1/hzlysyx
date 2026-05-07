@@ -3,6 +3,7 @@ NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH +=$(abspath ./csrc)
 AUTOCONF_H = $(abspath ./csrc/include/autoconf.h)
 IMG ?=
+ARGS ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
@@ -53,7 +54,7 @@ lint:
 all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$(BIN) $(IMG)
+	@$(BIN) $($(ARGS)) $(IMG)
 gdb: $(BIN)
 	gdb --args $(BIN) $(IMG)
 
