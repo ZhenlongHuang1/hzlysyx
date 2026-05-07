@@ -44,6 +44,7 @@ void reset(int n){
 static void execute(uint64_t n){
     for(;n>0;n--){
         single_cycle();
+        if(npc_state.state!=NPC_RUNNING)break;
     }
 }
 void cpu_exec(uint64_t n){
