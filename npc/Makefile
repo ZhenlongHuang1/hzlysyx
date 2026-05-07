@@ -54,7 +54,7 @@ lint:
 all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$(BIN) $($(ARGS)) $(IMG)
+	@$(BIN) $(ARGS) $(IMG)
 gdb: $(BIN)
 	gdb --args $(BIN) $(IMG)
 
