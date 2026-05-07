@@ -1,3 +1,4 @@
+CONFIG_ITRACE = y
 TOPNAME=ysyx_26040117_top
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH +=$(abspath ./csrc)
@@ -25,6 +26,22 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O3 -flto
 LDFLAGS += -lreadline -flto
+
+ifneq ($(CONFIG_ITRACE),)
+LIBCAPSTONE = $(NEMU_HOME)/tools/capstone/repo/libcapstone.so.5
+CXXFLAGS += -I$(NEMU_HOME)/tools/capstone/repo/include 
+CXXFLAGS += -I$(NEMU_HOME)/src/utils
+CXXFLAGS += -I$(NEMU_HOME)/include
+CXXFLAGS += -DCONFIG_ITRACE -fpermissive -DCONFIG_ISA_riscv
+CSRCS+=$(NEMU_HOME)/src/utils/disasm.c
+LDFLAGS += -L$(NEMU_HOME)/tools/capstone/repo -lcapstone
+LDFLAGS += -Wl,-rpath,$(NEMU_HOME)/tools/capstone/repo
+$(NEMU_HOME)/src/utils/disasm.c: $(LIBCAPSTONE)
+$(LIBCAPSTONE):
+	$(MAKE) -C $(NEMU_HOME)/tools/capstone
+endif
+
+
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VERILATOR_FLAGS)\

@@ -1,4 +1,5 @@
 #include "cpu/cpu.h"
+#include "memory/pmem.h"
 #include "include/mydpi.h"
 #include "include/macro.h"
 #define ANSI_FG_GREEN "\e[1;32m"
@@ -10,10 +11,11 @@ TOP_NAME* dut;
 VerilatedContext*contextp;
 //VerilatedVcdC* tfp;
 NPC_state npc_state={NPC_RUNNING,0};
+static char logbuf[128];
 static bool g_print_step=false;
 static void trace_and_difftest(){
     
-    if(g_print_step){IFDEF(CONFIG_ITRACE,puts("si"));}
+    if(g_print_step){IFDEF(CONFIG_ITRACE,puts(logbuf));}
 
 }
 extern "C" int get_a0();
@@ -47,9 +49,24 @@ void reset(int n){
     while(n-->0)single_cycle();
     dut->rst=0;
 }
+static void itrace_record(uint32_t pc,uint32_t inst){
+#ifdef CONFIG_ITRACE
+    char *p=logbuf;
+    p+=snprintf(p,sizeof(logbuf),"0x%08x",pc);
+    p+=snprintf(p,4,"0x%08x",inst);
+    memset(p,' ',1);
+    p+=1;
+    void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+    disassemble(p,logbuf+sizeof(logbuf)-p,pc,(uint8_t *)(&inst),4);
+
+#endif
+}
 static void execute(uint64_t n){
     for(;n>0;n--){
+        uint32_t pc=cpu_pc;
+        uint32_t inst=pmem_read(pc);
         single_cycle();
+        itrace_record(pc,inst);
         trace_and_difftest();
         if(npc_state.state!=NPC_RUNNING)break;
     }
