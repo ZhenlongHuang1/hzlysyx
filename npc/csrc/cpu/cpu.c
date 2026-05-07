@@ -1,15 +1,21 @@
 #include "cpu/cpu.h"
 #include "include/mydpi.h"
-
+#include "include/macro.h"
 #define ANSI_FG_GREEN "\e[1;32m"
 #define ANSI_FG_RED "\e[1;31m"
 #define ANSI_NONE "\e[0m"
+#define MAX_INST_TO_PRINT 10
 
 TOP_NAME* dut;
 VerilatedContext*contextp;
 //VerilatedVcdC* tfp;
 NPC_state npc_state={NPC_RUNNING,0};
+static bool g_print_step=false;
+static void trace_and_difftest(){
+    
+    if(g_print_step){IFDEF(CONFIG_ITRACE,puts("si"));}
 
+}
 extern "C" int get_a0();
 extern "C" void npc_trap(){
     npc_state.state=NPC_END;
@@ -44,10 +50,12 @@ void reset(int n){
 static void execute(uint64_t n){
     for(;n>0;n--){
         single_cycle();
+        trace_and_difftest();
         if(npc_state.state!=NPC_RUNNING)break;
     }
 }
 void cpu_exec(uint64_t n){
+    g_print_step=(n<MAX_INST_TO_PRINT);
     switch (npc_state.state) {
         case NPC_END:case NPC_QUIT:
             printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
