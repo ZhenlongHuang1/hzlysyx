@@ -1,4 +1,4 @@
-CONFIG_ITRACE ?=
+CONFIG_ITRACE = y
 TOPNAME=ysyx_26040117_top
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH +=$(abspath ./csrc)
