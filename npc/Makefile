@@ -33,9 +33,8 @@ CXXFLAGS += -I$(NEMU_HOME)/tools/capstone/repo/include
 CXXFLAGS += -I$(NEMU_HOME)/src/utils
 CXXFLAGS += -I$(NEMU_HOME)/include
 CXXFLAGS += -DCONFIG_ITRACE -fpermissive -DCONFIG_ISA_riscv
+CXXFLAGS += -DNEMU_HOME_STR=\"$(NEMU_HOME)\"
 CSRCS+=$(NEMU_HOME)/src/utils/disasm.c
-LDFLAGS += -L$(NEMU_HOME)/tools/capstone/repo -lcapstone
-LDFLAGS += -Wl,-rpath,$(NEMU_HOME)/tools/capstone/repo
 $(NEMU_HOME)/src/utils/disasm.c: $(LIBCAPSTONE)
 $(LIBCAPSTONE):
 	$(MAKE) -C $(NEMU_HOME)/tools/capstone

@@ -18,6 +18,7 @@ SRCS-BLACKLIST-y += src/utils/disasm.c
 else
 LIBCAPSTONE = tools/capstone/repo/libcapstone.so.5
 CFLAGS += -I tools/capstone/repo/include
+CFLAGS += -DNEMU_HOME_STR=\"$(NEMU_HOME)\"
 src/utils/disasm.c: $(LIBCAPSTONE)
 $(LIBCAPSTONE):
 	$(MAKE) -C tools/capstone
