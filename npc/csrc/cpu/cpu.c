@@ -13,6 +13,10 @@ VerilatedContext*contextp;
 NPC_state npc_state={NPC_RUNNING,0};
 static char logbuf[128];
 static bool g_print_step=false;
+static char ftrace_buf[1024][128]={};
+static int ftrace_cnt=0;
+static int depth=0;
+
 static void trace_and_difftest(){
     
     if(g_print_step){IFDEF(CONFIG_ITRACE,puts(logbuf));}
@@ -60,10 +64,55 @@ static void itrace_record(uint32_t pc,uint32_t inst){
 
 #endif
 }
+static void ftrace_record(uint32_t pc,uint32_t dnpc,int is_return){
+    int i;int index1=-1,index2=-1;
+    char space[32];
+    if(!is_return) depth++;
+    int space_len=depth>31?31:depth;
+    if(is_return) {depth--; if(depth<0) depth=0;}
+    memset(space,' ',space_len);
+    space[space_len]='\0';
+    for(i=0;i<func_cnt;i++){
+        if(pc>=func_list[i].low&&pc<=func_list[i].high){
+            index1=i;break;
+        }
+    }
+    for(i=0;i<func_cnt;i++){
+        if(dnpc>=func_list[i].low&&dnpc<=func_list[i].high){
+            index2=i;break;
+        }
+    }
+    if(is_return){
+        sprintf(ftrace_buf[ftrace_cnt],"0x%08x:%sret [%s] to [%s]",pc,space,index1>=0?func_list[index1].name:"???",index2>=0?func_list[index2].name:"???"); 
+    }else{
+        sprintf(ftrace_buf[ftrace_cnt],"0x%08x:%scall [%s@0x%08x], from [%s]",pc,space,index2>=0?func_list[index2].name:"???",dnpc,index1>=0?func_list[index1].name:"???");  
+    }
+    ftrace_cnt=(ftrace_cnt+1)%1024;
+}
+static void ftrace_call(uint32_t pc,uint32_t inst,uint32_t dnpc){
+    int opcode=BITS(inst,6,0);
+    int funct3=BITS(inst,14,12);
+    int rd=BITS(inst,11,7);
+    if(opcode==0b01101111){
+       if(rd==1)ftrace_record(pc,dnpc,0); 
+    }else if(opcode==0b01100111&&funct3==0){
+        if(rd==1)ftrace_record(pc,dnpc,0);
+        else if(BITS(inst,19,15)==1) ftrace_record(pc,dnpc,1);
+    }
+
+}
+
+void ftrace_print(){
+    int i;
+    for(i=0;i<ftrace_cnt;i++){
+        printf("%s\n",ftrace_buf[i]);
+    }
+}
 static void execute(uint64_t n){
     for(;n>0;n--){
         uint32_t pc=cpu_pc;
         uint32_t inst=paddr_read(pc);
+        IFDEF(CONFIG_FTRACE,ftrace_call(pc,inst,cpu_dnpc));
         single_cycle();
         itrace_record(pc,inst);
         trace_and_difftest();

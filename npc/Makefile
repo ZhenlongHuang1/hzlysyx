@@ -1,7 +1,7 @@
-CONFIG_ITRACE = y
 TOPNAME=ysyx_26040117_top
 NXDC_FILES=constr/$(TOPNAME).nxdc
 INC_PATH +=$(abspath ./csrc)
+AUTOCONF_H = $(abspath ./csrc/include/autoconf.h)
 IMG ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
@@ -27,12 +27,12 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O3 -flto
 LDFLAGS += -lreadline -flto
 
-ifneq ($(CONFIG_ITRACE),)
+ifneq ($(shell grep '^\s*\#define\s\+CONFIG_ITRACE' $(AUTOCONF_H)),)
 LIBCAPSTONE = $(NEMU_HOME)/tools/capstone/repo/libcapstone.so.5
 CXXFLAGS += -I$(NEMU_HOME)/tools/capstone/repo/include 
 CXXFLAGS += -I$(NEMU_HOME)/src/utils
 CXXFLAGS += -I$(NEMU_HOME)/include
-CXXFLAGS += -DCONFIG_ITRACE -fpermissive -DCONFIG_ISA_riscv
+CXXFLAGS += -fpermissive -DCONFIG_ISA_riscv
 CXXFLAGS += -DNEMU_HOME_STR=$(NEMU_HOME)
 CSRCS+=$(NEMU_HOME)/src/utils/disasm.c
 $(NEMU_HOME)/src/utils/disasm.c: $(LIBCAPSTONE)

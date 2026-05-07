@@ -13,7 +13,7 @@ extern VerilatedVcdC* tfp;
 
 #define cpu_pc dut->rootp->ysyx_26040117_top__DOT__pc
 #define cpu_gpr(i) dut->rootp->ysyx_26040117_top__DOT__Register1__DOT__rf[i]
-
+#define cpu_dnpc dut->rootp->ysyx_26040117_top__DOT__dnpc
 enum NPC_STATE{NPC_RUNNING,NPC_END,NPC_STOP,NPC_QUIT};
 typedef struct{
     enum NPC_STATE state;
@@ -21,9 +21,19 @@ typedef struct{
 }NPC_state;
 extern NPC_state npc_state;
 
+#define MAX_FUNC_CNT 1024
+typedef struct{
+    char name[32];
+    uint32_t low;
+    uint32_t high;
+}Func_list;
+extern Func_list func_list[MAX_FUNC_CNT];
+extern int func_cnt;
+
+
 extern "C" void npc_trap();
 int is_exit_status_bad();
 void reset(int n);
 void cpu_exec(uint64_t n); 
-
+void ftrace_print();
 #endif

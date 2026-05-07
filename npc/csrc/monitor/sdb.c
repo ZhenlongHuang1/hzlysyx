@@ -6,6 +6,9 @@
 #include "cpu/cpu.h"
 #include "isa/reg.h"
 static int is_batch_mode=false;
+void sdb_set_batch_mode(){
+    is_batch_mode=true;
+}
 static char* rl_gets(){
     static char * line_read=NULL;
     if(line_read){
@@ -43,6 +46,8 @@ static int cmd_info(char*args){
     }else{
         if(strcmp(arg,"r")==0){
             isa_reg_display();
+        }else if(strcmp(arg,"f")==0){
+            ftrace_print();            
         }
     }
     return 0;

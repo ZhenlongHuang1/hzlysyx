@@ -15,6 +15,10 @@
 #define IFDEF(macro, ...) MUXDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
 #define IFNDEF(macro, ...) MUXNDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
 
+#define BITMASK(bits) ((1ull << (bits)) - 1)
+#define BITS(x, hi, lo) (((x) >> (lo)) & BITMASK((hi) - (lo) + 1))
+#define SEXT(x, len) ({ struct { int64_t n : len; } __x = { .n = x }; (uint64_t)__x.n; })
+
 #if !defined(likely)
 #define likely(cond)   __builtin_expect(cond, 1)
 #define unlikely(cond) __builtin_expect(cond, 0)
