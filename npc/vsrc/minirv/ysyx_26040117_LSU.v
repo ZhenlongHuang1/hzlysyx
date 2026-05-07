@@ -7,8 +7,8 @@ module ysyx_26040117_LSU (clk,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
     wire[31:0] bitmask,bitnmask;
     wire[1:0] raddr_shift;
     wire signbit;
-    import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
-    import "DPI-C" function void pmem_write(
+    import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
+    import "DPI-C" function void paddr_write(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);
     assign bitmask={{8{wmask[3]}},{8{wmask[2]}},{8{wmask[1]}},{8{wmask[0]}}};
     assign bitnmask={{8{~wmask[3]&&ifsigned}},{8{~wmask[2]&&ifsigned}},{8{~wmask[1]&&ifsigned}},{8{~wmask[0]&&ifsigned}}};
@@ -26,7 +26,7 @@ module ysyx_26040117_LSU (clk,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
     end
     always @(*) begin
         if (valid) begin // 有读写请求时
-            rdata0 = pmem_read(raddr);
+            rdata0 = paddr_read(raddr);
         end
         else begin
             rdata0 = 0;
@@ -34,7 +34,7 @@ module ysyx_26040117_LSU (clk,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
     end
     always @(posedge clk) begin
         if (wen) begin
-            pmem_write(waddr,wdata,wmask);
+            paddr_write(waddr,wdata,wmask);
         end
     end
 endmodule

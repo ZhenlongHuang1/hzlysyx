@@ -63,7 +63,7 @@ static void itrace_record(uint32_t pc,uint32_t inst){
 static void execute(uint64_t n){
     for(;n>0;n--){
         uint32_t pc=cpu_pc;
-        uint32_t inst=pmem_read(pc);
+        uint32_t inst=paddr_read(pc);
         single_cycle();
         itrace_record(pc,inst);
         trace_and_difftest();

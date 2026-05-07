@@ -1,11 +1,21 @@
 #include<stdio.h>
 #include "include/mydpi.h"
+#include "include/debug.h"
+#include "include/macro.h"
 #include "memory/pmem.h"
 
-#define SERIAL_PORT 0x10000000u
-#define PEME_START 0x80000000u
-#define RTC_ADDR 0x10000048u
 uint32_t pmem[MAX_LENGTH];
+static uint32_t pmem_read(uint32_t addr){
+    addr=(addr-PMEM_START)>>2;
+    return pmem[addr];
+}
+static void pmem_write(uint32_t addr,uint32_t data,uint32_t mask){
+    uint32_t addr_shift=addr%4;
+    addr=(addr-PMEM_START)>>2;
+    uint32_t wdata1=data<<(addr_shift*8);
+    uint32_t wdata2=pmem[addr]&~(mask<<(addr_shift*8));
+    pmem[addr]=wdata1|wdata2; 
+}
 static uint64_t get_time(){
     static struct timeval tv;
     static uint64_t bool_time=0;
@@ -18,26 +28,21 @@ static uint64_t get_time(){
 
     return now-bool_time;
 }
-extern "C" uint32_t pmem_read(uint32_t raddr){
-    uint32_t index=(uint32_t)raddr;
+extern "C" uint32_t paddr_read(uint32_t raddr){
     static uint64_t us=0;
-    if(index>=RTC_ADDR&&index<=RTC_ADDR+4){
-        if(index==RTC_ADDR+4){
+    if(likely(in_pmem(raddr)))return pmem_read(raddr);
+    if(raddr>=RTC_ADDR&&raddr<=RTC_ADDR+4){
+        if(raddr==RTC_ADDR+4){
             us=get_time();
             return us>>32;
         }else {
             return (uint32_t)us;
         }
-    }else if(index>=PEME_START){
-        index=(index-PEME_START)>>2;
-        return pmem[index];
     }
     return 0;
 }
-extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, char wmask) {
-    uint32_t index=(uint32_t)waddr;
-    int addr_shift;
-    uint32_t wdata1,wdata2,mask;
+extern "C" void paddr_write(uint32_t waddr, uint32_t wdata, char wmask) {
+    uint32_t data,mask;
     if(wmask==1){
         mask=0x000000ff;
     }else if(wmask==3){
@@ -45,14 +50,9 @@ extern "C" void pmem_write(uint32_t waddr, uint32_t wdata, char wmask) {
     }else{
         mask=0xffffffff;
     }
-    wdata1=(uint32_t)wdata&mask;
-    if(index==SERIAL_PORT){
-        putc(wdata1,stdout);
-    }else if(index>=PEME_START){
-        addr_shift=index%4;
-        index=(index-PEME_START)>>2;
-        wdata1=wdata1<<(addr_shift*8);
-        wdata2=pmem[index]&~(mask<<(addr_shift*8));
-        pmem[index]=wdata1|wdata2;
+    data=(uint32_t)wdata&mask;
+    if(likely(in_pmem(waddr))){pmem_write(waddr,data,mask);return ;}
+    if(waddr==SERIAL_PORT){
+        putc(data,stdout);
     }
 }

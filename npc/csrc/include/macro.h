@@ -14,4 +14,10 @@
 #define __KEEP(...) __VA_ARGS__
 #define IFDEF(macro, ...) MUXDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
 #define IFNDEF(macro, ...) MUXNDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
+
+#if !defined(likely)
+#define likely(cond)   __builtin_expect(cond, 1)
+#define unlikely(cond) __builtin_expect(cond, 0)
+#endif
+
 #endif
