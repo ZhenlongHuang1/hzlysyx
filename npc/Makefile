@@ -25,8 +25,8 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 CSRCS += $(SRC_AUTO_BIND)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O3 -flto
-LDFLAGS += -lreadline -flto
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g #-O3 -flto
+LDFLAGS += -lreadline #-flto
 
 ifneq ($(shell grep '^\s*\#define\s\+CONFIG_ITRACE' $(AUTOCONF_H)),)
 LIBCAPSTONE = $(NEMU_HOME)/tools/capstone/repo/libcapstone.so.5
