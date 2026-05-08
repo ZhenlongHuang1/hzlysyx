@@ -27,6 +27,7 @@ static long load_img(){
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
     int ret=fread(pmem,1,fpsize,fp);
+    printf("Opening image: %s, size: %ld\n", img_file, fpsize);
     assert(ret==fpsize);
     fclose(fp);
     return fpsize;
@@ -80,7 +81,7 @@ static int parse_args(int argc, char *argv[]) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'e': elf_file=optarg; break;
-      case 1: img_file = optarg; return 0;
+      case 1: img_file = optarg; break;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b,--batch              run with batch mode\n");
