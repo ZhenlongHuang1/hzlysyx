@@ -9,5 +9,5 @@
 //ftrace
 #define CONFIG_FTRACE 1
 //difftest
-#define CONFIG_DIFFTEST
+//#define CONFIG_DIFFTEST
 #endif
