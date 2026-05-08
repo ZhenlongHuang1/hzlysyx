@@ -3,6 +3,7 @@
 #include "include/mydpi.h"
 #include "include/macro.h"
 #include "include/autoconf.h"
+#include "include/debug.h"
 #define ANSI_FG_GREEN "\e[1;32m"
 #define ANSI_FG_RED "\e[1;31m"
 #define ANSI_NONE "\e[0m"
@@ -12,19 +13,29 @@ TOP_NAME* dut;
 VerilatedContext*contextp;
 //VerilatedVcdC* tfp;
 NPC_state npc_state={NPC_RUNNING,0};
+CPU_state cpu_dut;
+
 static char logbuf[128];
 static bool g_print_step=false;
 static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;
 static int depth=0;
-
-static void trace_and_difftest(){
+void get_cpu_state(CPU_state *cpu_dut){
+    int i;
+    for(i=0;i<32;i++){
+        cpu_dut->gpr[i]=cpu_gpr(i);
+    }
+    cpu_dut->pc=cpu_pc;
+}
+static void trace_and_difftest(uint32_t pc){
     
     if(g_print_step){IFDEF(CONFIG_ITRACE,puts(logbuf));}
+    IFDEF(CONFIG_DIFFTEST, difftest_step(pc, cpu_pc));
 
 }
 extern "C" int get_a0();
 extern "C" void npc_trap(){
+    difftest_skip_ref(); 
     npc_state.state=NPC_END;
     svScope scope=svGetScopeFromName("TOP.ysyx_26040117_top.Register1");
     if(scope){
@@ -117,14 +128,14 @@ static void execute(uint64_t n){
         IFDEF(CONFIG_FTRACE,ftrace_call(pc,inst,cpu_dnpc));
         single_cycle();
         itrace_record(pc,inst);
-        trace_and_difftest();
+        trace_and_difftest(pc);
         if(npc_state.state!=NPC_RUNNING)break;
     }
 }
 void cpu_exec(uint64_t n){
     g_print_step=(n<MAX_INST_TO_PRINT);
     switch (npc_state.state) {
-        case NPC_END:case NPC_QUIT:
+        case NPC_END:case NPC_QUIT:case NPC_ABORT:
             printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
             return;
         default:npc_state.state=NPC_RUNNING;
@@ -132,12 +143,11 @@ void cpu_exec(uint64_t n){
     execute(n);
     switch(npc_state.state){
         case NPC_RUNNING:npc_state.state=NPC_STOP;break;
-        case NPC_END: 
-            if(npc_state.halt_ret==0){
-                printf(ANSI_FG_GREEN"HIT GOOD TRAP" ANSI_NONE "\n");
-            }else{
-                printf(ANSI_FG_RED "HITBAD TRAP" ANSI_NONE "\n");
-            }
-
+        case NPC_END:case NPC_ABORT: 
+            Log("npc: %s at pc = 0x%08x \n",
+                (npc_state.state==NPC_ABORT? ANSI_FG_RED "ABORT":
+                (npc_state.halt_ret==0?ANSI_FG_GREEN"HIT GOOD TRAP":
+                ANSI_FG_RED "HITBAD TRAP" ANSI_NONE)),
+                npc_state.halt_pc);
     }
 }

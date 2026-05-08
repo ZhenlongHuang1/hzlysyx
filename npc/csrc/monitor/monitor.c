@@ -10,6 +10,7 @@
 #include "include/autoconf.h"
 void init_disasm();
 void sdb_set_batch_mode();
+void init_difftest(const char*ref_so_file,long img_size);
 static char * img_file=NULL;
 static char * elf_file=NULL;
 Func_list func_list[1024];
@@ -96,6 +97,8 @@ void init_monitor(int argc,char*argv[]){
     long img_size=load_img();
     //init ftrace 
     init_func();
+    //difftest
+    init_difftest(str(NEMU_HOME_STR) "/build/riscv32-nemu-interpreter-so",img_size);
     //initial verilator
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);

@@ -13,4 +13,15 @@ void isa_reg_display() {
     }
     printf("pc   0x%08X\n",cpu_pc);
 }
-
+bool isa_difftest_checkregs(CPU_state *ref_r){
+    int i;
+    for(i=0;i<32;i++){
+        if(ref_r->gpr[i]!=cpu_gpr(i)){
+            return false;
+        }
+    }
+    if(ref_r->pc!=cpu_pc){
+        return false;
+    }
+    return true;
+} 

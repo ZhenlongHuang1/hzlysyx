@@ -41,7 +41,6 @@ $(LIBCAPSTONE):
 	$(MAKE) -C $(NEMU_HOME)/tools/capstone
 endif
 
-
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VERILATOR_FLAGS)\
