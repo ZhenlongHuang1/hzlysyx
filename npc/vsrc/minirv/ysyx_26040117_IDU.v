@@ -17,17 +17,17 @@ module ysyx_26040117_IDU(inst,ebreak,rs1,rs2,rd,imm,op,mytype,wmask,ifsigned);
     assign rs1=inst[19:15];
     assign rs2=inst[24:20];
     assign mytype={type_R,type_I_compute,type_S,type_I_LOAD,type_B,type_I_JALR,type_J,type_U_AUIPC,type_U_LUI};
-    assign type_I_compute=(opcode==7'b0010011);
-    assign type_I_JALR=(opcode==7'b1100111);
-    assign type_I_LOAD=(opcode==7'b0000011);
-    assign type_U_LUI=opcode==7'b0110111;
-    assign type_U_AUIPC=opcode==7'b0010111;
-    assign type_R=(opcode==7'b0110011);
+    assign type_I_compute=(opcode==7'b0010011);//ADDI~SRAI
+    assign type_I_JALR=(opcode==7'b1100111);//JALR
+    assign type_I_LOAD=(opcode==7'b0000011);//LB~LHU
+    assign type_U_LUI=opcode==7'b0110111;//LUI
+    assign type_U_AUIPC=opcode==7'b0010111;//AUIPC
+    assign type_R=(opcode==7'b0110011);//ADD~AND
     assign type_I=(type_I_JALR)||(type_I_LOAD)||(type_I_compute);
-    assign type_S=(opcode==7'b0100011);
-    assign type_B=(opcode==7'b1100011);
+    assign type_S=(opcode==7'b0100011);//SB~SW
+    assign type_B=(opcode==7'b1100011);//BEQ~BGEU
     assign type_U=type_U_LUI||type_U_AUIPC;
-    assign type_J=(opcode==7'b1101111);
+    assign type_J=(opcode==7'b1101111);//JAL
     
     assign immI={{20{inst[31]}},inst[31:20]};
     assign immS={{20{inst[31]}},inst[31:25],inst[11:7]};
