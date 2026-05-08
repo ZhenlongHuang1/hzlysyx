@@ -4,7 +4,7 @@ module ysyx_26040117_EXU(num1,num2,op,result);
     output reg [31:0]result;
     always@(*)begin
         case(op)
-            4'b0000:result=num1-num2;
+            4'b0000:result=num1+num2;//ADDI,ADD,all other not ALU commands
             default:result=32'd0;
         endcase
     end
