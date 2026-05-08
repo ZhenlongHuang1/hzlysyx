@@ -10,11 +10,9 @@ void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
 static bool is_skip_ref = false;
-static int skip_dut_nr_inst = 0;
 
 void difftest_skip_ref() {
   is_skip_ref = true;
-  skip_dut_nr_inst = 0;
 }
 
 
@@ -59,21 +57,6 @@ static void checkregs(CPU_state *ref, uint32_t pc) {
 
 void difftest_step(uint32_t pc, uint32_t npc) {
   CPU_state ref_r;
-
-  if (skip_dut_nr_inst > 0) {
-    ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
-    if (ref_r.pc == npc) {
-      skip_dut_nr_inst = 0;
-      checkregs(&ref_r, npc);
-      return;
-    }
-    skip_dut_nr_inst --;
-    if (skip_dut_nr_inst == 0){
-        Log("can not catch up with ref.pc = 0x%08x,at pc =0x%08x",ref_r.pc,pc);
-        assert(0);
-    }
-    return;
-  }
 
   if (is_skip_ref) {
     // to skip the checking of an instruction, just copy the reg state to reference design
