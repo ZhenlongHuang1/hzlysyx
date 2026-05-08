@@ -15,7 +15,7 @@ static char* rl_gets(){
         free(line_read);
         line_read=NULL; 
     }
-    line_read=readline("(nemu) ");
+    line_read=readline("(npc) ");
     if(line_read&&*line_read){
         add_history(line_read);
     }
@@ -74,7 +74,7 @@ static struct{
     {"si","Execute the program n times",cmd_si},
     {"info","Print registers",cmd_info},
     {"x","Scan the memory",cmd_x},
-    {"q","Exit NEMU",cmd_q},
+    {"q","Exit NPC",cmd_q},
 };
 #define NR_CMD (int)(sizeof(cmd_table)/sizeof(cmd_table[0]))
 
