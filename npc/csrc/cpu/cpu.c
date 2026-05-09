@@ -149,5 +149,6 @@ void cpu_exec(uint64_t n){
                 (npc_state.halt_ret==0?ANSI_FG_GREEN"HIT GOOD TRAP":
                 ANSI_FG_RED "HITBAD TRAP" ANSI_NONE)),
                 npc_state.halt_pc);
+            Log("%s\n",logbuf);
     }
 }
