@@ -145,8 +145,8 @@ void cpu_exec(uint64_t n){
         case NPC_RUNNING:npc_state.state=NPC_STOP;break;
         case NPC_END:case NPC_ABORT: 
             Log("npc: %s at pc = 0x%08x \n%s\n",
-                (npc_state.state==NPC_ABORT? ANSI_FG_RED "ABORT":
-                (npc_state.halt_ret==0?ANSI_FG_GREEN"HIT GOOD TRAP":
+                (npc_state.state==NPC_ABORT? ANSI_FG_RED "ABORT" ANSI_NONE:
+                (npc_state.halt_ret==0?ANSI_FG_GREEN"HIT GOOD TRAP" ANSI_NONE:
                 ANSI_FG_RED "HITBAD TRAP" ANSI_NONE)),
                 npc_state.halt_pc,logbuf);
     }
