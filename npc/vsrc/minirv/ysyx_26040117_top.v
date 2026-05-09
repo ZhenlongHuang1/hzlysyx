@@ -16,7 +16,7 @@ module ysyx_26040117_top(clk,rst
     //WriteBack Unit
     assign snpc=pc+32'd4;
     assign dnpc= imm+(mytype[3]?src1:pc);//JALR:other
-    ysyx_26040117_WBU WBU1(.clk(clk),.rst(rst),.br_token(1'b0),.ebreak(ebreak),.imm(imm),.snpc(snpc),.dnpc(dnpc),.result(result),.ramdata(ramdata),.mytype(mytype),.srcd(srcd),.pc(pc));
+    ysyx_26040117_WBU WBU1(.clk(clk),.rst(rst),.br_token(result[0]),.ebreak(ebreak),.imm(imm),.snpc(snpc),.dnpc(dnpc),.result(result),.ramdata(ramdata),.mytype(mytype),.srcd(srcd),.pc(pc));
     //Register block
     ysyx_26040117_RegisterFile Register1(.clk(clk),.wdata(srcd),.waddr(rd),.wen((~rst)&&((|mytype[3:0])||mytype[5]||(|mytype[8:7]))),.raddr1(rs1),.raddr2(rs2),.rdata1(src1),.rdata2(src2));
     //EXecution Unit
