@@ -11,7 +11,7 @@
 
 TOP_NAME* dut;
 VerilatedContext*contextp;
-//VerilatedVcdC* tfp;
+VerilatedVcdC* tfp;
 NPC_state npc_state={NPC_RUNNING,0};
 CPU_state cpu_dut;
 
@@ -54,11 +54,9 @@ int is_exit_status_bad() {
 
 void single_cycle(){
     dut->clk=0;dut->eval();
-    //tfp->dump(contextp->time());
-    //contextp->timeInc(1);
+    IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
     dut->clk=1;dut->eval();
-    //tfp->dump(contextp->time());
-    //contextp->timeInc(1);
+    IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
 }
 void reset(int n){
     dut->rst=1;

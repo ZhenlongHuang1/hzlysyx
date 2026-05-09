@@ -102,6 +102,13 @@ void init_monitor(int argc,char*argv[]){
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
     dut=new TOP_NAME(contextp);
+    //open vcd trace
+    IFDEF(CONFIG_VCD_TRACE,{
+        contextp->traceEverOn(true);
+        tfp=new VerilatedVcdC;
+        dut->trace(tfp,CONFIG_VCD_TRACE_LENGTH);
+        tfp->open("simx.vcd");
+    })
     //reset
     reset(10);
     //difftest
@@ -111,5 +118,5 @@ void init_monitor(int argc,char*argv[]){
 void free_monitor(){
     delete dut;
     delete contextp;
-
+    IFDEF(CONFIG_VCD_TRACE,tfp->close();delete tfp;)
 }
