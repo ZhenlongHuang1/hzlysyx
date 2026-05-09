@@ -18,7 +18,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r){
     bool flag=true;
     for(i=0;i<32;i++){
         if(ref_r->gpr[i]!=cpu_gpr(i)){
-            printf("difftest error at %d gpr_ref=%x,gpr_dut=%x\n",ref_r->gpr[i],cpu_gpr(i));        
+            printf("difftest error at %d gpr_ref=%x,gpr_dut=%x\n",i,ref_r->gpr[i],cpu_gpr(i));        
             flag=false;
         }
     }
