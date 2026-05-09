@@ -13,8 +13,8 @@ module ysyx_26040117_WBU(clk,rst,br_token,ebreak,imm,snpc,dnpc,result,ramdata,my
                 ({32{mytype[1]}}&dnpc);
     assign notjump=~((|mytype[3:2])||(mytype[4]&&br_token));
     assign pc_next=({32{notjump}}&snpc)|
-                    ({32{mytype[2]||(mytype[4]&&br_token)}}&dnpc)|
-                    ({{31{mytype[3]}},1'b0}&dnpc);
+                    ({32{mytype[2]||(mytype[4]&&br_token)}}&dnpc)|//JAL||跳转
+                    ({{31{mytype[3]}},1'b0}&dnpc);//JALR
     always@(posedge clk)begin
         if(rst)
             pc<=32'h80000000;

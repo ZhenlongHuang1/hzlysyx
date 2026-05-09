@@ -13,7 +13,7 @@ module ysyx_26040117_LSU (clk,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
     assign bitmask={{8{wmask[3]}},{8{wmask[2]}},{8{wmask[1]}},{8{wmask[0]}}};
     assign bitnmask={{8{~wmask[3]&&ifsigned}},{8{~wmask[2]&&ifsigned}},{8{~wmask[1]&&ifsigned}},{8{~wmask[0]&&ifsigned}}};
     assign raddr_shift=raddr[1:0];
-    assign rdata=(rdata1&bitmask)|(bitnmask&{32{signbit}});
+    assign rdata=(rdata1&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
     assign signbit=(~wmask[3]&&wmask[1]&&rdata1[15])||(~(|wmask[3:1])&&rdata1[7]);
     always @(*) begin
         case (raddr_shift)
