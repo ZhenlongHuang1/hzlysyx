@@ -15,13 +15,16 @@ void isa_reg_display() {
 }
 bool isa_difftest_checkregs(CPU_state *ref_r){
     int i;
+    bool flag=true;
     for(i=0;i<32;i++){
         if(ref_r->gpr[i]!=cpu_gpr(i)){
-            return false;
+            printf("difftest error at %d gpr_ref=%x,gpr_dut=%x\n",ref_r->gpr[i],cpu_gpr(i));        
+            flag=false;
         }
     }
     if(ref_r->pc!=cpu_pc){
-        return false;
+        printf("difftest error at npc_ref=0x%08x,npc_dut=0x%08x\n",ref_r->pc,cpu_pc);
+        flag=false;
     }
-    return true;
+    return flag;
 } 
