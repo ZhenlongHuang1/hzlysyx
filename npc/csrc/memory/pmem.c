@@ -4,7 +4,7 @@
 #include "include/macro.h"
 #include "memory/pmem.h"
 #include "include/autoconf.h"
-uint32_t pmem[MAX_LENGTH];
+uint32_t pmem[MAX_LENGTH]={0};
 static uint32_t pmem_read(uint32_t addr){
     uint32_t raddr=(addr-PMEM_START)>>2;
     uint32_t ret=pmem[raddr];

@@ -37,6 +37,7 @@ extern "C" int get_a0();
 extern "C" void npc_trap(){
     difftest_skip_ref(); 
     npc_state.state=NPC_END;
+    npc_state.halt_pc=cpu_pc;//?
     svScope scope=svGetScopeFromName("TOP.ysyx_26040117_top.Register1");
     if(scope){
         svSetScope(scope);

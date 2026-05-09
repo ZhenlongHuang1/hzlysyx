@@ -11,7 +11,7 @@
 extern uint32_t pmem[MAX_LENGTH];
 
 static inline int in_pmem(uint32_t addr){
-    return addr-PMEM_START<PMEM_SIZE;
+    return (addr-PMEM_START<PMEM_SIZE)&&(addr>=PMEM_START);
 }
 extern "C" uint32_t paddr_read(uint32_t raddr);
 extern "C" void paddr_write(uint32_t waddr, uint32_t wdata, char wmask);

@@ -13,6 +13,7 @@ int main(int argc,char**argv){
     //nvboard_bind_all_pins(dut);
     //nvboard_init();
     //while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1)
+    printf("DEBUG: Enter init_monitor!\n"); fflush(stdout);
     init_monitor(argc,argv);
     sdb_main_loop();
     free_monitor();
