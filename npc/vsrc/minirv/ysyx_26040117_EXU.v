@@ -16,6 +16,7 @@ module ysyx_26040117_EXU(num1,num2,op,result);
             5'b00000:result=result0;//ADDI,ADD,all other not ALU/condition commands
             5'b00010:result={31'd0,overflow^result0[31]};//SLTI,SLT
             5'b00011:result={31'd0,~carry};//SLTIU,SLTU
+            5'b00001:result=num1<<(num2[4:0]);//SLLI,SLL
             default:result=32'd0;
         endcase
     end
