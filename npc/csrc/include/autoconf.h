@@ -4,12 +4,13 @@
 //#define CONFIG_MTRACE 1
 #define CONFIG_MTRACE_START 0x80000000
 #define CONFIG_MTRACE_END 0x80000000
+
 //itrace
-#define CONFIG_ITRACE 1
+//#define CONFIG_ITRACE 1
 //ftrace
-#define CONFIG_FTRACE 1
+//#define CONFIG_FTRACE 1
 //difftest
-#define CONFIG_DIFFTEST 1
+//#define CONFIG_DIFFTEST 1
 //vcd_trace
 //#define CONFIG_VCD_TRACE 1
 #define CONFIG_VCD_TRACE_LENGTH 400

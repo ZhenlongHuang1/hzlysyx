@@ -124,9 +124,9 @@ static void execute(uint64_t n){
     for(;n>0;n--){
         uint32_t pc=cpu_pc;
         uint32_t inst=paddr_read(pc);
-        IFDEF(CONFIG_FTRACE,ftrace_call(pc,inst,cpu_dnpc));
+        IFDEF(CONFIG_FTRACE,ftrace_call(pc,inst,cpu_dnpc);)
         single_cycle();
-        itrace_record(pc,inst);
+        IFDEF(CONFIG_ITRACE,itrace_record(pc,inst);)
         trace_and_difftest(pc);
         if(npc_state.state!=NPC_RUNNING)break;
     }

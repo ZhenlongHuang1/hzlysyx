@@ -97,7 +97,7 @@ void init_monitor(int argc,char*argv[]){
     //read pmem of IMG file
     long img_size=load_img();
     //init ftrace 
-    init_func();
+    IFDEF(CONFIG_FTRACE,init_func();)
     //initial verilator
     contextp=new VerilatedContext;
     contextp->commandArgs(argc,argv);
