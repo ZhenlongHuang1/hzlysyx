@@ -64,7 +64,7 @@ void difftest_step(uint32_t pc, uint32_t npc) {
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
     is_skip_ref = false;
     return;
-  }else{is_skip_ref--;}
+  }else if(is_skip_ref>0){is_skip_ref--;}
 
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
