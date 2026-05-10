@@ -44,7 +44,7 @@ static uint64_t get_time(){
 extern "C" uint32_t paddr_read(uint32_t raddr){
     static uint64_t us=0;
     if(likely(in_pmem(raddr)))return pmem_read(raddr);
-    printf("read pc=%08x %08x\n",cpu_pc,raddr);
+    printf("read pc=%08x %08x,clk=%d\n",cpu_pc,raddr,dut->clk);
     if(dut->clk==0)difftest_skip_ref();
     if(raddr>=RTC_ADDR&&raddr<=RTC_ADDR+4){
         if(raddr==RTC_ADDR+4){
@@ -67,8 +67,8 @@ extern "C" void paddr_write(uint32_t waddr, uint32_t wdata, char wmask) {
     }
     data=(uint32_t)wdata&mask;
     if(likely(in_pmem(waddr))){pmem_write(waddr,data,mask);return ;}
-    printf("write pc=%08x %08x %08x\n",cpu_pc,waddr,wdata);
-    if(dut->clk==0)difftest_skip_ref();
+    printf("write pc=%08x %08x %08x,clk=%d\n",cpu_pc,waddr,wdata,dut->clk);
+    difftest_skip_ref();
     if(waddr==SERIAL_PORT){
         putc(data,stdout);
     }
