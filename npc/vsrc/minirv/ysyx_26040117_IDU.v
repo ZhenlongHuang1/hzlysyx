@@ -40,7 +40,7 @@ module ysyx_26040117_IDU(inst,ebreak,rs1,rs2,rd,imm,op,mytype,wmask,ifsigned);
                 (immU&{32{type_U}})|
                 (immJ&{32{type_J}});
     assign funct3=inst[14:12];
-    assign op = {1'b1,inst[30],funct3}&{type_B,type_R,{3{type_R||type_I_compute||type_B}}};//srai,srli?
+    assign op = {1'b1,inst[30],funct3}&{type_B,type_R||(type_I_compute&&(funct3==3'b101)),{3{type_R||type_I_compute||type_B}}};//srai,srli?
     
     assign wmask={4'b0000,{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
     assign ifsigned=~funct3[2];
