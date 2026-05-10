@@ -4,6 +4,7 @@
 #include "include/macro.h"
 #include "memory/pmem.h"
 #include "include/autoconf.h"
+void difftest_skip_ref();
 uint32_t pmem[MAX_LENGTH]={0};
 static uint32_t pmem_read(uint32_t addr){
     uint32_t raddr=(addr-PMEM_START)>>2;
@@ -43,6 +44,7 @@ extern "C" uint32_t paddr_read(uint32_t raddr){
     static uint64_t us=0;
     if(likely(in_pmem(raddr)))return pmem_read(raddr);
     if(raddr>=RTC_ADDR&&raddr<=RTC_ADDR+4){
+        difftest_skip_ref();
         if(raddr==RTC_ADDR+4){
             us=get_time();
             return us>>32;
@@ -64,6 +66,7 @@ extern "C" void paddr_write(uint32_t waddr, uint32_t wdata, char wmask) {
     data=(uint32_t)wdata&mask;
     if(likely(in_pmem(waddr))){pmem_write(waddr,data,mask);return ;}
     if(waddr==SERIAL_PORT){
+        difftest_skip_ref();
         putc(data,stdout);
     }
 }
