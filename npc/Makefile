@@ -63,7 +63,7 @@ include ../Makefile
 sta:
 	@mkdir -p $(SYN_DIR)
 	$(MAKE) -C $(YOSYS_HOME) sta DESIGN=$(TOPNAME) \
-		RTL_FILES=$(VSRCS) O=$(SYN_DIR)
+		RTL_FILES="$(VSRCS)" O=$(SYN_DIR)
 syn:
 	@mkdir -p $(SYN_DIR)
 	$(MAKE) -C $(YOSYS_HOME) syn DESIGN=$(TOPNAME) \
