@@ -54,9 +54,9 @@ int is_exit_status_bad() {
 }
 
 void single_cycle(){
-    dut->clk=1;dut->eval();
+    dut->clk=0;dut->eval();//对当前pc的指令设置跳过difftest
     IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
-    dut->clk=0;dut->eval();
+    dut->clk=1;dut->eval();//执行当前pc指令，并将状态设计为下一个pc
     IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
 }
 void reset(int n){
