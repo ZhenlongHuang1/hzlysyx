@@ -41,10 +41,12 @@ static uint64_t get_time(){
 
     return now-bool_time;
 }
+extern bool is_skip_ref;
 extern "C" uint32_t paddr_read(uint32_t raddr){
     static uint64_t us=0;
     if(likely(in_pmem(raddr)))return pmem_read(raddr);
     printf("read pc=%08x %08x,clk=%d\n",cpu_pc,raddr,dut->clk);
+    printf("Skip bit addr in pmem: %p\n", &is_skip_ref);
     difftest_skip_ref();
     if(raddr>=RTC_ADDR&&raddr<=RTC_ADDR+4){
         if(raddr==RTC_ADDR+4){

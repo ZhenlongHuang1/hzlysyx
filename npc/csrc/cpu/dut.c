@@ -9,7 +9,7 @@ void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
-static bool is_skip_ref = false;
+bool is_skip_ref = false;
 
 void difftest_skip_ref() {
   is_skip_ref = true;
@@ -57,7 +57,7 @@ static void checkregs(CPU_state *ref, uint32_t pc) {
 
 void difftest_step(uint32_t pc, uint32_t npc) {
   CPU_state ref_r;
-
+    printf("Skip bit addr in dut: %p\n", &is_skip_ref);
   if (is_skip_ref) {
     // to skip the checking of an instruction, just copy the reg state to reference design
      printf("Difftest skipping at PC = 0x%08x\n", pc);
