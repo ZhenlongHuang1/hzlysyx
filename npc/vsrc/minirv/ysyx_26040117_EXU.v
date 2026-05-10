@@ -27,6 +27,7 @@ module ysyx_26040117_EXU(num1,num2,op,result);
             5'b00111:result=num1&num2;//ANDI,AND
             5'b00001:result=num1<<(num2[4:0]);//SLLI,SLL
             5'b00101:result=num1>>(num2[4:0]);//SRLI,SRL
+            5'b01101:result=$signed(num1)>>>(num2[4:0]);//SRAI
             default:result=32'd0;
         endcase
     end
