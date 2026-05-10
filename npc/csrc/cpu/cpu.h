@@ -31,7 +31,7 @@ void get_cpu_state(CPU_state *cpu_dut);
 #define cpu \
     (*({get_cpu_state(&cpu_dut);\
      &cpu_dut;}))
-void difftest_skip_ref();
+void difftest_skip_ref(int skip_ref);
 void init_difftest(const char *ref_so_file, long img_size);
 void difftest_step(uint32_t pc, uint32_t npc);
 #define MAX_FUNC_CNT 1024

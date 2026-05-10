@@ -35,7 +35,7 @@ static void trace_and_difftest(uint32_t pc){
 }
 extern "C" int get_a0();
 extern "C" void npc_trap(){
-    difftest_skip_ref(); 
+    difftest_skip_ref(1); 
     npc_state.state=NPC_END;
     npc_state.halt_pc=cpu_pc;//?
     svScope scope=svGetScopeFromName("TOP.ysyx_26040117_top.Register1");
