@@ -45,9 +45,9 @@ extern "C" uint32_t paddr_read(uint32_t raddr){
     static uint64_t us=0;
     if(likely(in_pmem(raddr)))return pmem_read(raddr);
     printf("read pc=%08x %08x,clk=%d\n",cpu_pc,raddr,dut->clk);
+    difftest_skip_ref(2);
     if(raddr>=RTC_ADDR&&raddr<=RTC_ADDR+4){
         if(raddr==RTC_ADDR+4){
-            difftest_skip_ref(2);
             us=get_time();
             return us>>32;
         }else {
