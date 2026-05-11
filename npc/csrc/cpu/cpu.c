@@ -12,7 +12,7 @@
 TOP_NAME* dut;
 VerilatedContext*contextp;
 VerilatedVcdC* tfp;
-NPC_state npc_state={NPC_RUNNING,0};
+NPC_state npc_state={NPC_RUNNING,0,0x80000000};
 CPU_state cpu_dut;
 
 static char logbuf[128];
