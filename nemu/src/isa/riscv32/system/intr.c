@@ -20,9 +20,7 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    */
     cpu.sr[MEPC]=epc;
     cpu.sr[MCAUSE]=NO;
-    cpu.pc=cpu.sr[MTEVC];
-    
-    return 0;
+    return cpu.sr[MTEVC];
 }
 
 word_t isa_query_intr() {

@@ -151,7 +151,7 @@ static int decode_exec(Decode *s) {
                                                                         R(rd) = src1 % src2;
                                                                     });
 
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, isa_raise_intr(cpu.gpr[17],s->pc) );
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc=isa_raise_intr(cpu.gpr[17],s->pc) );
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, switch (imm) {
                                                                         case 0x305:R(rd)=cpu.sr[MTEVC];cpu.sr[MTEVC]=src1;

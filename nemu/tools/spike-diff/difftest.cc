@@ -121,7 +121,7 @@ __EXPORT void difftest_init(int port) {
       NULL,
       true);
   s->diff_init(port);
-  p->put_csr(CSR_MSTATUS,0x1800);
+  //p->put_csr(CSR_MSTATUS,0x1800);
 }
 
 __EXPORT void difftest_raise_intr(uint64_t NO) {
