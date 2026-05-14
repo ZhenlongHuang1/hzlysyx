@@ -60,7 +60,15 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
   }
 //  printf("0x%08x %d src1=%08x, src2=%08x, imm=%08x\n",s->pc,type,*src1,*src2,*imm);
 }
-
+static int imm_2_csr(word_t imm){
+    switch(imm){
+        case 0x305:return MTEVC;
+        case 0x300:return MSTATUS;
+        case 0x341:return MEPC;
+        case 0x342:return MCAUSE;
+    }
+    return MEPC;
+}
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
 
@@ -153,12 +161,8 @@ static int decode_exec(Decode *s) {
 
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc=isa_raise_intr(cpu.gpr[17],s->pc) );
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, switch (imm) {
-                                                                        case 0x305:R(rd)=cpu.sr[MTEVC];cpu.sr[MTEVC]=src1;
-                                                                        case 0x300:R(rd)=cpu.sr[MSTATUS];cpu.sr[MSTATUS]=src1;
-                                                                        case 0x341:R(rd)=cpu.sr[MEPC];cpu.sr[MEPC]=src1;
-                                                                        case 0x342:R(rd)=cpu.sr[MCAUSE];cpu.sr[MCAUSE]=src1;
-                                                                    });
+  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, int csr_index=imm_2_csr(imm);R(rd)=cpu.sr[csr_index];cpu.sr[csr_index]=src1;break;);
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, int csr_index=imm_2_csr(imm);R(rd)=cpu.sr[csr_index];cpu.sr[csr_index]=src1|cpu.sr[csr_index];break;);
 
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
