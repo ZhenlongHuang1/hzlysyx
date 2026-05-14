@@ -9,13 +9,13 @@
 #define ANSI_NONE "\e[0m"
 #define MAX_INST_TO_PRINT 10
 
-TOP_NAME* dut;
-VerilatedContext*contextp;
-VerilatedVcdC* tfp;
+TOP_NAME* dut=NULL;
+VerilatedContext*contextp=NULL;
+VerilatedVcdC* tfp=NULL;
 NPC_state npc_state={NPC_RUNNING,0,0x80000000};
-CPU_state cpu_dut;
+CPU_state cpu_dut={{0},0x80000000};
 
-static char logbuf[128];
+static char logbuf[128]={};
 static bool g_print_step=false;
 static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;

@@ -44,7 +44,7 @@ static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static char *elf_file = NULL;
-Func_list func_list[1024];
+Func_list func_list[1024]={};
 int func_cnt=0;
 static int difftest_port = 1234;
 

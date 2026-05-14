@@ -29,6 +29,7 @@ extern unsigned char isa_logo[];
 void init_isa();
 
 // reg
+enum{MEPC=0,MSTATUS,MCAUSE,MTEVC};
 extern CPU_state cpu;
 void isa_reg_display();
 word_t isa_reg_str2val(const char *name, bool *success);

@@ -13,7 +13,7 @@ void sdb_set_batch_mode();
 void init_difftest(const char*ref_so_file,long img_size);
 static char * img_file=NULL;
 static char * elf_file=NULL;
-Func_list func_list[1024];
+Func_list func_list[1024]={};
 int func_cnt=0;
 static long load_img(){
     if(img_file==NULL){
