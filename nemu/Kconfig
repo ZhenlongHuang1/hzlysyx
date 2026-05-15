@@ -222,6 +222,9 @@ config MTRACE_END
 config FTRACE
     bool "open ftrace"
     default n
+config ETRACE
+    bool "open etrace"
+    default n
 
 
 
