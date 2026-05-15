@@ -20,6 +20,9 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    */
     cpu.sr[MEPC]=epc;
     cpu.sr[MCAUSE]=NO;
+#ifdef CONFIG_ETRACE
+    Log("ETRACE: mepc=0x%08x,mcause=%d,mstatus=0x%08x,mtevc=0x%08x\n",epc,NO,cpu.sr[MSTATUS],cpu.sr[MTEVC] );
+#endif
     return cpu.sr[MTEVC];
 }
 
