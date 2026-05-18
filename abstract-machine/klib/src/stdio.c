@@ -21,13 +21,14 @@ int printf(const char *fmt, ...) {
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
     char *ptr=(char *)fmt;
-    int num=0,tmp;
+    int num=0;
+    long int tmp;
     char *string;
-    int flag=0,fc,width;
+    int flag=0,fc,width,mylong=0;
     while(*ptr){
         switch (*ptr) {
             case '%':{
-                flag=1;fc=' ';width=0;
+                flag=1;fc=' ';width=0,mylong=0;
                 while(flag){
                     ptr++;
                     switch (*ptr) {
@@ -37,9 +38,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                                     width=width*10;
                                 }
                                 break;
+                        case 'l':mylong=1;
                         case 'x':
                         case 'o':
-                        case 'd':tmp=va_arg(ap,int);
+                        case 'd':
+                                if(mylong==0)tmp=va_arg(ap,int);
+                                else tmp=va_arg(ap,long int);
                                 num+=intcatstr(out+num,tmp,fc,width,(*ptr)=='d'?10:((*ptr=='x')?16:8),(*ptr)=='d'?1:0);
                                 flag=0;
                                 break;
