@@ -28,8 +28,8 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O2 #-flto
 LDFLAGS += -lreadline #-flto
 
-CXXFLAGS += -Wall -Wextra -fsanitize=address,undefined
-LDFLAGS  += -fsanitize=address,undefined
+#CXXFLAGS += -Wall -Wextra -fsanitize=address,undefined
+#LDFLAGS  += -fsanitize=address,undefined
 
 ifneq ($(shell grep '^\s*\#define\s\+CONFIG_ITRACE' $(AUTOCONF_H)),)
 LIBCAPSTONE = $(NEMU_HOME)/tools/capstone/repo/libcapstone.so.5
