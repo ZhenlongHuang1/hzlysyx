@@ -7,7 +7,7 @@ ARGS ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
-#VERILATOR_FLAGS += --trace-vcd
+VERILATOR_FLAGS += --trace-vcd
 VERILATOR_FLAGS +=
 
 BUILD_DIR =./build
