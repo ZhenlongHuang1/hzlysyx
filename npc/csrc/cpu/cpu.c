@@ -33,7 +33,6 @@ static void trace_and_difftest(uint32_t pc){
     IFDEF(CONFIG_DIFFTEST, difftest_step(pc, cpu_pc));
 
 }
-extern "C" int get_a0();
 extern "C" void npc_trap(){
     difftest_skip_ref(1); 
     npc_state.state=NPC_END;
@@ -41,7 +40,7 @@ extern "C" void npc_trap(){
     svScope scope=svGetScopeFromName("TOP.ysyx_26040117_top.Register1");
     if(scope){
         svSetScope(scope);
-        npc_state.halt_ret=get_a0();
+        npc_state.halt_ret=cpu_gpr(10);
         printf("ret=%d\n",npc_state.halt_ret);
     }else{
         printf("get incorrect name\n");
