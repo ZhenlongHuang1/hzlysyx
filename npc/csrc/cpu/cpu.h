@@ -13,7 +13,7 @@ extern VerilatedVcdC* tfp;
 
 #define cpu_pc dut->rootp->ysyx_26040117_top__DOT__pc
 #define cpu_gpr(i) dut->rootp->ysyx_26040117_top__DOT__Register1__DOT__rf[i]
-#define cpu_dnpc dut->rootp->ysyx_26040117_top__DOT__dnpc
+#define cpu_dnpc dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__dnpc
 enum NPC_STATE{NPC_RUNNING,NPC_END,NPC_STOP,NPC_QUIT,NPC_ABORT};
 typedef struct{
     enum NPC_STATE state;
