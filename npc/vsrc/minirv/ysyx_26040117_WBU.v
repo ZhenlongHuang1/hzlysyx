@@ -17,9 +17,9 @@ module ysyx_26040117_WBU(clk,rst,br_token,ebreak,imm,src1,result,ramdata,csr_rda
                 ({32{mytype[0]}}&imm)|
                 ({32{mytype[1]}}&dnpc)|
                 ({32{trap_ctrl[0]}}&csr_rdata);
-    assign notjump=~((|mytype[3:2])||(mytype[4]&&br_token));
+    assign notjump=~((mytype[3])||(mytype[2]||privil)||(mytype[4]&&br_token));
     assign pc_next=({32{notjump}}&snpc)|
-                    ({32{mytype[2]||(mytype[4]&&br_token)}}&dnpc)|//JAL||跳转
+                    ({32{mytype[2]||privil||(mytype[4]&&br_token)}}&dnpc)|//JAL||跳转
                     ({{31{mytype[3]}},1'b0}&dnpc);//JALR
     always@(posedge clk)begin
         if(rst)
