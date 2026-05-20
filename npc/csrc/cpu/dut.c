@@ -18,7 +18,7 @@ void difftest_skip_ref(int skip_ref) {
 
 void init_difftest(const char *ref_so_file, long img_size) {
   assert(ref_so_file != NULL);
-
+    printf("%s\n",ref_so_file);
   void *handle;
   handle = dlopen(ref_so_file, RTLD_LAZY);
   assert(handle);
