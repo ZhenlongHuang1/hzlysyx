@@ -48,6 +48,12 @@ int is_exit_status_bad() {
 
 void single_cycle(){
     dut->clk=0;dut->eval();//对当前pc的指令设置跳过difftest
+    int trap_ctrl=dut->rootp->ysyx_26040117_top__DOT__trap_ctrl;
+    int imm=dut->rootp->ysyx_26040117_top__DOT__imm;
+    if(trap_ctrl==1&&(imm==0xf11||imm==0xf12||imm==0xb00||imm==0xb80)){
+        difftest_skip_ref(1);
+        printf("%d %d\n",trap_ctrl,imm);
+    }
     IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
     dut->clk=1;dut->eval();//执行当前pc指令，并将状态设计为下一个pc
     IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
