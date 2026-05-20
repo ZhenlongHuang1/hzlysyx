@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
-int intcatstr(char *str,int num,char fc,int width,int cardinal,int signornot);
+int intcatstr(char *str,int64_t num,char fc,int width,int cardinal,int signornot);
 int printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap,fmt);
@@ -22,7 +22,7 @@ int printf(const char *fmt, ...) {
 int vsprintf(char *out, const char *fmt, va_list ap) {
     char *ptr=(char *)fmt;
     int num=0;
-    long int tmp;
+    int64_t tmp;
     char *string;
     int flag=0,fc,width,mylong=0;
     while(*ptr){
@@ -38,12 +38,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                                     width=width*10;
                                 }
                                 break;
-                        case 'l':mylong=1;
+                        case 'l':mylong=1;break;
                         case 'x':
                         case 'o':
                         case 'd':
                                 if(mylong==0)tmp=va_arg(ap,int);
-                                else tmp=va_arg(ap,long int);
+                                else tmp=va_arg(ap,int64_t);
                                 num+=intcatstr(out+num,tmp,fc,width,(*ptr)=='d'?10:((*ptr=='x')?16:8),(*ptr)=='d'?1:0);
                                 flag=0;
                                 break;
@@ -97,15 +97,15 @@ int snprintf(char *out, size_t n, const char *fmt, ...) {
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   panic("Not implemented");
 }
-int intcatstr(char *str,int num,char fc,int width,int cardinal,int signornot){
+int intcatstr(char *str,int64_t num,char fc,int width,int cardinal,int signornot){
     int i=0,j=0,is_neg=0,pad_len,total_len;
-    unsigned int unum,t;
+    uint64_t unum,t;
     int length=num==0?1:0;
     if(num<0&&signornot){
         is_neg=1;
-        unum=(unsigned int)-(num+1)+1;
+        unum=(uint64_t)-(num+1)+1;
     }else{
-        unum=(unsigned int)num;
+        unum=(uint64_t)num;
     }
     t=unum;
     while(t>0){length+=1;t/=cardinal;}
@@ -128,10 +128,10 @@ int intcatstr(char *str,int num,char fc,int width,int cardinal,int signornot){
         *(str++)='0';
         return total_len+pad_len;
     }
-    char buf[16];
+    char buf[32];
     i=0;
     while(unum>0){
-        unsigned int tmp=unum%cardinal;
+        uint64_t tmp=unum%cardinal;
         buf[i++]=tmp<10?tmp+'0':tmp+'a'-10;
         unum=unum/cardinal;
     }

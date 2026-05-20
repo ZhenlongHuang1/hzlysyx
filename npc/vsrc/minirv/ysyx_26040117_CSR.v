@@ -19,6 +19,8 @@ module ysyx_26040117_CSR(clk,rst,trap_ctrl,funct3,csr_addr,src1,pc,rdata);
                 12'h300:rdata=mstatus;
                 12'h342:rdata=mcause;
                 12'h305:rdata=mtvec;
+                12'hf11:rdata=32'h79737978;
+                12'hf12:rdata=32'h18d5735;
                 default:rdata=32'h0;
             endcase
         end
