@@ -14,7 +14,6 @@ Context* __am_irq_handle(Context *c) {
                     }
             default: ev.event = EVENT_ERROR; break;
         }
-        assert(c!=NULL);
         c = user_handler(ev, c);
         assert(c != NULL);
     }
@@ -38,7 +37,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
     cp->mepc=(uintptr_t)entry;
     cp->gpr[10]=(uintptr_t)arg;
     cp->mstatus=0x1800;
-    return NULL;
+    return cp;
 }
 
 void yield() {
