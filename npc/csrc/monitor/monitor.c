@@ -112,9 +112,7 @@ void init_monitor(int argc,char*argv[]){
     //reset
     reset(20);
     //difftest
-#ifdef CONFIG_DIFFTEST
-    init_difftest(str(NEMU_HOME_STR) "/build/riscv32-nemu-interpreter-so",img_size);
-#endif
+    IFDEF(CONFIG_DIFFTEST,init_difftest(str(NEMU_HOME_STR) "/build/riscv32-nemu-interpreter-so",img_size));
     IFDEF(CONFIG_ITRACE,init_disasm());
 }
 void free_monitor(){

@@ -31,13 +31,15 @@ LDFLAGS += -lreadline #-flto
 #CXXFLAGS += -Wall -Wextra -fsanitize=address,undefined
 #LDFLAGS  += -fsanitize=address,undefined
 
+ifneq ($(shell grep '^\s*\#define\s\+CONFIG_DIFFTEST' $(AUTOCONF_H)),)
+CXXFLAGS += -DNEMU_HOME_STR=$(NEMU_HOME)
+endif
 ifneq ($(shell grep '^\s*\#define\s\+CONFIG_ITRACE' $(AUTOCONF_H)),)
 LIBCAPSTONE = $(NEMU_HOME)/tools/capstone/repo/libcapstone.so.5
 CXXFLAGS += -I$(NEMU_HOME)/tools/capstone/repo/include 
 CXXFLAGS += -I$(NEMU_HOME)/src/utils
 CXXFLAGS += -I$(NEMU_HOME)/include
 CXXFLAGS += -fpermissive -DCONFIG_ISA_riscv
-CXXFLAGS += -DNEMU_HOME_STR=$(NEMU_HOME)
 CSRCS+=$(NEMU_HOME)/src/utils/disasm.c
 $(NEMU_HOME)/src/utils/disasm.c: $(LIBCAPSTONE)
 $(LIBCAPSTONE):
