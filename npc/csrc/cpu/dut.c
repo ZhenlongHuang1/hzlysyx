@@ -12,7 +12,6 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 static int is_skip_ref = false;
 
 void difftest_skip_ref(int skip_ref) {
-    printf("difftest %d\n",skip_ref);
   is_skip_ref = skip_ref;
 }
 
