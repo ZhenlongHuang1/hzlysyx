@@ -25,7 +25,7 @@ void get_cpu_state(CPU_state *cpu_dut){
     for(i=0;i<32;i++){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
-    cpu_dut->pc=cpu_dnpc;
+    cpu_dut->pc=cpu_pc;
 }
 static void trace_and_difftest(uint32_t pc){
     
