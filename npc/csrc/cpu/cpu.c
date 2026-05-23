@@ -122,6 +122,8 @@ static void execute(uint64_t n){
         cpu_pc=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__pc_reg;
         cpu_dnpc=dut->rootp->ysyx_26040117_top__DOT__IFU1__DOT__dnpc;
         uint32_t inst=paddr_read(cpu_pc);
+        printf("execute,pc=0x%08x,dnpc=0x%08x,inst=%08x\n",cpu_pc,cpu_dnpc,inst);
+
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
 
