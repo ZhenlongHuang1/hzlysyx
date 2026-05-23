@@ -13,7 +13,8 @@ module ysyx_26040117_WBU(clk,rst,
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
-    output[31:0] srcd,dnpc;
+    output[31:0] srcd;
+    output[31:0] dnpc ;
     output jump;
     output [4:0]rd_out;
     output register_wen;
