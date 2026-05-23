@@ -132,7 +132,8 @@ static void execute(uint64_t n){
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
             difftest_skip_ref(1);
         }
-        //single_cycle();
+        single_cycle();
+        if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
 
         trace_and_difftest(cpu_pc);

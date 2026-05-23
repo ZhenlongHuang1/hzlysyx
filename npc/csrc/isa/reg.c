@@ -20,11 +20,16 @@ bool isa_difftest_checkregs(CPU_state *ref_r,CPU_state * dut_r){
         if(ref_r->gpr[i]!=dut_r->gpr[i]){
             printf("difftest error at %s gpr_ref=%x,gpr_dut=%x\n",regs[i],ref_r->gpr[i],dut_r->gpr[i]);        
             flag=false;
+        }else {
+            printf("difftest error at %s gpr_ref=%x,gpr_dut=%x\n",regs[i],ref_r->gpr[i],dut_r->gpr[i]);        
         }
     }
     if(ref_r->pc!=dut_r->pc){
         printf("difftest error at npc_ref=0x%08x,npc_dut=0x%08x\n",ref_r->pc,dut_r->pc);
         flag=false;
+    }else {
+        printf("difftest error at npc_ref=0x%08x,npc_dut=0x%08x\n",ref_r->pc,dut_r->pc);
+        
     }
     return flag;
 } 
