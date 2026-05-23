@@ -25,7 +25,7 @@ static void test_mcycle(){
     uint32_t low,high;
     asm volatile("csrr %0, mcycle" :"=r"(low));
     asm volatile("csrr %0, mcycleh" :"=r"(high));
-    printf("%ld\n",((uint64_t)high<<32)|low);
+    printf("Number of operating cycles=%ld\n",((uint64_t)high<<32)|low);
 
 }
 void _trm_init() {
