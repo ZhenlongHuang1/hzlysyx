@@ -1,5 +1,5 @@
-module ysyx_26040117_LSU (clk,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
-    input clk,valid,wen,ifsigned;
+module ysyx_26040117_LSU (clk,rst,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
+    input clk,rst,valid,wen,ifsigned;
     input[31:0] raddr,waddr,wdata;
     input[7:0]wmask;
     output [31:0]rdata;
@@ -7,6 +7,9 @@ module ysyx_26040117_LSU (clk,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
     wire[31:0] bitmask,bitnmask;
     wire[1:0] raddr_shift;
     wire signbit;
+
+
+
     import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     import "DPI-C" function void paddr_write(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);

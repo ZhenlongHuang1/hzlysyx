@@ -11,9 +11,10 @@ extern TOP_NAME* dut;
 extern VerilatedContext*contextp; 
 extern VerilatedVcdC* tfp;
 
-#define cpu_pc dut->rootp->ysyx_26040117_top__DOT__pc
+//#define cpu_pc dut->rootp->ysyx_26040117_top__DOT__pc
 #define cpu_gpr(i) dut->rootp->ysyx_26040117_top__DOT__Register1__DOT__rf[i]
-#define cpu_dnpc dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__dnpc
+//#define cpu_dnpc dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__dnpc
+extern uint32_t cpu_pc,cpu_dnpc;
 enum NPC_STATE{NPC_RUNNING,NPC_END,NPC_STOP,NPC_QUIT,NPC_ABORT};
 typedef struct{
     enum NPC_STATE state;
@@ -28,9 +29,7 @@ typedef struct {
 }CPU_state;
 extern CPU_state cpu_dut;
 void get_cpu_state(CPU_state *cpu_dut);
-#define cpu \
-    (*({get_cpu_state(&cpu_dut);\
-     &cpu_dut;}))
+#define cpu cpu_dut
 void difftest_skip_ref(int skip_ref);
 void init_difftest(const char *ref_so_file, long img_size);
 void difftest_step(uint32_t pc, uint32_t npc);

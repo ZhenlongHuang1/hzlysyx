@@ -48,10 +48,10 @@ void init_difftest(const char *ref_so_file, long img_size) {
 }
 
 static void checkregs(CPU_state *ref, uint32_t pc) {
-  if (!isa_difftest_checkregs(ref)) {
+  if (!isa_difftest_checkregs(ref,&cpu)) {
     npc_state.state = NPC_ABORT;
     npc_state.halt_pc = pc;
-    isa_reg_display();
+    isa_reg_display(&cpu);
   }
 }
 

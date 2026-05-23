@@ -1,24 +1,80 @@
-module ysyx_26040117_IDU(inst,ebreak,rs1,rs2,rd,imm,op,mytype,trap_ctrl,wmask,ifsigned);
+module ysyx_26040117_IDU(clk,rst,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,
+    IDU_EXU_ready,IDU_EXU_valid,imm,op,mytype,
+    IDU_wrapper,
+    rs1,rs2
+);
+    input clk,rst;
+    //IFU_IDU
+    input IFU_IDU_valid;
+    output IFU_IDU_ready;
     input [31:0] inst;
-    output ebreak;
+    input [31:0] pc,snpc;
+    //IDU_EXU
+    input IDU_EXU_ready;
+    output IDU_EXU_valid;
     output [4:0] op;
-    output [4:0] rs1,rs2,rd;
     output[31:0] imm;
     output [8:0] mytype;
-    output [2:0]trap_ctrl;
-    output [7:0]wmask;
-    output ifsigned;
+    output[81:0]IDU_wrapper;
+    assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,out_pc,out_snpc};
+    //IDU-REGISTERS
+    output [4:0] rs1,rs2;
+
+    wire [2:0]trap_ctrl;
+    wire [7:0]wmask;
+    wire ifsigned;
+    wire ebreak;
+    wire [4:0] rd;
+    wire [31:0] out_pc,out_snpc;
+    //state machine
+    wire IFU_IDU_fire,IDU_EXU_fire;
+    reg[31:0] inst_reg,pc_reg,snpc_reg;//FIFO
+    reg state,next_state;
+    localparam IDLE=1'b0,WAIT=1'b1;
+    assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;//IDU is empty,IFU pop->IDU push
+    assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;//EXU is empty,IDU pop->EXU push
+    always @(posedge clk) begin
+        if(rst)
+            state<=IDLE;
+        else
+            state<=next_state;
+    end
+    always @(*) begin
+        next_state=state;
+        case(state)
+            IDLE:if(IFU_IDU_fire)next_state=WAIT;//valid?
+            WAIT:if(IDU_EXU_fire)next_state=IDLE;//ready?
+        endcase
+    end 
+    assign IFU_IDU_ready=state==IDLE;
+    assign IDU_EXU_valid=state==WAIT; 
+    always @(posedge clk) begin
+        if(rst)begin
+            inst_reg<=32'h0;
+            pc_reg<=32'h0;
+            snpc_reg<=32'h0;
+        end
+        else if(IFU_IDU_fire)begin
+            inst_reg<=inst;
+            pc_reg<=pc;
+            snpc_reg<=snpc;
+        end
+    end
+    assign out_pc=pc_reg;
+    assign out_snpc=snpc_reg;
+    //function logic
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil;
     wire [6:0]opcode;
     wire [2:0]funct3;
     wire funct3_zero;
     wire [31:0]immI,immS,immB,immU,immJ;
     assign funct3_zero=~(|funct3);
-    assign ebreak=inst==32'b00000000000100000000000001110011;
-    assign opcode=inst[6:0];
-    assign rd=inst[11:7];
-    assign rs1=inst[19:15];
-    assign rs2=inst[24:20];
+    assign ebreak=inst_reg==32'b00000000000100000000000001110011;
+    assign opcode=inst_reg[6:0];
+    assign rd=inst_reg[11:7];
+    assign rs1=inst_reg[19:15];
+    assign rs2=inst_reg[24:20];
     assign trap_ctrl = {funct3_zero&(immI[11:0]==12'b001100000010),
                         funct3_zero&(immI[11:0]==12'b0),
                         ~funct3_zero}&{3{type_I_privil}};
@@ -36,18 +92,18 @@ module ysyx_26040117_IDU(inst,ebreak,rs1,rs2,rd,imm,op,mytype,trap_ctrl,wmask,if
     assign type_U=type_U_LUI||type_U_AUIPC;
     assign type_J=(opcode==7'b1101111);//JAL
     
-    assign immI={{20{inst[31]}},inst[31:20]};
-    assign immS={{20{inst[31]}},inst[31:25],inst[11:7]};
-    assign immB={{20{inst[31]}},inst[7],inst[30:25],inst[11:8],1'b0};
-    assign immU={inst[31:12],12'b0};
-    assign immJ={{12{inst[31]}},inst[19:12],inst[20],inst[30:21],1'b0};
+    assign immI={{20{inst_reg[31]}},inst_reg[31:20]};
+    assign immS={{20{inst_reg[31]}},inst_reg[31:25],inst_reg[11:7]};
+    assign immB={{20{inst_reg[31]}},inst_reg[7],inst_reg[30:25],inst_reg[11:8],1'b0};
+    assign immU={inst_reg[31:12],12'b0};
+    assign immJ={{12{inst_reg[31]}},inst_reg[19:12],inst_reg[20],inst_reg[30:21],1'b0};
     assign imm= (immI&{32{type_I}})|
                 (immS&{32{type_S}})|
                 (immB&{32{type_B}})|
                 (immU&{32{type_U}})|
                 (immJ&{32{type_J}});
-    assign funct3=inst[14:12];
-    assign op = {1'b1,inst[30],funct3}&{type_B,type_R||(type_I_compute&&(funct3==3'b101)),{3{type_R||type_I_compute||type_B||trap_ctrl[0]}}};//srai,srli?
+    assign funct3=inst_reg[14:12];
+    assign op = {1'b1,inst_reg[30],funct3}&{type_B,type_R||(type_I_compute&&(funct3==3'b101)),{3{type_R||type_I_compute||type_B||trap_ctrl[0]}}};//srai,srli?
     
     assign wmask={4'b0000,{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
     assign ifsigned=~funct3[2];

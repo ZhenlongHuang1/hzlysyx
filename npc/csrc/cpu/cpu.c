@@ -14,7 +14,7 @@ VerilatedContext*contextp=NULL;
 VerilatedVcdC* tfp=NULL;
 NPC_state npc_state={NPC_RUNNING,0,0x80000000};
 CPU_state cpu_dut={{0},0x80000000};
-
+uint32_t cpu_pc=0,cpu_dnpc=0;
 static char logbuf[128]={};
 static bool g_print_step=false;
 static char ftrace_buf[1024][128]={};
@@ -47,14 +47,9 @@ int is_exit_status_bad() {
 }
 
 void single_cycle(){
-    dut->clk=0;dut->eval();//对当前pc的指令设置跳过difftest
-    int trap_ctrl=dut->rootp->ysyx_26040117_top__DOT__trap_ctrl;
-    int imm=dut->rootp->ysyx_26040117_top__DOT__imm&0xfff;
-    if(trap_ctrl==1&&(imm==0xf11||imm==0xf12||imm==0xb00||imm==0xb80)){
-        difftest_skip_ref(1);
-    }
+    dut->clk=0;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
-    dut->clk=1;dut->eval();//执行当前pc指令，并将状态设计为下一个pc
+    dut->clk=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
 }
 void reset(int n){
@@ -120,13 +115,25 @@ void ftrace_print(){
 }
 static void execute(uint64_t n){
     for(;n>0;n--){
-        uint32_t pc=cpu_pc;
-        uint32_t inst=paddr_read(pc);
-        IFDEF(CONFIG_FTRACE,ftrace_call(pc,inst,cpu_dnpc);)
+        while(dut->rootp->ysyx_26040117_top__DOT__IFU1__DOT__WBU_IFU_fire==0){
         single_cycle();
-        IFDEF(CONFIG_ITRACE,itrace_record(pc,inst);)
-        trace_and_difftest(pc);
-        if(npc_state.state!=NPC_RUNNING)break;
+        if(npc_state.state!=NPC_RUNNING)return;
+        }
+        cpu_pc=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__pc_reg;
+        cpu_dnpc=dut->rootp->ysyx_26040117_top__DOT__dnpc;
+        uint32_t inst=paddr_read(cpu_pc);
+        IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
+        IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
+
+        int trap_ctrl=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__trap_ctrl_reg;
+        int csr_addr=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__imm_reg&0xfff;
+        if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
+            difftest_skip_ref(1);
+        }
+        single_cycle();
+        get_cpu_state(&cpu_dut);
+
+        trace_and_difftest(cpu_pc);
     }
 }
 void cpu_exec(uint64_t n){

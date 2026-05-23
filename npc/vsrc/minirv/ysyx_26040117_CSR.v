@@ -1,5 +1,9 @@
-module ysyx_26040117_CSR(clk,rst,trap_ctrl,funct3,csr_addr,src1,pc,rdata);
+module ysyx_26040117_CSR(clk,rst,
+    wen,trap_ctrl,funct3,csr_addr,src1,pc,
+    rdata
+);
     input clk,rst;
+    input wen;
     input [2:0] trap_ctrl,funct3;//0:csrr,1:ecall,2:mret
     input [11:0]csr_addr;
     input [31:0]src1,pc;
@@ -41,19 +45,21 @@ module ysyx_26040117_CSR(clk,rst,trap_ctrl,funct3,csr_addr,src1,pc,rdata);
             mtvec<=32'h0;
         end else begin
             mcycle<=mcycle+64'h1;
-            if(trap_ctrl[1])begin
-                mepc<=pc;
-                mcause<=32'd11;
-            end else if(trap_ctrl[0])begin
-                case(csr_addr)
-                    12'hb00:mcycle[31:0]<=wdata;
-                    12'hb80:mcycle[63:32]<=wdata;
-                    12'h341:mepc<=wdata;
-                    12'h300:mstatus<=wdata;
-                    12'h342:mcause<=wdata;
-                    12'h305:mtvec<=wdata;
-                    default:;
-                endcase
+            if(wen)begin
+                if(trap_ctrl[1])begin
+                    mepc<=pc;
+                    mcause<=32'd11;
+                end else if(trap_ctrl[0])begin
+                    case(csr_addr)
+                        12'hb00:mcycle[31:0]<=wdata;
+                        12'hb80:mcycle[63:32]<=wdata;
+                        12'h341:mepc<=wdata;
+                        12'h300:mstatus<=wdata;
+                        12'h342:mcause<=wdata;
+                        12'h305:mtvec<=wdata;
+                        default:;
+                    endcase
+                end
             end
         end
     end
