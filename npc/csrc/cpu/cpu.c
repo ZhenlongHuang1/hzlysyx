@@ -25,7 +25,7 @@ void get_cpu_state(CPU_state *cpu_dut){
     for(i=0;i<32;i++){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
-    cpu_dut->pc=cpu_dnpc;
+    cpu_dut->pc=cpu_pc;
 }
 static void trace_and_difftest(uint32_t pc){
     
@@ -133,10 +133,12 @@ static void execute(uint64_t n){
             difftest_skip_ref(1);
         }
         single_cycle();
+        uint32_t old_cpu_pc=cpu_pc;
+        cpu_pc=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__pc_reg;
         if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
 
-        trace_and_difftest(cpu_pc);
+        trace_and_difftest(old_cpu_pc);
     }
 }
 void cpu_exec(uint64_t n){
