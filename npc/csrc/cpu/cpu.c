@@ -134,7 +134,7 @@ static void execute(uint64_t n){
         }
         single_cycle();
         uint32_t old_cpu_pc=cpu_pc;
-        cpu_pc=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__pc_reg;
+        cpu_pc=dut->rootp->ysyx_26040117_top__DOT__ifu_idu_pc;
         if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
 
