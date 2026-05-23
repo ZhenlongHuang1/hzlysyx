@@ -120,7 +120,7 @@ static void execute(uint64_t n){
         if(npc_state.state!=NPC_RUNNING)return;
         }
         cpu_pc=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__pc_reg;
-        cpu_dnpc=dut->rootp->ysyx_26040117_top__DOT__dnpc;
+        cpu_dnpc=dut->rootp->ysyx_26040117_top__DOT__IFU1__DOT__dnpc;
         uint32_t inst=paddr_read(cpu_pc);
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
