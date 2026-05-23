@@ -47,9 +47,9 @@ int is_exit_status_bad() {
 }
 
 void single_cycle(){
-    dut->clk=0;dut->eval();
-    IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
     dut->clk=1;dut->eval();
+    IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
+    dut->clk=0;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,tfp->dump(contextp->time());contextp->timeInc(1);)
 }
 void reset(int n){
