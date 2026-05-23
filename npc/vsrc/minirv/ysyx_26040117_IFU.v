@@ -7,7 +7,7 @@ module ysyx_26040117_IFU(clk,rst,
     input WBU_IFU_valid;
     output WBU_IFU_ready;
     input jump;
-    input[31:0]dnpc;
+    input[31:0]dnpc/* verilator public_flat_rd */;
     input [8:0]mytype;
     //IFU-IDU
     input IFU_IDU_ready;
