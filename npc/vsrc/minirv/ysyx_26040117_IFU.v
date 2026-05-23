@@ -1,14 +1,13 @@
 module ysyx_26040117_IFU(clk,rst,
-    WBU_IFU_valid,WBU_IFU_ready,mytype,jump,dnpc,
+    WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc
 );
     input clk,rst;
     //WBU-IFU
     input WBU_IFU_valid;
     output WBU_IFU_ready;
-    input jump;
+    input jump,jalr;
     input[31:0]dnpc/* verilator public_flat_rd */;
-    input [8:0]mytype;
     //IFU-IDU
     input IFU_IDU_ready;
     output IFU_IDU_valid;
@@ -39,7 +38,7 @@ module ysyx_26040117_IFU(clk,rst,
     //pc_next计算
     assign snpc=pc+32'd4;
     assign pc_next=({32{~jump}}&snpc)|                    //FIFO
-                    ({{31{jump}},jump&(~mytype[3])}&dnpc);//jump:JAL||JALR||跳转，mytype[3]:JALR
+                    ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     always@(posedge clk)begin
         if(rst)
