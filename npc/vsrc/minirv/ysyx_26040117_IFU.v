@@ -51,6 +51,9 @@ module ysyx_26040117_IFU(clk,rst,
     //取指
     import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     always@(*)begin
-        inst=paddr_read(pc);
+        if(pc<=32'h80000000)
+            inst=32'h0;
+        else
+            inst=paddr_read(pc);
     end
 endmodule
