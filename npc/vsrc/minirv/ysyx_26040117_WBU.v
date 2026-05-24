@@ -39,7 +39,7 @@ module ysyx_26040117_WBU(clk,rst,
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     always @(*) begin
         case(state)
-            IDLE:if(EXU_WBU_fire)next_state=WAIT;
+            IDLE:if(EXU_WBU_fire)next_state=MEM;
             MEM: next_state=WAIT;
             WAIT:if(WBU_IFU_fire)next_state=IDLE;
             default:next_state=state;
