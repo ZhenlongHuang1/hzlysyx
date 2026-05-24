@@ -35,6 +35,7 @@ module ysyx_26040117_IFU(clk,rst,
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;
     always@(*)begin
+        next_state=state;
         case (state)
             IDLE:if(WBU_IFU_fire)next_state=FETCH;
             FETCH:next_state=WAIT;

@@ -38,15 +38,16 @@ module ysyx_26040117_WBU(clk,rst,
     assign EXU_WBU_fire=EXU_WBU_ready&&EXU_WBU_valid;
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     always @(*) begin
+        next_state=state;
         case(state)
             IDLE:if(EXU_WBU_fire)next_state=MEM;
-            MEM: next_state=WAIT;
+            MEM: next_state=(!mytype_out[5]&&WBU_IFU_fire)?IDLE:WAIT;
             WAIT:if(WBU_IFU_fire)next_state=IDLE;
             default:next_state=state;
         endcase
     end
     assign EXU_WBU_ready=state==IDLE;
-    assign WBU_IFU_valid=state==WAIT;
+    assign WBU_IFU_valid=(state==WAIT)||(state==MEM&&(!mytype_out[5]));
     //FIFO
     reg [31:0] result_reg,imm_reg,src1_reg,src2_reg;
     reg [8:0] mytype_reg;
