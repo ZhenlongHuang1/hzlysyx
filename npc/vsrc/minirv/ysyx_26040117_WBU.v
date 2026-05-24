@@ -124,7 +124,7 @@ module ysyx_26040117_WBU(clk,rst,
     );
     //Load-Store Unit
     ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
-        .valid(mytype_out[5]&&(state==WAIT)),.wen(mytype_out[6]&&WBU_IFU_fire),.raddr(result_out),.waddr(result_out),.wdata(src2_out),.wmask(wmask_out),.ifsigned(ifsigned_out),
+        .valid(mytype_out[5]&&(state==MEM)),.wen(mytype_out[6]&&WBU_IFU_fire),.raddr(result_out),.waddr(result_out),.wdata(src2_out),.wmask(wmask_out),.ifsigned(ifsigned_out),
         .rdata(ramdata)
     );
 endmodule
