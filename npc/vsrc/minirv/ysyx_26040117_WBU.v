@@ -116,6 +116,7 @@ module ysyx_26040117_WBU(clk,rst,
         end
     end
     //Control Status Register
+
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
         .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl_out),.funct3(op_out[2:0]),.csr_addr(imm_out[11:0]),.src1(src1_out),.pc(pc_out),
         .rdata(csr_rdata)
