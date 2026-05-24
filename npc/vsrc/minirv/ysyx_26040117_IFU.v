@@ -33,7 +33,7 @@ module ysyx_26040117_IFU(clk,rst,
             state<=next_state;
     end
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
-    assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_ready;
+    assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;
     always@(*)begin
         case (state)
             IDLE:if(WBU_IFU_fire)next_state=FETCH;
@@ -61,7 +61,7 @@ module ysyx_26040117_IFU(clk,rst,
 
     import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     always@(posedge clk)begin
-        if(rst||pc<=32'h80000000)
+        if(rst||pc<32'h80000000)
             ifu_rdata<=32'h0;
         else if(state==FETCH)
             ifu_rdata<=paddr_read(pc);
