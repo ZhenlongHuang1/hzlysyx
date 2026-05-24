@@ -27,8 +27,8 @@ module ysyx_26040117_WBU(clk,rst,
     assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc}=EXU_wrapper;
     //state machine
     wire EXU_WBU_fire,WBU_IFU_fire;
-    reg state,next_state;
-    localparam IDLE=0,WAIT=1;
+    reg[1:0] state,next_state;
+    localparam IDLE=2'd0,MEM=2'd1,WAIT=2'd2;
     always @(posedge clk) begin
         if(rst)
             state<=IDLE;
@@ -38,10 +38,11 @@ module ysyx_26040117_WBU(clk,rst,
     assign EXU_WBU_fire=EXU_WBU_ready&&EXU_WBU_valid;
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     always @(*) begin
-        next_state=state;
         case(state)
             IDLE:if(EXU_WBU_fire)next_state=WAIT;
+            MEM: next_state=WAIT;
             WAIT:if(WBU_IFU_fire)next_state=IDLE;
+            default:next_state=state;
         endcase
     end
     assign EXU_WBU_ready=state==IDLE;
