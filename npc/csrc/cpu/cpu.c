@@ -122,10 +122,8 @@ static void execute(uint64_t n){
         cpu_pc=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__pc_reg;
         cpu_dnpc=dut->rootp->ysyx_26040117_top__DOT__IFU1__DOT__dnpc;
         uint32_t inst=paddr_read(cpu_pc);
-
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
-
         int trap_ctrl=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__trap_ctrl_reg;
         int csr_addr=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__imm_reg&0xfff;
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
@@ -134,9 +132,8 @@ static void execute(uint64_t n){
         single_cycle();
         uint32_t old_cpu_pc=cpu_pc;
         cpu_pc=dut->rootp->ysyx_26040117_top__DOT__ifu_idu_pc;
-        //if(npc_state.state!=NPC_RUNNING)return;
+        if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
-
         trace_and_difftest(old_cpu_pc);
     }
 }
