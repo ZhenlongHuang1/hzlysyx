@@ -44,7 +44,7 @@ module ysyx_26040117_WBU(clk,rst,
         next_state=state;
         case(state)
             IDLE:if(EXU_WBU_fire)next_state=WAIT;
-            WAIT: next_state=(!reqValid&&WBU_IFU_fire)||(respValid)?IDLE:WAIT;
+            WAIT: next_state=WBU_IFU_fire?IDLE:WAIT;
             default:next_state=state;
         endcase
     end

@@ -12,6 +12,7 @@ module ysyx_26040117_counter #(DELAY_VAL=5)(clk,rst,
             running<=0;
             delay_over<=0;
         end else begin
+            delay_over<=0;
             if(wen&&!running)begin
                 delay_cnt<=DELAY_VAL-1;
                 running<=1;
