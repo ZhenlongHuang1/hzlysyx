@@ -3,16 +3,12 @@ module ysyx_26040117_LSU (clk,rst,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rda
     input[31:0] raddr,waddr,wdata;
     input[7:0]wmask;
     output [31:0]rdata;
-    reg[31:0]rdata0,rdata1;
+    reg[31:0] rdata0;
+    reg[31:0] rdata1;
     wire[31:0] bitmask,bitnmask;
     wire[1:0] raddr_shift;
     wire signbit;
 
-
-
-    import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
-    import "DPI-C" function void paddr_write(
-        input int unsigned waddr, input int unsigned wdata, input byte wmask);
     assign bitmask={{8{wmask[3]}},{8{wmask[2]}},{8{wmask[1]}},{8{wmask[0]}}};
     assign bitnmask={{8{~wmask[3]&&ifsigned}},{8{~wmask[2]&&ifsigned}},{8{~wmask[1]&&ifsigned}},{8{~wmask[0]&&ifsigned}}};
     assign raddr_shift=raddr[1:0];
@@ -27,12 +23,15 @@ module ysyx_26040117_LSU (clk,rst,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rda
             default:rdata1=rdata0;
         endcase
     end
-    always @(*) begin
-        if (valid) begin // 有读写请求时
-            rdata0 = paddr_read(raddr);
-        end
-        else begin
-            rdata0 = 0;
+
+    import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
+    import "DPI-C" function void paddr_write(
+        input int unsigned waddr, input int unsigned wdata, input byte wmask);
+    always @(posedge clk) begin
+        if(rst)
+            rdata0<=32'h0;
+        else if(valid)begin  //有读写请求时
+            rdata0<= paddr_read(raddr);
         end
     end
     always @(posedge clk) begin
@@ -40,4 +39,10 @@ module ysyx_26040117_LSU (clk,rst,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rda
             paddr_write(waddr,wdata,wmask);
         end
     end
+
+//    wire[31:0] unused_rdata2;
+//    ysyx_26040117_RegisterFile #(.ADDR_WIDTH(8)) Register3(.clk(clk),.rst(rst),
+//        .raddr1(raddr[7:0]),.raddr2(8'h0),.rdata1(rdata0),.rdata2(unused_rdata2),
+//        .wdata(wdata),.waddr(waddr[7:0]),.wen(wen)
+//    );
 endmodule

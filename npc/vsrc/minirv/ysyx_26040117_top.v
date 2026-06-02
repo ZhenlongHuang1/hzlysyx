@@ -1,5 +1,16 @@
 module ysyx_26040117_top(clk,rst
+    //srcd,inst,mytype,result,
+    //dummy_ifu_wen,dummy_ifu_waddr,dummy_ifu_wdata
 );
+//    //dummy test
+//    input [7:0] dummy_ifu_waddr;
+//    input [31:0] dummy_ifu_wdata;
+//    input dummy_ifu_wen;
+//    //dummy test
+//    output[31:0]srcd,inst,result;
+//    output [8:0]mytype;
+
+
     input clk,rst;
     //WBU-data
     wire[31:0]dnpc,srcd;//result:ALU结果
@@ -11,6 +22,7 @@ module ysyx_26040117_top(clk,rst
     wire WBU_IFU_valid,WBU_IFU_ready;
     ysyx_26040117_IFU IFU1(.clk(clk),.rst(rst),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jalr(jalr),.jump(jump),.dnpc(dnpc),
+        //.dummy_ifu_wen(dummy_ifu_wen),.dummy_ifu_wdata(dummy_ifu_wdata),.dummy_ifu_waddr(dummy_ifu_waddr),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc)
     );
     

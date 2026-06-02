@@ -27,8 +27,8 @@ module ysyx_26040117_WBU(clk,rst,
     assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc}=EXU_wrapper;
     //state machine
     wire EXU_WBU_fire,WBU_IFU_fire;
-    reg state,next_state;
-    localparam IDLE=0,WAIT=1;
+    reg[1:0] state,next_state;
+    localparam IDLE=2'd0,MEM=2'd1,WAIT=2'd2;
     always @(posedge clk) begin
         if(rst)
             state<=IDLE;
@@ -40,12 +40,14 @@ module ysyx_26040117_WBU(clk,rst,
     always @(*) begin
         next_state=state;
         case(state)
-            IDLE:if(EXU_WBU_fire)next_state=WAIT;
+            IDLE:if(EXU_WBU_fire)next_state=MEM;
+            MEM: next_state=(!mytype_out[5]&&WBU_IFU_fire)?IDLE:WAIT;
             WAIT:if(WBU_IFU_fire)next_state=IDLE;
+            default:next_state=state;
         endcase
     end
     assign EXU_WBU_ready=state==IDLE;
-    assign WBU_IFU_valid=state==WAIT;
+    assign WBU_IFU_valid=(state==WAIT)||(state==MEM&&(!mytype_out[5]));
     //FIFO
     reg [31:0] result_reg,imm_reg,src1_reg,src2_reg;
     reg [8:0] mytype_reg;
@@ -116,13 +118,14 @@ module ysyx_26040117_WBU(clk,rst,
         end
     end
     //Control Status Register
+
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
         .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl_out),.funct3(op_out[2:0]),.csr_addr(imm_out[11:0]),.src1(src1_out),.pc(pc_out),
         .rdata(csr_rdata)
     );
     //Load-Store Unit
     ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
-        .valid(mytype_out[5]&&(state==WAIT)),.wen(mytype_out[6]&&WBU_IFU_fire),.raddr(result_out),.waddr(result_out),.wdata(src2_out),.wmask(wmask_out),.ifsigned(ifsigned_out),
+        .valid(mytype_out[5]&&(state==MEM)),.wen(mytype_out[6]&&WBU_IFU_fire),.raddr(result_out),.waddr(result_out),.wdata(src2_out),.wmask(wmask_out),.ifsigned(ifsigned_out),
         .rdata(ramdata)
     );
 endmodule
