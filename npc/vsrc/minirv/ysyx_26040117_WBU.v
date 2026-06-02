@@ -28,8 +28,8 @@ module ysyx_26040117_WBU(clk,rst,
     //state machine
     wire reqValid,respValid,lsu_wen;
     wire EXU_WBU_fire,WBU_IFU_fire;
-    assign lsu_wen=mytype_out[6]&&(state==MEM);
-    assign reqValid=lsu_wen||(mytype_out[5]&&(state==MEM));
+    assign lsu_wen=mytype_out[6]&&(state==WAIT);
+    assign reqValid=lsu_wen||(mytype_out[5]&&(state==WAIT));
     reg[1:0] state,next_state;
     localparam IDLE=2'd0,MEM=2'd1,WAIT=2'd2;
     always @(posedge clk) begin
@@ -43,14 +43,13 @@ module ysyx_26040117_WBU(clk,rst,
     always @(*) begin
         next_state=state;
         case(state)
-            IDLE:if(EXU_WBU_fire)next_state=MEM;
-            MEM: next_state=(!reqValid&&WBU_IFU_fire)?IDLE:WAIT;
-            WAIT:if(WBU_IFU_fire)next_state=IDLE;
+            IDLE:if(EXU_WBU_fire)next_state=WAIT;
+            WAIT: next_state=(!reqValid&&WBU_IFU_fire)||(respValid)?IDLE:WAIT;
             default:next_state=state;
         endcase
     end
     assign EXU_WBU_ready=state==IDLE;
-    assign WBU_IFU_valid=(state==WAIT&&respValid)||(state==MEM&&(!reqValid));
+    assign WBU_IFU_valid=(state==WAIT&&(respValid||!reqValid));
     //FIFO
     reg [31:0] result_reg,imm_reg,src1_reg,src2_reg;
     reg [8:0] mytype_reg;
