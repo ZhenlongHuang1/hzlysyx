@@ -1,7 +1,8 @@
-module ysyx_26040117_LSU (clk,rst,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
-    input clk,rst,valid,wen,ifsigned;
+module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
+    input clk,rst,reqValid,wen,ifsigned;
     input[31:0] raddr,waddr,wdata;
     input[7:0]wmask;
+    output reg respValid;
     output [31:0]rdata;
     reg[31:0] rdata0;
     reg[31:0] rdata1;
@@ -28,15 +29,15 @@ module ysyx_26040117_LSU (clk,rst,valid,wen,raddr,waddr,wdata,wmask,ifsigned,rda
     import "DPI-C" function void paddr_write(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);
     always @(posedge clk) begin
-        if(rst)
+        if(rst)begin
             rdata0<=32'h0;
-        else if(valid)begin  //有读写请求时
-            rdata0<= paddr_read(raddr);
-        end
-    end
-    always @(posedge clk) begin
-        if (wen) begin
-            paddr_write(waddr,wdata,wmask);
+            respValid<=1'b0;
+        end else begin  //有读写请求时
+            rdata0<= (reqValid&&(!wen))?paddr_read(raddr):32'h0;
+            if (reqValid&&wen) begin
+                paddr_write(waddr,wdata,wmask);
+            end
+            respValid<=reqValid;
         end
     end
 
