@@ -9,12 +9,12 @@ module ysyx_26040117_counter #(DELAY_VAL=5)(clk,rst,
     reg running,clear;
     always@(posedge clk)begin
         if(rst)begin
-            delay_cnt<=delay_val-1;
+            delay_cnt<=delay_val;
             running<=0;
             clear<=0;
         end else begin
             if(wen&&!running&&!clear)begin
-                delay_cnt<=delay_val-1;
+                delay_cnt<=delay_val;
                 running<=1;
                 clear<=1;
             end
@@ -30,9 +30,9 @@ module ysyx_26040117_counter #(DELAY_VAL=5)(clk,rst,
         end
     end
     always@(*)begin
-        delay_over=(delay_val==1)||(delay_val==0)||//delay=0 is forced to 1
-                    (delay_val==2&&running==1)||
-                    (delay_val>2&&delay_cnt==1&&running==1);
+        delay_over=(delay_val==0)||
+                    (delay_val==1&&running==1)||
+                    (delay_val>1&&delay_cnt==1&&running==1);
     end
 
 endmodule
