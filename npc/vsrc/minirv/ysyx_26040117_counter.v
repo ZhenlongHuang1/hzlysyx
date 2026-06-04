@@ -30,7 +30,7 @@ module ysyx_26040117_counter #(DELAY_VAL=5)(clk,rst,
         end
     end
     always@(*)begin
-        delay_over=(delay_val==1)||
+        delay_over=(delay_val==1)||(delay_val==0)||//delay=0 is forced to 1
                     (delay_val==2&&running==1)||
                     (delay_val>2&&delay_cnt==1&&running==1);
     end
