@@ -49,11 +49,11 @@ int is_exit_status_bad() {
 void single_cycle(){
     dut->clk=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
-            if(contextp->time()<300){tfp->dump(contextp->time());}
+            if(contextp->time()<30000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
     dut->clk=0;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
-            if(contextp->time()<300){tfp->dump(contextp->time());}
+            if(contextp->time()<30000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
 }
 void reset(int n){
