@@ -20,6 +20,12 @@ module ysyx_26040117_IFU(clk,rst,
     output [31:0]inst;
     output reg[31:0]pc;
     output[31:0] snpc;
+    //counter1
+    wire reg_notbusy;
+    wire reqValid=state==WAIT;
+    wire [7:0]delay_val;
+    ysyx_26040117_LFshifter lfshifter2(.clk(rst?clk:(!reqValid)),.rst(rst),.outQ(delay_val));
+    ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.delay_val({4'd0,delay_val[3:0]}));
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
@@ -37,13 +43,12 @@ module ysyx_26040117_IFU(clk,rst,
     always@(*)begin
         next_state=state;
         case (state)
-            IDLE:if(WBU_IFU_fire)next_state=FETCH;
-            FETCH:next_state=WAIT;
+            IDLE:if(WBU_IFU_fire)next_state=WAIT;
             WAIT:if(IFU_IDU_fire)next_state=IDLE;
             default:next_state=state;
         endcase
     end
-    assign IFU_IDU_valid=state==WAIT;
+    assign IFU_IDU_valid=state==WAIT&&(reg_notbusy);
     assign WBU_IFU_ready=state==IDLE;
     //pc_next计算
     assign snpc=pc+32'd4;
