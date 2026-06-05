@@ -32,14 +32,14 @@ module ysyx_26040117_IFU(clk,rst,
         else
             respValid<=reg_notbusy&&reqValid;
     end
-    ysyx_26040117_LFshifter lfshifter2(.clk(rst?clk:(!reqValid)),.rst(rst),.outQ(delay_val));
+    ysyx_26040117_LFshifter lfshifter2(.clk(clk),.rst(rst),.wen(!reqValid),.outQ(delay_val));
     ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.delay_val({4'd0,delay_val[3:0]}));
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
     wire[31:0]pc_next;
-    reg[1:0] state,next_state;
-    localparam IDLE=2'd0,WAIT=2'd2;
+    reg state,next_state;
+    localparam IDLE=1'd0,WAIT=1'd1;
     always@(posedge clk)begin
         if(rst)
             state<=WAIT;

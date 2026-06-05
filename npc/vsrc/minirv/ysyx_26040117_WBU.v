@@ -30,8 +30,8 @@ module ysyx_26040117_WBU(clk,rst,
     wire EXU_WBU_fire,WBU_IFU_fire;
     assign lsu_wen=mytype_out[6]&&(state==WAIT);
     assign reqValid=lsu_wen||(mytype_out[5]&&(state==WAIT));
-    reg[1:0] state,next_state;
-    localparam IDLE=2'd0,MEM=2'd1,WAIT=2'd2;
+    reg state,next_state;
+    localparam IDLE=1'd0,WAIT=1'd1;
     always @(posedge clk) begin
         if(rst)
             state<=IDLE;

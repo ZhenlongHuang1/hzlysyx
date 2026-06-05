@@ -4,7 +4,7 @@ module ysyx_26040117_counter #(DELAY_VAL=5)(clk,rst,
     input clk,rst;
     input wen;
     input [7:0] delay_val;
-    output reg delay_over;
+    output delay_over;
     reg[7:0] delay_cnt;
     reg running,clear;
     always@(posedge clk)begin
@@ -29,10 +29,6 @@ module ysyx_26040117_counter #(DELAY_VAL=5)(clk,rst,
             end
         end
     end
-    always@(*)begin
-        delay_over=(delay_val==0)||
-                    (delay_val==1&&running==1)||
-                    (delay_val>1&&delay_cnt==1&&running==1);
-    end
+    assign delay_over=(delay_val==0)||(delay_cnt==1&&running==1);
 
 endmodule
