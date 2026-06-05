@@ -26,6 +26,12 @@ module ysyx_26040117_IFU(clk,rst,
     reg respValid;
     wire [7:0]delay_val;
     assign reqValid=state==WAIT;
+    always @(posedge clk) begin
+        if(rst)
+            respValid<=0;
+        else
+            respValid<=reg_notbusy;
+    end
     ysyx_26040117_LFshifter lfshifter2(.clk(rst?clk:(!reqValid)),.rst(rst),.outQ(delay_val));
     ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.delay_val({4'd0,delay_val[3:0]}));
 
@@ -71,10 +77,8 @@ module ysyx_26040117_IFU(clk,rst,
     always@(posedge clk)begin
         if(rst||pc<32'h80000000)begin
             ifu_rdata<=32'h0;
-            respValid<=0;
         end else if(reg_notbusy)begin
             ifu_rdata<=paddr_read(pc);
-            respValid<=reg_notbusy;
         end
     end
     assign inst=ifu_rdata; 
