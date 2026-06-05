@@ -1,12 +1,13 @@
-module ysyx_26040117_counter #(DELAY_VAL=5)(clk,rst,
-    wen,delay_over,delay_val
+module ysyx_26040117_counter (clk,rst,
+    wen,delay_over
 );
     input clk,rst;
     input wen;
-    input [7:0] delay_val;
     output delay_over;
+    wire [7:0] delay_val;
     reg[7:0] delay_cnt;
     reg running,clear;
+    ysyx_26040117_LFshifter lfshifter1(.clk(clk),.rst(rst),.wen(!wen),.outQ(delay_val));
     always@(posedge clk)begin
         if(rst)begin
             delay_cnt<=delay_val;

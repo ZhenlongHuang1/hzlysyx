@@ -29,9 +29,7 @@ module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,raddr,waddr,wdata,wmask
     import "DPI-C" function void paddr_write(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);
     wire reg_notbusy;
-    wire [7:0]delay_val;
-    ysyx_26040117_LFshifter lfshifter1(.clk(clk),.rst(rst),.wen(!reqValid),.outQ(delay_val));
-    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.delay_val({4'd0,delay_val[3:0]}));
+    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy));
     always @(posedge clk) begin
         if(rst)begin
             rdata0<=32'h0;
