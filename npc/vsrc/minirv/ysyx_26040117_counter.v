@@ -8,7 +8,11 @@ module ysyx_26040117_counter (clk,rst,
     wire [7:0] delay_val0;
     reg[7:0] delay_cnt;
     reg running,clear;
-    ysyx_26040117_LFshifter lfshifter1(.clk(clk),.rst(rst),.wen(!wen),.outQ(delay_val0));
+    reg wen_q1;
+    always @(posedge clk) begin
+        wen_q1<=wen;
+    end
+    ysyx_26040117_LFshifter lfshifter1(.clk(clk),.rst(rst),.wen(!wen&&wen_q1),.outQ(delay_val0));
     assign delay_val={6'd0,delay_val0[1:0]};
     always@(posedge clk)begin
         if(rst)begin
