@@ -62,7 +62,6 @@ module ysyx_26040117_IFU(clk,rst,
     assign snpc=pc+32'd4;
     assign pc_next=({32{~jump}}&snpc)|                    //FIFO
                     ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
-    assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     always@(posedge clk)begin
         if(rst)
             pc<=32'h80000000;

@@ -16,13 +16,13 @@ module ysyx_26040117_IDU(clk,rst,
     output [4:0] op;
     output[31:0] imm;
     output [8:0] mytype;
-    output[81:0]IDU_wrapper;
+    output[77:0]IDU_wrapper;
     assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,pc_out,snpc_out};
     //IDU-REGISTERS
     output [4:0] rs1,rs2;
 
     wire [2:0]trap_ctrl;
-    wire [7:0]wmask;
+    wire [3:0]wmask;
     wire ifsigned;
     wire ebreak;
     wire [4:0] rd;
@@ -107,6 +107,6 @@ module ysyx_26040117_IDU(clk,rst,
     assign funct3=inst_out[14:12];
     assign op = {1'b1,inst_out[30],funct3}&{type_B,type_R||(type_I_compute&&(funct3==3'b101)),{3{type_R||type_I_compute||type_B||trap_ctrl[0]}}};//srai,srli?
     
-    assign wmask={4'b0000,{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
+    assign wmask={{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
     assign ifsigned=~funct3[2];
 endmodule

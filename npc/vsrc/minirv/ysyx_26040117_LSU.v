@@ -1,7 +1,7 @@
 module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
     input clk,rst,reqValid,wen,ifsigned;
     input[31:0] raddr,waddr,wdata;
-    input[7:0]wmask;
+    input[3:0]wmask;
     output reg respValid;
     output [31:0]rdata;
     reg[31:0] rdata0;
@@ -38,7 +38,7 @@ module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,raddr,waddr,wdata,wmask
         end else if(reg_notbusy)begin  //有读写请求时
             rdata0<= (reqValid&&(!wen))?paddr_read(raddr):32'h0;
             if (reqValid&&wen) begin
-                paddr_write(waddr,wdata,wmask);
+                paddr_write(waddr,wdata,{4'd0,wmask});
             end
         end
     end
