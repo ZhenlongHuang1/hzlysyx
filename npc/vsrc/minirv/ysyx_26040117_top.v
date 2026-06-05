@@ -75,7 +75,7 @@ module ysyx_26040117_top(clk,rst
     );
     //Load-Store Unit
     ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
-        .reqValid(lsu_reqValid),.respValid(lsu_respValid),.wen(lsu_wen),.raddr(lsu_addr),.waddr(lsu_addr),.wdata(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
+        .reqValid(lsu_reqValid),.respValid(lsu_respValid),.wen(lsu_wen),.addr(lsu_addr),.wdata(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
         .rdata(lsu_rdata)
     );
 

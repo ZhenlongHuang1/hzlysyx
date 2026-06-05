@@ -1,10 +1,10 @@
-module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,raddr,waddr,wdata,wmask,ifsigned,rdata);
+module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,addr,wdata,wmask,ifsigned,rdata);
     input clk,rst,reqValid,wen,ifsigned;
-    input[31:0] raddr,waddr,wdata;
+    input[31:0] addr,wdata;
     input[3:0]wmask;
-    output reg respValid;
+    output respValid;
     output [31:0]rdata;
-    reg[31:0] rdata0;
+    wire[31:0] rdata0;
     reg[31:0] rdata1;
     wire[31:0] bitmask,bitnmask;
     wire[1:0] raddr_shift;
@@ -12,7 +12,7 @@ module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,raddr,waddr,wdata,wmask
 
     assign bitmask={{8{wmask[3]}},{8{wmask[2]}},{8{wmask[1]}},{8{wmask[0]}}};
     assign bitnmask={{8{~wmask[3]&&ifsigned}},{8{~wmask[2]&&ifsigned}},{8{~wmask[1]&&ifsigned}},{8{~wmask[0]&&ifsigned}}};
-    assign raddr_shift=raddr[1:0];
+    assign raddr_shift=addr[1:0];
     assign rdata=(rdata1&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
     assign signbit=(~wmask[3]&&wmask[1]&&rdata1[15])||(~(|wmask[3:1])&&rdata1[7]);
     always @(*) begin
@@ -24,33 +24,8 @@ module ysyx_26040117_LSU (clk,rst,reqValid,respValid,wen,raddr,waddr,wdata,wmask
             default:rdata1=rdata0;
         endcase
     end
-
-    import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
-    import "DPI-C" function void paddr_write(
-        input int unsigned waddr, input int unsigned wdata, input byte wmask);
-    wire reg_notbusy;
-    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy));
-    always @(posedge clk) begin
-        if(rst)begin
-            rdata0<=32'h0;
-        end else if(reg_notbusy)begin  //有读写请求时
-            rdata0<= (reqValid&&(!wen))?paddr_read(raddr):32'h0;
-            if (reqValid&&wen) begin
-                paddr_write(waddr,wdata,{4'd0,wmask});
-            end
-        end
-    end
-    always @(posedge clk) begin
-        if(rst)begin
-            respValid<=1'b0;
-        end else begin
-            respValid<=reg_notbusy?reqValid:0;
-        end
-    end
-
-//    wire[31:0] unused_rdata2;
-//    ysyx_26040117_RegisterFile #(.ADDR_WIDTH(8)) Register3(.clk(clk),.rst(rst),
-//        .raddr1(raddr[7:0]),.raddr2(8'h0),.rdata1(rdata0),.rdata2(unused_rdata2),
-//        .wdata(wdata),.waddr(waddr[7:0]),.wen(wen)
-//    );
+    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
+        .lsu_reqValid(reqValid),.lsu_wen(wen),.lsu_addr(addr),.lsu_wdata(wdata),.lsu_wmask(wmask),
+        .lsu_respValid(respValid),.lsu_rdata(rdata0)
+);
 endmodule
