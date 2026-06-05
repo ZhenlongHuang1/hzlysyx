@@ -34,7 +34,7 @@ module ysyx_26040117_IFU(clk,rst,
     localparam IDLE=2'd0,FETCH=2'd1,WAIT=2'd2;
     always@(posedge clk)begin
         if(rst)
-            state<=FETCH;
+            state<=WAIT;
         else
             state<=next_state;
     end
