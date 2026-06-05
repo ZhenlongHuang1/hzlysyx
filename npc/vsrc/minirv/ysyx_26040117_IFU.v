@@ -22,8 +22,10 @@ module ysyx_26040117_IFU(clk,rst,
     output[31:0] snpc;
     //counter1
     wire reg_notbusy;
-    wire reqValid=state==WAIT;
+    wire reqValid;
+    reg respValid;
     wire [7:0]delay_val;
+    assign reqValid=state==WAIT;
     ysyx_26040117_LFshifter lfshifter2(.clk(rst?clk:(!reqValid)),.rst(rst),.outQ(delay_val));
     ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.delay_val({4'd0,delay_val[3:0]}));
 
@@ -31,7 +33,7 @@ module ysyx_26040117_IFU(clk,rst,
     wire WBU_IFU_fire,IFU_IDU_fire;
     wire[31:0]pc_next;
     reg[1:0] state,next_state;
-    localparam IDLE=2'd0,FETCH=2'd1,WAIT=2'd2;
+    localparam IDLE=2'd0,WAIT=2'd2;
     always@(posedge clk)begin
         if(rst)
             state<=WAIT;
@@ -48,7 +50,7 @@ module ysyx_26040117_IFU(clk,rst,
             default:next_state=state;
         endcase
     end
-    assign IFU_IDU_valid=state==WAIT&&(reg_notbusy);
+    assign IFU_IDU_valid=state==WAIT&&(respValid);
     assign WBU_IFU_ready=state==IDLE;
     //pc_next计算
     assign snpc=pc+32'd4;
@@ -67,10 +69,13 @@ module ysyx_26040117_IFU(clk,rst,
 
     import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     always@(posedge clk)begin
-        if(rst||pc<32'h80000000)
+        if(rst||pc<32'h80000000)begin
             ifu_rdata<=32'h0;
-        else if(state==FETCH)
+            respValid<=0;
+        end else if(reg_notbusy)begin
             ifu_rdata<=paddr_read(pc);
+            respValid<=reg_notbusy;
+        end
     end
     assign inst=ifu_rdata; 
 //    wire [31:0] unused_rdata2;
