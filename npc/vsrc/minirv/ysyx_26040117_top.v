@@ -64,7 +64,7 @@ module ysyx_26040117_top(clk,rst
     );
 
     //WriteBack Unit
-    wire lsu_reqValid,lsu_respValid,lsu_wen,lsu_reqReady,lsu_respReady;
+    wire lsu_reqValid,lsu_respValid,lsu_wen;
     wire [31:0]lsu_addr,lsu_wdata,lsu_rdata;
     wire [3:0]lsu_wmask;
     wire ifsigned_out;
@@ -75,7 +75,7 @@ module ysyx_26040117_top(clk,rst
     );
     //Load-Store Unit
     ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
-        .reqValid(lsu_reqValid),.respValid(lsu_respValid),.wen(lsu_wen),.addr(lsu_addr),.wdata(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
+        .reqValid(lsu_reqValid),.lsu_respValid(lsu_respValid),.wen(lsu_wen),.addr(lsu_addr),.wdata(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
         .rdata(lsu_rdata)
     );
 
