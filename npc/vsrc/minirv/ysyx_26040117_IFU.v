@@ -30,7 +30,7 @@ module ysyx_26040117_IFU(clk,rst,
         if(rst)
             respValid<=0;
         else
-            respValid<=reg_notbusy;
+            respValid<=reg_notbusy&&reqValid;
     end
     ysyx_26040117_LFshifter lfshifter2(.clk(rst?clk:(!reqValid)),.rst(rst),.outQ(delay_val));
     ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.delay_val({4'd0,delay_val[3:0]}));
