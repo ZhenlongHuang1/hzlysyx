@@ -31,7 +31,7 @@ module ysyx_26040117_IFU(clk,rst,
         else
             respValid<=reg_notbusy&&reqValid;
     end
-    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy));
+    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.ptemp(1'b0));
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;

@@ -29,8 +29,8 @@ module ysyx_26040117_MEM(clk,rst,
     import "DPI-C" function void paddr_write(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);
     wire reg_notbusy;
-    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(lsu_reqValid),.delay_over(lsu_reqReady));
-    ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(lsu_reqReady),.delay_over(reg_notbusy));
+    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(lsu_reqValid),.delay_over(lsu_reqReady),.ptemp(1'b0));
+    ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(lsu_reqReady),.delay_over(reg_notbusy),.ptemp(1'b0));
     always @(posedge clk) begin
         if(rst)begin
             lsu_rdata<=32'h0;
