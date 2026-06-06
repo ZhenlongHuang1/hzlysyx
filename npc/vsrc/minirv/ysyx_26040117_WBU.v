@@ -10,7 +10,7 @@ module ysyx_26040117_WBU(clk,rst,
     input [31:0] result,imm,src1,src2;
     input [8:0] mytype;
     input [4:0] op;
-    input [77:0]EXU_wrapper;
+    input [78:0]EXU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
@@ -32,7 +32,8 @@ module ysyx_26040117_WBU(clk,rst,
     wire [4:0]rd;
     wire ifsigned,ebreak;
     wire [31:0] pc,snpc;
-    assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc}=EXU_wrapper;
+    wire ifu_error;
+    assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc,ifu_error}=EXU_wrapper;
     //WBU-LSU
     assign lsu_wen=mytype_out[6]&&(state==WAIT);
     assign reqValid=lsu_wen||(mytype_out[5]&&(state==WAIT));
@@ -78,32 +79,14 @@ module ysyx_26040117_WBU(clk,rst,
     wire [31:0] pc_out,snpc_out;
     always @(posedge clk) begin
         if(rst)begin
-            result_reg<=32'h0;imm_reg<=32'h0;src1_reg<=32'h0;src2_reg<=32'h0;
-            mytype_reg<=9'h0;op_reg<=5'h0;trap_ctrl_reg<=3'h0;
-            wmask_reg<=4'h0;rd_reg<=5'h0;
-            ifsigned_reg<=1'h0;ebreak_reg<=1'h0;
-            pc_reg<=32'h0;snpc_reg<=32'h0;
+            {result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,op_reg,trap_ctrl_reg,wmask_reg,rd_reg,ifsigned_reg,ebreak_reg,pc_reg,snpc_reg}<=220'h0;
         end else if(EXU_WBU_fire)begin
-            result_reg<=result;imm_reg<=imm;src1_reg<=src1;src2_reg<=src2;
-            mytype_reg<=mytype;op_reg<=op;trap_ctrl_reg<=trap_ctrl;
-            wmask_reg<=wmask;rd_reg<=rd;
-            ifsigned_reg<=ifsigned;ebreak_reg<=ebreak;
-            pc_reg<=pc;snpc_reg<=snpc;
+            {result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,op_reg,trap_ctrl_reg,wmask_reg,rd_reg,ifsigned_reg,ebreak_reg,pc_reg,snpc_reg}<={
+                result,imm,src1,src2,mytype,op,trap_ctrl,wmask,rd,ifsigned,ebreak,pc,snpc};
         end
     end
-    assign result_out=result_reg;
-    assign imm_out=imm_reg;
-    assign src1_out=src1_reg;
-    assign src2_out=src2_reg;
-    assign mytype_out=mytype_reg;
-    assign op_out=op_reg;
-    assign trap_ctrl_out=trap_ctrl_reg;
-    assign wmask_out=wmask_reg;
-    assign rd_out=rd_reg;
-    assign ifsigned_out=ifsigned_reg;
-    assign ebreak_out=ebreak_reg;
-    assign pc_out=pc_reg;
-    assign snpc_out=snpc_reg;
+    assign {result_out,imm_out,src1_out,src2_out,mytype_out,op_out,trap_ctrl_out,wmask_out,rd_out,ifsigned_out,ebreak_out,pc_out,snpc_out}={
+        result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,op_reg,trap_ctrl_reg,wmask_reg,rd_reg,ifsigned_reg,ebreak_reg,pc_reg,snpc_reg};
 
     //function
     wire [31:0] csr_rdata;

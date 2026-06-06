@@ -1,12 +1,16 @@
-module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,lsu_respReady,wen,addr,wdata,wmask,ifsigned,rdata);
+module ysyx_26040117_LSU (clk,rst,
+    reqValid,lsu_respReady,wen,addr,wdata,wmask,ifsigned,
+    lsu_respValid,rdata,lsu_error
+);
     input clk,rst;
     input reqValid,lsu_respReady,wen;
     input[31:0] addr,wdata;
     input[3:0]wmask;
-    output lsu_respValid;
-
     input ifsigned;
+
+    output lsu_respValid;
     output [31:0]rdata;
+    output lsu_error;
 
     wire[31:0] rdata0;
     wire lsu_reqReady;
@@ -59,7 +63,7 @@ module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,lsu_respReady,wen,addr,
 
     ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
         .lsu_reqValid(lsu_reqValid),.lsu_reqReady(lsu_reqReady),.lsu_wen(lsu_wen),.lsu_addr(lsu_addr),.lsu_wdata(lsu_wdata),.lsu_wmask(lsu_wmask),
-        .lsu_respValid(lsu_respValid),.lsu_respReady(lsu_respReady),.lsu_rdata(rdata0)
+        .lsu_respValid(lsu_respValid),.lsu_respReady(lsu_respReady),.lsu_rdata(rdata0),.error(lsu_error)
 );
 
     reg[31:0] rdata2;

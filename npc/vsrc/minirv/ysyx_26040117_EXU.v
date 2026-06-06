@@ -10,13 +10,13 @@ module ysyx_26040117_EXU(clk,rst,
     input[31:0]src1,src2,imm;
     input [8:0]mytype;
     input [4:0]op;
-    input[77:0]IDU_wrapper;
+    input[78:0]IDU_wrapper;
     
     //EXU-WBU
     input EXU_WBU_ready;
     output EXU_WBU_valid;
     output reg [31:0]result;
-    output[77:0] IDU_wrapper_out;
+    output[78:0] IDU_wrapper_out;
     output[31:0]src1_out,src2_out,imm_out;
     output [8:0]mytype_out;
     output [4:0]op_out;
@@ -44,33 +44,18 @@ module ysyx_26040117_EXU(clk,rst,
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_WBU_fire=EXU_WBU_ready&&EXU_WBU_valid;
     //FIFO
-    reg[77:0] IDU_wrapper_reg;
+    reg[78:0] IDU_wrapper_reg;
     reg [31:0] src1_reg,src2_reg,imm_reg;
     reg [8:0] mytype_reg;
     reg [4:0] op_reg;
     always @(posedge clk) begin
         if(rst)begin
-            IDU_wrapper_reg<=78'h0;
-            src1_reg<=32'h0;
-            src2_reg<=32'h0;
-            imm_reg<=32'h0;
-            mytype_reg<=9'h0;
-            op_reg<=5'h0;
+            {IDU_wrapper_reg,src1_reg,src2_reg,imm_reg,mytype_reg,op_reg}<=189'h0;
         end else if(IDU_EXU_fire)begin
-            IDU_wrapper_reg<=IDU_wrapper;
-            src1_reg<=src1;
-            src2_reg<=src2;
-            imm_reg<=imm;
-            mytype_reg<=mytype;
-            op_reg<=op;
+            {IDU_wrapper_reg,src1_reg,src2_reg,imm_reg,mytype_reg,op_reg}<={IDU_wrapper,src1,src2,imm,mytype,op};
         end
     end
-    assign IDU_wrapper_out=IDU_wrapper_reg;
-    assign src1_out=src1_reg;
-    assign src2_out=src2_reg;
-    assign imm_out=imm_reg;
-    assign mytype_out=mytype_reg;
-    assign op_out=op_reg;
+    assign {IDU_wrapper_out,src1_out,src2_out,imm_out,mytype_out,op_out}={IDU_wrapper_reg,src1_reg,src2_reg,imm_reg,mytype_reg,op_reg};
     //function 
     wire [31:0] num1,num2;
     assign num1=src1_out;

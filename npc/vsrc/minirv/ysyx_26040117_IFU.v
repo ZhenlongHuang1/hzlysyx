@@ -1,13 +1,8 @@
 module ysyx_26040117_IFU(clk,rst,
     WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,
-    //dummy_ifu_wen,dummy_ifu_waddr,dummy_ifu_wdata,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,ifu_error
 );
     input clk,rst;
-    //dummy test
-//    input dummy_ifu_wen;
-//    input[31:0] dummy_ifu_wdata;
-//    input[7:0]dummy_ifu_waddr;
 
     //WBU-IFU
     input WBU_IFU_valid;
@@ -20,6 +15,7 @@ module ysyx_26040117_IFU(clk,rst,
     output [31:0]inst;
     output reg[31:0]pc;
     output[31:0] snpc;
+    output ifu_error;
     //counter1
     wire reqValid,reqReady,respValid,respReady;
 
@@ -73,7 +69,7 @@ module ysyx_26040117_IFU(clk,rst,
     assign ifu_raddr=IDLE_fire?pc_next:pc;
     ysyx_26040117_MEM mem2(.clk(clk),.rst(rst),
         .lsu_reqValid(reqValid),.lsu_reqReady(reqReady),.lsu_wen(1'b0),.lsu_addr(ifu_raddr),.lsu_wdata(32'h0),.lsu_wmask(4'b1111),
-        .lsu_respValid(respValid),.lsu_respReady(respReady),.lsu_rdata(ifu_rdata)
+        .lsu_respValid(respValid),.lsu_respReady(respReady),.lsu_rdata(ifu_rdata),.error(ifu_error)
 );
 
     assign inst=ifu_rdata; 

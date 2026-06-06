@@ -1,6 +1,6 @@
 module ysyx_26040117_MEM(clk,rst,
     lsu_reqValid,lsu_reqReady,lsu_wen,lsu_addr,lsu_wdata,lsu_wmask,
-    lsu_respValid,lsu_respReady,lsu_rdata
+    lsu_respValid,lsu_respReady,lsu_rdata,error
 );
     input clk,rst;
     //LSU-MEM
@@ -11,6 +11,7 @@ module ysyx_26040117_MEM(clk,rst,
     input [3:0]lsu_wmask;
     //MEM-LSU
     input lsu_respReady;
+    output error;
     output reg lsu_respValid;
     output reg[31:0]lsu_rdata;
 
@@ -57,4 +58,5 @@ module ysyx_26040117_MEM(clk,rst,
                 lsu_respValid<=1'b0;
         end
     end
+    assign error=(addr_out>=32'h10000000)&&(addr_out<=32'h88000000);
 endmodule
