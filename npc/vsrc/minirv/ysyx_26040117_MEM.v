@@ -3,10 +3,15 @@ module ysyx_26040117_MEM(clk,rst,
     lsu_respValid,lsu_respReady,lsu_rdata
 );
     input clk,rst;
-    input lsu_reqValid,lsu_respReady,lsu_wen;
+    //LSU-MEM
+    input lsu_reqValid;
+    output lsu_reqReady;
+    input lsu_wen;
     input [31:0]lsu_addr,lsu_wdata;
     input [3:0]lsu_wmask;
-    output reg lsu_respValid,lsu_reqReady;
+    //MEM-LSU
+    input lsu_respReady;
+    output reg lsu_respValid;
     output reg[31:0]lsu_rdata;
 
     wire lsu_reqfire;
