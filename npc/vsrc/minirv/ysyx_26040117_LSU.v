@@ -1,6 +1,6 @@
-module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,wen,addr,wdata,wmask,ifsigned,rdata);
+module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,lsu_respReady,wen,addr,wdata,wmask,ifsigned,rdata);
     input clk,rst;
-    input reqValid,wen;
+    input reqValid,lsu_respReady,wen;
     input[31:0] addr,wdata;
     input[3:0]wmask;
     output lsu_respValid;
@@ -9,7 +9,7 @@ module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,wen,addr,wdata,wmask,if
     output [31:0]rdata;
 
     wire[31:0] rdata0;
-    wire lsu_reqReady,lsu_respReady;
+    wire lsu_reqReady;
     wire lsu_reqValid;
     reg[1:0] state,next_state;
     localparam IDLE=2'd0,WAIT_REQ=2'd1,WAIT_RESP=2'd2;
@@ -29,7 +29,6 @@ module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,wen,addr,wdata,wmask,if
             default:next_state=state;
         endcase
     end
-    assign lsu_respReady=state==WAIT_RESP;
     assign lsu_reqValid=state==WAIT_REQ||(state==IDLE&&reqValid);
     reg[31:0] addr_reg,wdata_reg;
     reg[3:0] wmask_reg;
@@ -59,11 +58,11 @@ module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,wen,addr,wdata,wmask,if
     assign lsu_ifsigned=state==IDLE?ifsigned:ifsigned_reg;
 
     ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
-        .lsu_reqValid(lsu_reqValid),.lsu_respReady(lsu_respReady),.lsu_wen(lsu_wen),.lsu_addr(lsu_addr),.lsu_wdata(lsu_wdata),.lsu_wmask(lsu_wmask),
-        .lsu_respValid(lsu_respValid),.lsu_reqReady(lsu_reqReady),.lsu_rdata(rdata0)
+        .lsu_reqValid(lsu_reqValid),.lsu_reqReady(lsu_reqReady),.lsu_wen(lsu_wen),.lsu_addr(lsu_addr),.lsu_wdata(lsu_wdata),.lsu_wmask(lsu_wmask),
+        .lsu_respValid(lsu_respValid),.lsu_respReady(lsu_respReady),.lsu_rdata(rdata0)
 );
 
-    reg[31:0] rdata1;
+    reg[31:0] rdata2;
     wire[31:0] bitmask,bitnmask;
     wire[1:0] raddr_shift;
     wire signbit;
@@ -71,15 +70,15 @@ module ysyx_26040117_LSU (clk,rst,reqValid,lsu_respValid,wen,addr,wdata,wmask,if
     assign bitmask={{8{lsu_wmask[3]}},{8{lsu_wmask[2]}},{8{lsu_wmask[1]}},{8{lsu_wmask[0]}}};
     assign bitnmask={{8{~lsu_wmask[3]&&lsu_ifsigned}},{8{~lsu_wmask[2]&&lsu_ifsigned}},{8{~lsu_wmask[1]&&lsu_ifsigned}},{8{~lsu_wmask[0]&&lsu_ifsigned}}};
     assign raddr_shift=lsu_addr[1:0];
-    assign rdata=(rdata1&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
-    assign signbit=(~lsu_wmask[3]&&lsu_wmask[1]&&rdata1[15])||(~(|lsu_wmask[3:1])&&rdata1[7]);
+    assign rdata=(rdata2&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
+    assign signbit=(~lsu_wmask[3]&&lsu_wmask[1]&&rdata2[15])||(~(|lsu_wmask[3:1])&&rdata2[7]);
     always @(*) begin
         case (raddr_shift)
-            2'b00: rdata1=rdata0;
-            2'b01: rdata1={8'h0,rdata0[31:8]}; 
-            2'b10: rdata1={16'h0,rdata0[31:16]};
-            2'b11: rdata1={24'h0,rdata0[31:24]};
-            default:rdata1=rdata0;
+            2'b00: rdata2=rdata0;
+            2'b01: rdata2={8'h0,rdata0[31:8]}; 
+            2'b10: rdata2={16'h0,rdata0[31:16]};
+            2'b11: rdata2={24'h0,rdata0[31:24]};
+            default:rdata2=rdata0;
         endcase
     end
 endmodule

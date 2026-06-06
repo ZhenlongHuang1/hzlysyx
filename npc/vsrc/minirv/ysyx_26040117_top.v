@@ -64,18 +64,18 @@ module ysyx_26040117_top(clk,rst
     );
 
     //WriteBack Unit
-    wire lsu_reqValid,lsu_respValid,lsu_wen;
+    wire lsu_reqValid,lsu_respValid,lsu_respReady,lsu_wen;
     wire [31:0]lsu_addr,lsu_wdata,lsu_rdata;
     wire [3:0]lsu_wmask;
     wire ifsigned_out;
     ysyx_26040117_WBU WBU1(.clk(clk),.rst(rst),
         .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.EXU_wrapper(EXU_wrapper),.src1(exu_wbu_src1),.src2(exu_wbu_src2),.imm(exu_wbu_imm),.op(exu_wbu_op),.mytype(exu_wbu_mytype),.result(result),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen),
-        .reqValid(lsu_reqValid),.respValid(lsu_respValid),.lsu_wen(lsu_wen),.result_out(lsu_addr),.src2_out(lsu_wdata),.wmask_out(lsu_wmask),.ifsigned_out(ifsigned_out),.ramdata(lsu_rdata)
+        .reqValid(lsu_reqValid),.respReady(lsu_respReady),.respValid(lsu_respValid),.lsu_wen(lsu_wen),.result_out(lsu_addr),.src2_out(lsu_wdata),.wmask_out(lsu_wmask),.ifsigned_out(ifsigned_out),.ramdata(lsu_rdata)
     );
     //Load-Store Unit
     ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
-        .reqValid(lsu_reqValid),.lsu_respValid(lsu_respValid),.wen(lsu_wen),.addr(lsu_addr),.wdata(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
+        .reqValid(lsu_reqValid),.lsu_respValid(lsu_respValid),.lsu_respReady(lsu_respReady),.wen(lsu_wen),.addr(lsu_addr),.wdata(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
         .rdata(lsu_rdata)
     );
 

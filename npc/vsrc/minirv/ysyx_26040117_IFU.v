@@ -21,26 +21,16 @@ module ysyx_26040117_IFU(clk,rst,
     output reg[31:0]pc;
     output[31:0] snpc;
     //counter1
-    wire reg_notbusy;
-    wire reqValid;
-    reg respValid;
-    assign reqValid=state==WAIT;
-    always @(posedge clk) begin
-        if(rst)
-            respValid<=0;
-        else
-            respValid<=reg_notbusy&&reqValid;
-    end
-    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(reqValid),.delay_over(reg_notbusy),.ptemp(1'b0));
+    wire reqValid,reqReady,respValid,respReady;
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
     wire[31:0]pc_next;
-    reg state,next_state;
-    localparam IDLE=1'd0,WAIT=1'd1;
+    reg[1:0] state,next_state;
+    localparam IDLE=2'd0,WAIT_REQ=2'd1,WAIT_RESP=2'd2;
     always@(posedge clk)begin
         if(rst)
-            state<=WAIT;
+            state<=WAIT_REQ;
         else
             state<=next_state;
     end
@@ -49,13 +39,23 @@ module ysyx_26040117_IFU(clk,rst,
     always@(*)begin
         next_state=state;
         case (state)
-            IDLE:if(WBU_IFU_fire)next_state=WAIT;
-            WAIT:if(IFU_IDU_fire)next_state=IDLE;
+            IDLE:if(WBU_IFU_fire)begin
+                if(reqReady)next_state=WAIT_RESP;
+                else next_state=WAIT_REQ;
+            end
+            WAIT_REQ:if(reqReady)next_state=WAIT_RESP;
+            WAIT_RESP:if(IFU_IDU_fire)next_state=IDLE;
             default:next_state=state;
         endcase
     end
-    assign IFU_IDU_valid=state==WAIT&&(respValid);
+    wire IDLE_fire;
+    assign IDLE_fire=state==IDLE&&WBU_IFU_fire;
+    assign reqValid=IDLE_fire||state==WAIT_REQ;
+    assign respReady=state==WAIT_RESP&&IFU_IDU_ready;
+    assign IFU_IDU_valid=state==WAIT_RESP&&(respValid);
     assign WBU_IFU_ready=state==IDLE;
+
+
     //pc_next计算
     assign snpc=pc+32'd4;
     assign pc_next=({32{~jump}}&snpc)|                    //FIFO
@@ -63,27 +63,19 @@ module ysyx_26040117_IFU(clk,rst,
     always@(posedge clk)begin
         if(rst)
             pc<=32'h80000000;
-        else if(WBU_IFU_fire)begin
+        else if(IDLE_fire)begin
             pc<=pc_next;
         end
     end
     //取指
     reg [31:0] ifu_rdata;
+    wire [31:0] ifu_raddr;
+    assign ifu_raddr=IDLE_fire?pc_next:pc;
+    ysyx_26040117_MEM mem2(.clk(clk),.rst(rst),
+        .lsu_reqValid(reqValid),.lsu_reqReady(reqReady),.lsu_wen(1'b0),.lsu_addr(ifu_raddr),.lsu_wdata(32'h0),.lsu_wmask(4'b1111),
+        .lsu_respValid(respValid),.lsu_respReady(respReady),.lsu_rdata(ifu_rdata)
+);
 
-    import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
-    always@(posedge clk)begin
-        if(rst||pc<32'h80000000)begin
-            ifu_rdata<=32'h0;
-        end else if(reg_notbusy)begin
-            ifu_rdata<=paddr_read(pc);
-        end
-    end
     assign inst=ifu_rdata; 
-//    wire [31:0] unused_rdata2;
-//    ysyx_26040117_RegisterFile #(.ADDR_WIDTH(8)) Register2(.clk(clk),.rst(rst),
-//        .raddr1(pc[7:0]),.raddr2(8'h0),.rdata1(inst),.rdata2(unused_rdata2),
-//        .wdata(dummy_ifu_wdata),.waddr(dummy_ifu_waddr),.wen(dummy_ifu_wen)
-//
-//    );
     
 endmodule

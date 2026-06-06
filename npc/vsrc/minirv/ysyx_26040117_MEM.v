@@ -1,6 +1,6 @@
 module ysyx_26040117_MEM(clk,rst,
-    lsu_reqValid,lsu_respReady,lsu_wen,lsu_addr,lsu_wdata,lsu_wmask,
-    lsu_respValid,lsu_reqReady,lsu_rdata
+    lsu_reqValid,lsu_reqReady,lsu_wen,lsu_addr,lsu_wdata,lsu_wmask,
+    lsu_respValid,lsu_respReady,lsu_rdata
 );
     input clk,rst;
     input lsu_reqValid,lsu_respReady,lsu_wen;
@@ -11,6 +11,7 @@ module ysyx_26040117_MEM(clk,rst,
 
     wire lsu_reqfire;
     assign lsu_reqfire=lsu_reqValid&&lsu_reqReady;
+    //FIFO
     reg [31:0] addr_reg,wdata_reg;
     reg [3:0] wmask_reg;
     reg wen_reg;
@@ -24,13 +25,13 @@ module ysyx_26040117_MEM(clk,rst,
     wire [3:0] wmask_out;
     wire wen_out;
     assign {addr_out,wdata_out,wmask_out,wen_out}=lsu_reqfire?{lsu_addr,lsu_wdata,lsu_wmask,lsu_wen}:{addr_reg,wdata_reg,wmask_reg,wen_reg};
-
+    //function
     import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     import "DPI-C" function void paddr_write(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);
     wire reg_notbusy;
-    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(lsu_reqValid),.delay_over(lsu_reqReady),.ptemp(1'b0));
-    ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(lsu_reqReady),.delay_over(reg_notbusy),.ptemp(1'b0));
+    ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(lsu_reqValid),.delay_over(lsu_reqReady));
+    ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(lsu_reqfire),.delay_over(reg_notbusy));
     always @(posedge clk) begin
         if(rst)begin
             lsu_rdata<=32'h0;

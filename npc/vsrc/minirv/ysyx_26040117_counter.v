@@ -1,8 +1,8 @@
 module ysyx_26040117_counter (clk,rst,
-    wen,delay_over,ptemp
+    wen,delay_over
 );
     input clk,rst;
-    input wen,ptemp;
+    input wen;
     output delay_over;
     wire [7:0] delay_val;
     wire [7:0] delay_val0;

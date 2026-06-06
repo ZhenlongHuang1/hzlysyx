@@ -1,7 +1,7 @@
 module ysyx_26040117_WBU(clk,rst,
     EXU_WBU_ready,EXU_WBU_valid,result,EXU_wrapper,imm,src1,src2,mytype,op,
     WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,jalr,rd_out,register_wen,
-    reqValid,respValid,lsu_wen,result_out,src2_out,wmask_out,ifsigned_out,ramdata
+    reqValid,respReady,respValid,lsu_wen,result_out,src2_out,wmask_out,ifsigned_out,ramdata
 );
     input clk,rst;
     //EXU-WBU
@@ -22,7 +22,7 @@ module ysyx_26040117_WBU(clk,rst,
     //WBU-LSU
     input respValid;
     input [31:0]ramdata;
-    output reqValid,lsu_wen;
+    output reqValid,respReady,lsu_wen;
     output ifsigned_out;
     output [31:0] result_out,src2_out;
     output[3:0] wmask_out;
@@ -33,10 +33,13 @@ module ysyx_26040117_WBU(clk,rst,
     wire ifsigned,ebreak;
     wire [31:0] pc,snpc;
     assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc}=EXU_wrapper;
-    //state machine
-    wire EXU_WBU_fire,WBU_IFU_fire;
+    //WBU-LSU
     assign lsu_wen=mytype_out[6]&&(state==WAIT);
     assign reqValid=lsu_wen||(mytype_out[5]&&(state==WAIT));
+    assign respReady=WBU_IFU_ready;
+
+    //state machine
+    wire EXU_WBU_fire,WBU_IFU_fire;
     reg state,next_state;
     localparam IDLE=1'd0,WAIT=1'd1;
     always @(posedge clk) begin
