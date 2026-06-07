@@ -67,7 +67,7 @@ module ysyx_26040117_IFU(clk,rst,
         end
     end
     //取指
-    reg [31:0] ifu_rdata;
+    wire [31:0] ifu_rdata;
     wire [31:0] ifu_araddr;
     assign ifu_araddr=IDLE_fire?pc_next:pc;
     wire ifu_awready,ifu_wready,ifu_bvalid,ifu_bresp;
