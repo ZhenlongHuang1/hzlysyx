@@ -1,6 +1,7 @@
 module ysyx_26040117_LSU (clk,rst,
     reqValid,respReady,wen,addr,wdata_in,wmask,ifsigned,
-    respValid,rdata_out,rresp,bresp
+    respValid,rdata_out,rresp,bresp,
+    MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
     input reqValid,respReady,wen;
@@ -11,6 +12,10 @@ module ysyx_26040117_LSU (clk,rst,
     output respValid;
     output [31:0]rdata_out;
     output rresp,bresp;
+    //LSU-MEM
+    input [38:0]MEM_LSU_wrapper;
+    output[104:0] LSU_MEM_wrapper;
+
 
     //read
     wire[31:0] rdata;
@@ -122,13 +127,15 @@ module ysyx_26040117_LSU (clk,rst,
     assign {wdata,wstrb}=wIDLE_reqvalid?{wdata_in,wmask}:{wdata_reg,wstrb_reg};
     assign awaddr=awIDLE_reqvalid?addr:awaddr_reg;
 
-    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
-        .arvalid(arvalid),.arready(arready),.araddr(araddr),
-        .rvalid(rvalid),.rready(rready),.rdata(rdata),.rresp(rresp),
-        .awvalid(awvalid),.awready(awready),.awaddr(awaddr),
-        .wvalid(wvalid),.wready(wready),.wdata(wdata),.wstrb(wstrb),
-        .bvalid(bvalid),.bready(bready),.bresp(bresp)
-);
+    assign LSU_MEM_wrapper={arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
+    assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;
+//    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
+//        .arvalid(arvalid),.arready(arready),.araddr(araddr),
+//        .rvalid(rvalid),.rready(rready),.rdata(rdata),.rresp(rresp),
+//        .awvalid(awvalid),.awready(awready),.awaddr(awaddr),
+//        .wvalid(wvalid),.wready(wready),.wdata(wdata),.wstrb(wstrb),
+//        .bvalid(bvalid),.bready(bready),.bresp(bresp)
+//);
     assign respValid=rfire||bfire;
 
     //read function

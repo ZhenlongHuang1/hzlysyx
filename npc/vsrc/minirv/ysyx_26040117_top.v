@@ -21,10 +21,13 @@ module ysyx_26040117_top(clk,rst
     wire ifu_idu_rresp;
     wire[31:0]inst;
     wire WBU_IFU_valid,WBU_IFU_ready;
+    wire [38:0]MEM_IFU_wrapper;
+    wire [104:0]IFU_MEM_wrapper;
     ysyx_26040117_IFU IFU1(.clk(clk),.rst(rst),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jalr(jalr),.jump(jump),.dnpc(dnpc),
         //.dummy_ifu_wen(dummy_ifu_wen),.dummy_ifu_wdata(dummy_ifu_wdata),.dummy_ifu_waddr(dummy_ifu_waddr),
-        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_rresp(ifu_idu_rresp)
+        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_rresp(ifu_idu_rresp),
+        .MEM_IFU_wrapper(MEM_IFU_wrapper),.IFU_MEM_wrapper(IFU_MEM_wrapper)
     );
     
     //Instruction Decode Unit
@@ -76,9 +79,12 @@ module ysyx_26040117_top(clk,rst
         .reqValid(lsu_reqValid),.respReady(lsu_respReady),.respValid(lsu_respValid),.lsu_wen(lsu_wen),.result_out(lsu_addr),.src2_out(lsu_wdata),.wmask_out(lsu_wmask),.ifsigned_out(ifsigned_out),.ramdata(lsu_rdata)
     );
     //Load-Store Unit
+    wire [38:0]MEM_LSU_wrapper;
+    wire [104:0]LSU_MEM_wrapper;
     ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
         .reqValid(lsu_reqValid),.respValid(lsu_respValid),.respReady(lsu_respReady),.wen(lsu_wen),.addr(lsu_addr),.wdata_in(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
-        .rdata_out(lsu_rdata),.rresp(lsu_rresp),.bresp(lsu_bresp)
+        .rdata_out(lsu_rdata),.rresp(lsu_rresp),.bresp(lsu_bresp),
+        .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
     );
 
 endmodule
