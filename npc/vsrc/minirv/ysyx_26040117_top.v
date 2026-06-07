@@ -86,5 +86,9 @@ module ysyx_26040117_top(clk,rst
         .rdata_out(lsu_rdata),.rresp(lsu_rresp),.bresp(lsu_bresp),
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
     );
+    ysyx_26040117_arbiter arbiter1(.clk(clk),.rst(rst),
+        .MEM_IFU_wrapper(MEM_IFU_wrapper),.IFU_MEM_wrapper(IFU_MEM_wrapper),
+        .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
+    );
 
 endmodule
