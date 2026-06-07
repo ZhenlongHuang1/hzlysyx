@@ -29,7 +29,8 @@ module ysyx_26040117_MEM(clk,rst,
     input bready;
     output bresp;
     //read
-    wire arfire;
+    wire arfire,rfire;
+    assign rfire=rvalid&&rready;
     assign arfire=arvalid&&arready;
     //read FIFO
     reg [31:0] araddr_reg;
@@ -55,10 +56,10 @@ module ysyx_26040117_MEM(clk,rst,
         if(rst)begin
             rvalid<=1'b0;
         end else begin
-            if(r_notbusy)
-                rvalid<=1'b1;
-            else if(rready)
+            if(rfire)
                 rvalid<=1'b0;
+            else if(r_notbusy&&!rvalid)
+                rvalid<=1'b1;
         end
     end
     assign rresp=(araddr_out>=32'h10000000)&&(araddr_out<=32'h88000000);
@@ -117,10 +118,10 @@ module ysyx_26040117_MEM(clk,rst,
         if(rst)begin
             bvalid<=1'b0;
         end else begin
-            if(b_notbusy)
-                bvalid<=1'b1;
-            else if(bready)
+            if(bfire)
                 bvalid<=1'b0;
+            else if(b_notbusy&&!bvalid)
+                bvalid<=1'b1;
         end
     end
     assign bresp=(awaddr_out>=32'h10000000)&&(awaddr_out<=32'h88000000);
