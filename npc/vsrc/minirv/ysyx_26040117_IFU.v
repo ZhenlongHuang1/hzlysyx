@@ -1,6 +1,6 @@
 module ysyx_26040117_IFU(clk,rst,
     WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,ifu_error
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,ifu_rresp
 );
     input clk,rst;
 
@@ -15,41 +15,44 @@ module ysyx_26040117_IFU(clk,rst,
     output [31:0]inst;
     output reg[31:0]pc;
     output[31:0] snpc;
-    output ifu_error;
-    //counter1
-    wire reqValid,reqReady,respValid,respReady;
+    output ifu_rresp;
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
+    wire arvalid,arready,rvalid,rready;
+    wire rfire,arfire;
     wire[31:0]pc_next;
     reg[1:0] state,next_state;
-    localparam IDLE=2'd0,WAIT_REQ=2'd1,WAIT_RESP=2'd2;
+    localparam IDLE=2'd0,WAIT_READY=2'd1,WAIT_VALID=2'd2;
     always@(posedge clk)begin
         if(rst)
-            state<=WAIT_REQ;
+            state<=WAIT_READY;
         else
             state<=next_state;
     end
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;
+    assign rfire=rvalid&&rready;
+    assign arfire=arvalid&&arready;
     always@(*)begin
         next_state=state;
         case (state)
-            IDLE:if(WBU_IFU_fire)begin
-                if(reqReady)next_state=WAIT_RESP;
-                else next_state=WAIT_REQ;
+            IDLE:begin
+                if(arfire)next_state=WAIT_VALID;
+                else if(arvalid)next_state=WAIT_READY;
             end
-            WAIT_REQ:if(reqReady)next_state=WAIT_RESP;
-            WAIT_RESP:if(IFU_IDU_fire)next_state=IDLE;
+            WAIT_READY:if(arfire)next_state=WAIT_VALID;
+            WAIT_VALID:if(rfire)next_state=IDLE;
             default:next_state=state;
         endcase
     end
     wire IDLE_fire;
     assign IDLE_fire=state==IDLE&&WBU_IFU_fire;
-    assign reqValid=IDLE_fire||state==WAIT_REQ;
-    assign respReady=state==WAIT_RESP&&IFU_IDU_ready;
-    assign IFU_IDU_valid=state==WAIT_RESP&&(respValid);
+    assign arvalid=IDLE_fire||state==WAIT_READY;
+    assign rready=state==WAIT_VALID&&IFU_IDU_ready;
+    assign IFU_IDU_valid=state==WAIT_VALID&&(rvalid);
     assign WBU_IFU_ready=state==IDLE;
+
 
 
     //pc_next计算
@@ -65,11 +68,16 @@ module ysyx_26040117_IFU(clk,rst,
     end
     //取指
     reg [31:0] ifu_rdata;
-    wire [31:0] ifu_raddr;
-    assign ifu_raddr=IDLE_fire?pc_next:pc;
-    ysyx_26040117_MEM mem2(.clk(clk),.rst(rst),
-        .lsu_reqValid(reqValid),.lsu_reqReady(reqReady),.lsu_wen(1'b0),.lsu_addr(ifu_raddr),.lsu_wdata(32'h0),.lsu_wmask(4'b1111),
-        .lsu_respValid(respValid),.lsu_respReady(respReady),.lsu_rdata(ifu_rdata),.error(ifu_error)
+    wire [31:0] ifu_araddr;
+    assign ifu_araddr=IDLE_fire?pc_next:pc;
+    wire ifu_awready,ifu_wready,ifu_bvalid,ifu_bresp;
+    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
+        .arvalid(arvalid),.arready(arready),.araddr(ifu_araddr),
+        .rvalid(rvalid),.rready(rready),.rdata(ifu_rdata),.rresp(ifu_rresp),
+
+        .awvalid(1'b0),.awready(ifu_awready),.awaddr(32'd0),
+        .wvalid(1'b0),.wready(ifu_wready),.wdata(32'd0),.wstrb(4'd0),
+        .bvalid(ifu_bvalid),.bready(1'b0),.bresp(ifu_bresp)
 );
 
     assign inst=ifu_rdata; 

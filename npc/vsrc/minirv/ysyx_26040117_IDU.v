@@ -1,5 +1,5 @@
 module ysyx_26040117_IDU(clk,rst,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,ifu_error,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,ifu_rresp,
     IDU_EXU_ready,IDU_EXU_valid,imm,op,mytype,
     IDU_wrapper,
     rs1,rs2
@@ -10,7 +10,7 @@ module ysyx_26040117_IDU(clk,rst,
     output IFU_IDU_ready;
     input [31:0] inst;
     input [31:0] pc,snpc;
-    input ifu_error;
+    input ifu_rresp;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
@@ -18,7 +18,7 @@ module ysyx_26040117_IDU(clk,rst,
     output[31:0] imm;
     output [8:0] mytype;
     output[78:0]IDU_wrapper;
-    assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,pc_out,snpc_out,ifu_error_out};
+    assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,pc_out,snpc_out,ifu_rresp_out};
     //IDU-REGISTERS
     output [4:0] rs1,rs2;
 
@@ -50,18 +50,18 @@ module ysyx_26040117_IDU(clk,rst,
     assign IDU_EXU_valid=state==WAIT; 
     //FIFO
     reg[31:0] inst_reg,pc_reg,snpc_reg;//FIFO
-    reg ifu_error_reg;
+    reg ifu_rresp_reg;
     wire [31:0] inst_out,pc_out,snpc_out;
-    wire ifu_error_out;
+    wire ifu_rresp_out;
     always @(posedge clk) begin
         if(rst)begin
-            {inst_reg,pc_reg,snpc_reg,ifu_error_reg}<=97'h0;
+            {inst_reg,pc_reg,snpc_reg,ifu_rresp_reg}<=97'h0;
         end
         else if(IFU_IDU_fire)begin
-            {inst_reg,pc_reg,snpc_reg,ifu_error_reg}<={inst,pc,snpc,ifu_error};
+            {inst_reg,pc_reg,snpc_reg,ifu_rresp_reg}<={inst,pc,snpc,ifu_rresp};
         end
     end
-    assign {inst_out,pc_out,snpc_out,ifu_error_out}={inst_reg,pc_reg,snpc_reg,ifu_error_reg};
+    assign {inst_out,pc_out,snpc_out,ifu_rresp_out}={inst_reg,pc_reg,snpc_reg,ifu_rresp_reg};
     //function logic
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil;
     wire [6:0]opcode;

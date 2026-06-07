@@ -18,13 +18,13 @@ module ysyx_26040117_top(clk,rst
     //Instruction Fetch Unit
     wire IFU_IDU_ready,IFU_IDU_valid;
     wire[31:0]ifu_idu_pc,ifu_idu_snpc;
-    wire ifu_idu_error;
+    wire ifu_idu_rresp;
     wire[31:0]inst;
     wire WBU_IFU_valid,WBU_IFU_ready;
     ysyx_26040117_IFU IFU1(.clk(clk),.rst(rst),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jalr(jalr),.jump(jump),.dnpc(dnpc),
         //.dummy_ifu_wen(dummy_ifu_wen),.dummy_ifu_wdata(dummy_ifu_wdata),.dummy_ifu_waddr(dummy_ifu_waddr),
-        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_error(ifu_idu_error)
+        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_rresp(ifu_idu_rresp)
     );
     
     //Instruction Decode Unit
@@ -37,7 +37,7 @@ module ysyx_26040117_top(clk,rst
     wire[4:0] rs1,rs2;
     ysyx_26040117_IDU IDU1(.clk(clk),.rst(rst),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),
-        .pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_error(ifu_idu_error),
+        .pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_rresp(ifu_idu_rresp),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.imm(imm),.op(op),.mytype(mytype),
         .IDU_wrapper(IDU_wrapper),
         .rs1(rs1),.rs2(rs2)
@@ -69,7 +69,7 @@ module ysyx_26040117_top(clk,rst
     wire [31:0]lsu_addr,lsu_wdata,lsu_rdata;
     wire [3:0]lsu_wmask;
     wire ifsigned_out;
-    wire lsu_error;
+    wire lsu_rresp,lsu_bresp;
     ysyx_26040117_WBU WBU1(.clk(clk),.rst(rst),
         .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.EXU_wrapper(EXU_wrapper),.src1(exu_wbu_src1),.src2(exu_wbu_src2),.imm(exu_wbu_imm),.op(exu_wbu_op),.mytype(exu_wbu_mytype),.result(result),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen),
@@ -77,8 +77,8 @@ module ysyx_26040117_top(clk,rst
     );
     //Load-Store Unit
     ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
-        .reqValid(lsu_reqValid),.lsu_respValid(lsu_respValid),.lsu_respReady(lsu_respReady),.wen(lsu_wen),.addr(lsu_addr),.wdata(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
-        .rdata(lsu_rdata),.lsu_error(lsu_error)
+        .reqValid(lsu_reqValid),.respValid(lsu_respValid),.respReady(lsu_respReady),.wen(lsu_wen),.addr(lsu_addr),.wdata_in(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
+        .rdata_out(lsu_rdata),.rresp(lsu_rresp),.bresp(lsu_bresp)
     );
 
 endmodule
