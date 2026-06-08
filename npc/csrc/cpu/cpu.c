@@ -139,6 +139,10 @@ static void execute(uint64_t n){
         if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
         trace_and_difftest(old_cpu_pc);
+        if(old_cpu_pc==0x80027dc4){
+            long tmp=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__CSR1__DOT__mcycle;
+            printf("\n now is %ld\n",tmp);
+        }
     }
 }
 void cpu_exec(uint64_t n){
