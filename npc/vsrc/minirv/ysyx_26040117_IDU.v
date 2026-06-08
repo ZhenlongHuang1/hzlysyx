@@ -1,5 +1,5 @@
 module ysyx_26040117_IDU(clk,rst,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,ifu_rresp,
     IDU_EXU_ready,IDU_EXU_valid,imm,op,mytype,
     IDU_wrapper,
     rs1,rs2
@@ -10,19 +10,20 @@ module ysyx_26040117_IDU(clk,rst,
     output IFU_IDU_ready;
     input [31:0] inst;
     input [31:0] pc,snpc;
+    input ifu_rresp;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
     output [4:0] op;
     output[31:0] imm;
     output [8:0] mytype;
-    output[81:0]IDU_wrapper;
-    assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,pc_out,snpc_out};
+    output[78:0]IDU_wrapper;
+    assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,pc_out,snpc_out,ifu_rresp_out};
     //IDU-REGISTERS
     output [4:0] rs1,rs2;
 
     wire [2:0]trap_ctrl;
-    wire [7:0]wmask;
+    wire [3:0]wmask;
     wire ifsigned;
     wire ebreak;
     wire [4:0] rd;
@@ -49,22 +50,18 @@ module ysyx_26040117_IDU(clk,rst,
     assign IDU_EXU_valid=state==WAIT; 
     //FIFO
     reg[31:0] inst_reg,pc_reg,snpc_reg;//FIFO
+    reg ifu_rresp_reg;
     wire [31:0] inst_out,pc_out,snpc_out;
+    wire ifu_rresp_out;
     always @(posedge clk) begin
         if(rst)begin
-            inst_reg<=32'h0;
-            pc_reg<=32'h0;
-            snpc_reg<=32'h0;
+            {inst_reg,pc_reg,snpc_reg,ifu_rresp_reg}<=97'h0;
         end
         else if(IFU_IDU_fire)begin
-            inst_reg<=inst;
-            pc_reg<=pc;
-            snpc_reg<=snpc;
+            {inst_reg,pc_reg,snpc_reg,ifu_rresp_reg}<={inst,pc,snpc,ifu_rresp};
         end
     end
-    assign pc_out=pc_reg;
-    assign snpc_out=snpc_reg;
-    assign inst_out=inst_reg;
+    assign {inst_out,pc_out,snpc_out,ifu_rresp_out}={inst_reg,pc_reg,snpc_reg,ifu_rresp_reg};
     //function logic
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil;
     wire [6:0]opcode;
@@ -107,6 +104,6 @@ module ysyx_26040117_IDU(clk,rst,
     assign funct3=inst_out[14:12];
     assign op = {1'b1,inst_out[30],funct3}&{type_B,type_R||(type_I_compute&&(funct3==3'b101)),{3{type_R||type_I_compute||type_B||trap_ctrl[0]}}};//srai,srli?
     
-    assign wmask={4'b0000,{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
+    assign wmask={{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
     assign ifsigned=~funct3[2];
 endmodule

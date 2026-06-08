@@ -1,16 +1,19 @@
+`include "ysyx_26040117__defines.vh"
 module ysyx_26040117_top(clk,rst
-    //srcd,inst,mytype,result,
-    //dummy_ifu_wen,dummy_ifu_waddr,dummy_ifu_wdata
+`ifdef STA_MODE
+    ,srcd,inst,mytype,result,
+    dummy_wen,dummy_waddr,dummy_wdata
+`endif
 );
-//    //dummy test
-//    input [7:0] dummy_ifu_waddr;
-//    input [31:0] dummy_ifu_wdata;
-//    input dummy_ifu_wen;
-//    //dummy test
-//    output[31:0]srcd,inst,result;
-//    output [8:0]mytype;
-
-
+`ifdef STA_MODE
+    //dummy test
+    input [7:0] dummy_waddr;
+    input [31:0] dummy_wdata;
+    input dummy_wen;
+    //dummy test
+    output[31:0]srcd,inst,result;
+    output [8:0]mytype;
+`endif
     input clk,rst;
     //WBU-data
     wire[31:0]dnpc,srcd;//result:ALU结果
@@ -18,12 +21,16 @@ module ysyx_26040117_top(clk,rst
     //Instruction Fetch Unit
     wire IFU_IDU_ready,IFU_IDU_valid;
     wire[31:0]ifu_idu_pc,ifu_idu_snpc;
+    wire ifu_idu_rresp;
     wire[31:0]inst;
     wire WBU_IFU_valid,WBU_IFU_ready;
+    wire [38:0]MEM_IFU_wrapper;
+    wire [104:0]IFU_MEM_wrapper;
     ysyx_26040117_IFU IFU1(.clk(clk),.rst(rst),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jalr(jalr),.jump(jump),.dnpc(dnpc),
         //.dummy_ifu_wen(dummy_ifu_wen),.dummy_ifu_wdata(dummy_ifu_wdata),.dummy_ifu_waddr(dummy_ifu_waddr),
-        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc)
+        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_rresp(ifu_idu_rresp),
+        .MEM_IFU_wrapper(MEM_IFU_wrapper),.IFU_MEM_wrapper(IFU_MEM_wrapper)
     );
     
     //Instruction Decode Unit
@@ -32,11 +39,11 @@ module ysyx_26040117_top(clk,rst
     wire[4:0]op;
     wire[8:0]mytype;//0:lui;    1:auipc;    2:jal;  3:jalr;  4:跳转;  5:load;  6:store;  7:立即数计算;  8:寄存器计算
 
-    wire[81:0]IDU_wrapper;
+    wire[78:0]IDU_wrapper;
     wire[4:0] rs1,rs2;
     ysyx_26040117_IDU IDU1(.clk(clk),.rst(rst),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),
-        .pc(ifu_idu_pc),.snpc(ifu_idu_snpc),
+        .pc(ifu_idu_pc),.snpc(ifu_idu_snpc),.ifu_rresp(ifu_idu_rresp),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.imm(imm),.op(op),.mytype(mytype),
         .IDU_wrapper(IDU_wrapper),
         .rs1(rs1),.rs2(rs2)
@@ -55,7 +62,7 @@ module ysyx_26040117_top(clk,rst
     wire [31:0] exu_wbu_src1,exu_wbu_src2,exu_wbu_imm;
     wire [8:0] exu_wbu_mytype;
     wire [4:0] exu_wbu_op;
-    wire[81:0]EXU_wrapper; 
+    wire[78:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clk),.rst(rst),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.src1(src1),.src2(src2),.imm(imm),.op(op),.mytype(mytype),
         .IDU_wrapper(IDU_wrapper),
@@ -64,8 +71,30 @@ module ysyx_26040117_top(clk,rst
     );
 
     //WriteBack Unit
+    wire lsu_reqValid,lsu_respValid,lsu_respReady,lsu_wen;
+    wire [31:0]lsu_addr,lsu_wdata,lsu_rdata;
+    wire [3:0]lsu_wmask;
+    wire ifsigned_out;
+    wire lsu_rresp,lsu_bresp;
     ysyx_26040117_WBU WBU1(.clk(clk),.rst(rst),
         .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.EXU_wrapper(EXU_wrapper),.src1(exu_wbu_src1),.src2(exu_wbu_src2),.imm(exu_wbu_imm),.op(exu_wbu_op),.mytype(exu_wbu_mytype),.result(result),
-        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen)
+        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen),
+        .reqValid(lsu_reqValid),.respReady(lsu_respReady),.respValid(lsu_respValid),.lsu_wen(lsu_wen),.result_out(lsu_addr),.src2_out(lsu_wdata),.wmask_out(lsu_wmask),.ifsigned_out(ifsigned_out),.ramdata(lsu_rdata)
     );
+    //Load-Store Unit
+    wire [38:0]MEM_LSU_wrapper;
+    wire [104:0]LSU_MEM_wrapper;
+    ysyx_26040117_LSU LSU1(.clk(clk),.rst(rst),
+        .reqValid(lsu_reqValid),.respValid(lsu_respValid),.respReady(lsu_respReady),.wen(lsu_wen),.addr(lsu_addr),.wdata_in(lsu_wdata),.wmask(lsu_wmask),.ifsigned(ifsigned_out),
+        .rdata_out(lsu_rdata),.rresp(lsu_rresp),.bresp(lsu_bresp),
+        .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
+    );
+    ysyx_26040117_arbiter arbiter1(.clk(clk),.rst(rst),
+        .MEM_IFU_wrapper(MEM_IFU_wrapper),.IFU_MEM_wrapper(IFU_MEM_wrapper),
+        .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
+`ifdef STA_MODE
+        ,.dummy_wen(dummy_wen),.dummy_wdata(dummy_wdata),.dummy_waddr(dummy_waddr)
+`endif
+    );
+
 endmodule
