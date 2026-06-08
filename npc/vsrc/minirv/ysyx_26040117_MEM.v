@@ -56,7 +56,7 @@ module ysyx_26040117_MEM(clk,rst,
     ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(arfire),.delay_over(r_notbusy));
 `ifdef STA_MODE
 
-`elsif
+`else
     import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     always @(posedge clk) begin
         if(rst)begin
