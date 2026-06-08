@@ -8,6 +8,7 @@ module ysyx_26040117_CSR(clk,rst,
     input [11:0]csr_addr;
     input [31:0]src1,pc;
     output reg[31:0]rdata;
+
     reg[63:0]mcycle;
     reg[31:0]wdata,mepc,mstatus,mcause,mtvec;
     always @(*)begin
