@@ -127,8 +127,7 @@ module ysyx_26040117_MEM(clk,rst,
         .raddr1(araddr_out[7:0]),.raddr2(8'd0),.rdata1(rdata),.rdata2(dummy_src2),
         .wdata(dummy_wdata),.waddr(dummy_waddr),.wen(dummy_wen)
     );
-
-`elsif
+`else
     import "DPI-C" function void paddr_write(input int unsigned waddr, input int unsigned wdata, input byte wmask);
     always @(posedge clk) begin
         if(rst)begin
