@@ -49,11 +49,11 @@ int is_exit_status_bad() {
 void single_cycle(){
     dut->clk=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
-            if(contextp->time()>300000000){tfp->dump(contextp->time());}
+            if(contextp->time()>38760000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
     dut->clk=0;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
-            if(contextp->time()>300000000){tfp->dump(contextp->time());}
+            if(contextp->time()>38760000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
 }
 void reset(int n){
@@ -140,7 +140,7 @@ static void execute(uint64_t n){
         get_cpu_state(&cpu_dut);
         trace_and_difftest(old_cpu_pc);
         if(old_cpu_pc==0x80027dc4){
-            long tmp=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__CSR1__DOT__mcycle;
+            long tmp=contextp->time();
             printf("\n now is %ld\n",tmp);
         }
     }
