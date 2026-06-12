@@ -1,7 +1,17 @@
+`include "ysyx_26040117__defines.vh"
 module ysyx_26040117_arbiter(clk,rst,
     MEM_IFU_wrapper,IFU_MEM_wrapper,
     MEM_LSU_wrapper,LSU_MEM_wrapper
+`ifdef STA_MODE
+    ,dummy_wen,dummy_waddr,dummy_wdata
+`endif
 );
+`ifdef STA_MODE
+    //dummy
+    input dummy_wen;
+    input [31:0] dummy_wdata;
+    input [7:0] dummy_waddr;
+`endif
     input clk,rst;
     input [104:0] IFU_MEM_wrapper,LSU_MEM_wrapper;
     output [38:0] MEM_IFU_wrapper,MEM_LSU_wrapper;
@@ -63,5 +73,9 @@ module ysyx_26040117_arbiter(clk,rst,
         .awvalid(awvalid),.awready(awready),.awaddr(awaddr),
         .wvalid(wvalid),.wready(wready),.wdata(wdata),.wstrb(wstrb),
         .bvalid(bvalid),.bready(bready),.bresp(bresp)
+`ifdef STA_MODE
+        ,.dummy_wen(dummy_wen),.dummy_wdata(dummy_wdata),.dummy_waddr(dummy_waddr)
+`endif
 );
+
 endmodule

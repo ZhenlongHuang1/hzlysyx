@@ -1,3 +1,4 @@
+`include "ysyx_26040117__defines.vh"
 module ysyx_26040117_WBU(clk,rst,
     EXU_WBU_ready,EXU_WBU_valid,result,EXU_wrapper,imm,src1,src2,mytype,op,
     WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,jalr,rd_out,register_wen,
@@ -105,12 +106,14 @@ module ysyx_26040117_WBU(clk,rst,
                 ({32{mytype_out[1]}}&dnpc)|
                 ({32{trap_ctrl_out[0]}}&csr_rdata);
     assign jump=(mytype_out[3]||mytype_out[2]||privil||(mytype_out[4]&&br_token));
+`ifndef STA_MODE
     import "DPI-C" function void npc_trap();
     always@(posedge clk)begin
         if(ebreak_out&&!rst&&WBU_IFU_fire)begin
             npc_trap();
         end
     end
+`endif
     //Control Status Register
 
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),

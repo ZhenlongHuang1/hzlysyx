@@ -1,10 +1,20 @@
+`include "ysyx_26040117__defines.vh"
 module ysyx_26040117_MEM(clk,rst,
     arvalid,arready,araddr,
     rvalid,rready,rdata,rresp,
     awvalid,awready,awaddr,
     wvalid,wready,wdata,wstrb,
     bvalid,bready,bresp
+`ifdef STA_MODE
+    ,dummy_wen,dummy_waddr,dummy_wdata
+`endif
 );
+`ifdef STA_MODE
+    //dummy
+    input dummy_wen;
+    input [31:0] dummy_wdata;
+    input [7:0] dummy_waddr;
+`endif
     input clk,rst;
     //read
     input arvalid;
@@ -41,10 +51,13 @@ module ysyx_26040117_MEM(clk,rst,
     end
     assign araddr_out=arfire?araddr:araddr_reg;
     //read function
-    import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     wire r_notbusy;
     ysyx_26040117_counter counter1(.clk(clk),.rst(rst),.wen(arvalid),.delay_over(arready));
     ysyx_26040117_counter counter2(.clk(clk),.rst(rst),.wen(arfire),.delay_over(r_notbusy));
+`ifdef STA_MODE
+
+`else
+    import "DPI-C" function int unsigned paddr_read(input int unsigned raddr);
     always @(posedge clk) begin
         if(rst)begin
             rdata<=32'h0;
@@ -52,6 +65,7 @@ module ysyx_26040117_MEM(clk,rst,
             rdata<= paddr_read(araddr_out);
         end
     end
+`endif
     always @(posedge clk) begin
         if(rst)begin
             rvalid<=1'b0;
@@ -103,17 +117,25 @@ module ysyx_26040117_MEM(clk,rst,
     end
     assign {wdata_out,wstrb_out}=wfire?{wdata,wstrb}:{wdata_reg,wstrb_reg};
     //function
-    import "DPI-C" function void paddr_write(input int unsigned waddr, input int unsigned wdata, input byte wmask);
     wire b_notbusy;
     ysyx_26040117_counter counter3(.clk(clk),.rst(rst),.wen(awvalid),.delay_over(awready));
     ysyx_26040117_counter counter4(.clk(clk),.rst(rst),.wen(wvalid),.delay_over(wready));
     ysyx_26040117_counter counter5(.clk(clk),.rst(rst),.wen(write_ok),.delay_over(b_notbusy));
+`ifdef STA_MODE
+    wire [31:0]dummy_src2;
+    ysyx_26040117_RegisterFile #(.ADDR_WIDTH(8)) Register2(.clk(clk),.rst(rst),
+        .raddr1(araddr_out[7:0]),.raddr2(8'd0),.rdata1(rdata),.rdata2(dummy_src2),
+        .wdata(dummy_wdata),.waddr(dummy_waddr),.wen(dummy_wen)
+    );
+`else
+    import "DPI-C" function void paddr_write(input int unsigned waddr, input int unsigned wdata, input byte wmask);
     always @(posedge clk) begin
         if(rst)begin
         end else if(b_notbusy&&!bvalid)begin  //?
             paddr_write(awaddr_out,wdata_out,{4'd0,wstrb_out});
         end
     end
+`endif
     always @(posedge clk) begin
         if(rst)begin
             bvalid<=1'b0;

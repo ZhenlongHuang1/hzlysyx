@@ -1,16 +1,19 @@
+`include "ysyx_26040117__defines.vh"
 module ysyx_26040117_top(clk,rst
-    //srcd,inst,mytype,result,
-    //dummy_ifu_wen,dummy_ifu_waddr,dummy_ifu_wdata
+`ifdef STA_MODE
+    ,srcd,inst,mytype,result,
+    dummy_wen,dummy_waddr,dummy_wdata
+`endif
 );
-//    //dummy test
-//    input [7:0] dummy_ifu_waddr;
-//    input [31:0] dummy_ifu_wdata;
-//    input dummy_ifu_wen;
-//    //dummy test
-//    output[31:0]srcd,inst,result;
-//    output [8:0]mytype;
-
-
+`ifdef STA_MODE
+    //dummy test
+    input [7:0] dummy_waddr;
+    input [31:0] dummy_wdata;
+    input dummy_wen;
+    //dummy test
+    output[31:0]srcd,inst,result;
+    output [8:0]mytype;
+`endif
     input clk,rst;
     //WBU-data
     wire[31:0]dnpc,srcd;//result:ALU结果
@@ -89,6 +92,9 @@ module ysyx_26040117_top(clk,rst
     ysyx_26040117_arbiter arbiter1(.clk(clk),.rst(rst),
         .MEM_IFU_wrapper(MEM_IFU_wrapper),.IFU_MEM_wrapper(IFU_MEM_wrapper),
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
+`ifdef STA_MODE
+        ,.dummy_wen(dummy_wen),.dummy_wdata(dummy_wdata),.dummy_waddr(dummy_waddr)
+`endif
     );
 
 endmodule
