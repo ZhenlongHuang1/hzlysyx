@@ -67,7 +67,7 @@ module ysyx_26040117_arbiter(clk,rst,
     assign {awvalid,awaddr,wvalid,wdata,wstrb,bready}=LSU_MEM_wrapper[70:0];
     assign MEM_LSU_wrapper[3:0]={awready,wready,bvalid,bresp};
 
-    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
+    ysyx_26040117_Xbar xbar1(.clk(clk),.rst(rst),
         .arvalid(arvalid),.arready(arready),.araddr(araddr),
         .rvalid(rvalid),.rready(rready),.rdata(rdata),.rresp(rresp),
         .awvalid(awvalid),.awready(awready),.awaddr(awaddr),

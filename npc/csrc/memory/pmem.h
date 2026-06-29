@@ -4,7 +4,6 @@
 #include <stdint.h>
 #define MAX_LENGTH 134217728
 
-#define SERIAL_PORT 0x10000000u
 #define PMEM_START 0x80000000u
 #define PMEM_SIZE  0x08000000u
 #define RTC_ADDR 0x10000048u
