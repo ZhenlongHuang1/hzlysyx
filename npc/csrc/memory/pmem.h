@@ -6,7 +6,6 @@
 
 #define PMEM_START 0x80000000u
 #define PMEM_SIZE  0x08000000u
-#define RTC_ADDR 0x10000048u
 extern uint32_t pmem[MAX_LENGTH];
 
 static inline int in_pmem(uint32_t addr){
