@@ -49,6 +49,8 @@ module ysyx_26040117_UART(clk,rst,
     assign aw_ok=awfire?1'b1:aw_done;
     assign w_ok=wfire?1'b1:w_done;
     assign write_ok=w_ok&&aw_ok;
+    assign awready=awvalid;
+    assign wready=wvalid;
     //write FIFO
     reg [31:0] wdata_reg,awaddr_reg;
     reg [3:0] wstrb_reg;
