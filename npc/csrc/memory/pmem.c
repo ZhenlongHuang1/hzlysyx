@@ -66,7 +66,7 @@ extern "C" void paddr_write(uint32_t waddr, uint32_t wdata, char wmask) {
     }
     data=(uint32_t)wdata&mask;
     if(likely(in_pmem(waddr))){pmem_write(waddr,data,mask);return ;}
-    difftest_skip_ref(1);
+    //difftest_skip_ref(1);
     //if(waddr==SERIAL_PORT){
     //    putc(data,stderr);
     //}

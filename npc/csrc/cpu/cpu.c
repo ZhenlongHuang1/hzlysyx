@@ -128,11 +128,14 @@ static void execute(uint64_t n){
         uint32_t inst=paddr_read(cpu_pc);
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
+
         int trap_ctrl=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__trap_ctrl_reg;
         int csr_addr=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__imm_reg&0xfff;
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
             difftest_skip_ref(1);
         }
+        if(dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__uart1__DOT__bfire)
+            difftest_skip_ref(1);
         single_cycle();
         uint32_t old_cpu_pc=cpu_pc;
         cpu_pc=dut->rootp->ysyx_26040117_top__DOT__ifu_idu_pc;
