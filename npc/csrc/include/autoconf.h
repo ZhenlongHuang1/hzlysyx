@@ -8,7 +8,7 @@
 //itrace
 //#define CONFIG_ITRACE 1
 //ftrace
-//#define CONFIG_FTRACE 1
+#define CONFIG_FTRACE 1
 //difftest
 #define CONFIG_DIFFTEST 1
 //vcd_trace
