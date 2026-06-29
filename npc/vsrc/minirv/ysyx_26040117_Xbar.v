@@ -39,7 +39,7 @@ module ysyx_26040117_Xbar(clk,rst,
     input bready;
     output bresp;
     //aw_choose
-    wire dec_uart,dec_mem_w,sel_uart,sel_mem_w,sel_mtime;
+    wire dec_uart,dec_mem_w,sel_uart,sel_mem_w;
     reg reg_uart,reg_mem_w,w_routed;
     assign dec_uart=(awaddr>=32'h10000000&&awaddr<=32'h10000004)&&awvalid;
     assign dec_mem_w=(awaddr>=32'h80000000&&awaddr<=32'h88000000&&awvalid);

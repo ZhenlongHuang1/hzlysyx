@@ -13,5 +13,5 @@ static inline int in_pmem(uint32_t addr){
 }
 extern "C" uint32_t paddr_read(uint32_t raddr);
 extern "C" void paddr_write(uint32_t waddr, uint32_t wdata, char wmask);
-
+uint64_t get_time();
 #endif

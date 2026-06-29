@@ -29,7 +29,7 @@ static void pmem_write(uint32_t addr,uint32_t data,uint32_t mask){
 
 
 }
-static uint64_t get_time(){
+uint64_t get_time(){
     static struct timeval tv;
     static uint64_t bool_time=0;
     if(bool_time==0){
