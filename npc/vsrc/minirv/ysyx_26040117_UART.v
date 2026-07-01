@@ -15,7 +15,7 @@ module ysyx_26040117_UART(clk,rst,
     output rvalid;
     input rready;
     output [31:0]rdata;
-    output rresp;
+    output[1:0] rresp;
     //write
     input awvalid;
     output awready;
@@ -28,7 +28,7 @@ module ysyx_26040117_UART(clk,rst,
 
     output reg bvalid;
     input bready;
-    output bresp;
+    output[1:0] bresp;
     //write
     reg aw_done,w_done;
     wire aw_ok,w_ok,write_ok;
@@ -81,5 +81,5 @@ module ysyx_26040117_UART(clk,rst,
             else if(write_ok&&!bvalid) bvalid<=1'b1;
         end
     end
-    assign bresp=(awaddr_out>=32'h10000000&&awaddr_out<=32'h10000004);
+    assign bresp=2'b00;
 endmodule

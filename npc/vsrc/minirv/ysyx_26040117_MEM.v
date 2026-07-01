@@ -24,7 +24,7 @@ module ysyx_26040117_MEM(clk,rst,
     output reg rvalid;
     input rready;
     output reg [31:0]rdata;
-    output rresp;
+    output[1:0] rresp;
     //write
     input awvalid;
     output awready;
@@ -37,7 +37,7 @@ module ysyx_26040117_MEM(clk,rst,
 
     output reg bvalid;
     input bready;
-    output bresp;
+    output[1:0] bresp;
     //read
     wire arfire,rfire;
     assign rfire=rvalid&&rready;
@@ -76,7 +76,7 @@ module ysyx_26040117_MEM(clk,rst,
                 rvalid<=1'b1;
         end
     end
-    assign rresp=(araddr_out>=32'h10000000)&&(araddr_out<=32'h88000000);
+    assign rresp=2'b00;
     //write
     reg aw_done,w_done;
     wire aw_ok,w_ok,write_ok;
@@ -146,5 +146,5 @@ module ysyx_26040117_MEM(clk,rst,
                 bvalid<=1'b1;
         end
     end
-    assign bresp=(awaddr_out>=32'h10000000)&&(awaddr_out<=32'h88000000);
+    assign bresp=2'b00;
 endmodule

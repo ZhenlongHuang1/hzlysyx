@@ -11,9 +11,9 @@ module ysyx_26040117_LSU (clk,rst,
 
     output respValid;
     output [31:0]rdata_out;
-    output rresp,bresp;
+    output [1:0]rresp,bresp;
     //LSU-MEM
-    input [38:0]MEM_LSU_wrapper;
+    input [40:0]MEM_LSU_wrapper;
     output[104:0] LSU_MEM_wrapper;
 
 

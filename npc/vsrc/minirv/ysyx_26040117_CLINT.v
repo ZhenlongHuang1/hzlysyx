@@ -1,5 +1,5 @@
 `include "ysyx_26040117__defines.vh"
-module ysyx_26040117_RTC(clk,rst,
+module ysyx_26040117_CLINT(clk,rst,
     arvalid,arready,araddr,
     rvalid,rready,rdata,rresp,
     awvalid,awready,awaddr,
@@ -15,7 +15,7 @@ module ysyx_26040117_RTC(clk,rst,
     output reg rvalid;
     input rready;
     output reg [31:0]rdata;
-    output rresp;
+    output[1:0] rresp;
     //write
     input awvalid;
     output awready;
@@ -28,7 +28,7 @@ module ysyx_26040117_RTC(clk,rst,
 
     output reg bvalid;
     input bready;
-    output bresp;
+    output[1:0] bresp;
     //read
     reg ar_done;
     wire ar_ok;
@@ -59,7 +59,7 @@ module ysyx_26040117_RTC(clk,rst,
             else if(ar_ok&&!rvalid) rvalid<=1'b1;
         end
     end
-    assign rresp=(araddr_out>=32'h10000048&&araddr_out<=32'h1000004c);
+    assign rresp=2'b00;
     //function
     reg [63:0]mtime;
     always @(posedge clk) begin

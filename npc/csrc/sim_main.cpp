@@ -16,13 +16,7 @@ int main(int argc,char**argv){
 
     init_monitor(argc,argv);
 
-    printf("pass cycles %lu\n",dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__rtc1__DOT__mtime);
-    printf("begin time %lu\n",get_time());
-
     sdb_main_loop();
-
-    printf("pass cycles %lu\n",dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__rtc1__DOT__mtime);
-    printf("final time %lu\n",get_time());
 
     free_monitor();
 

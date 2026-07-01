@@ -16,9 +16,9 @@ module ysyx_26040117_IFU(clk,rst,
     output [31:0]inst;
     output reg[31:0]pc;
     output[31:0] snpc;
-    output ifu_rresp;
+    output[1:0] ifu_rresp;
     //IFU-MEM
-    input [38:0]MEM_IFU_wrapper;
+    input [40:0]MEM_IFU_wrapper;
     output[104:0] IFU_MEM_wrapper;
 
     //state machine 
@@ -74,7 +74,8 @@ module ysyx_26040117_IFU(clk,rst,
     wire [31:0] ifu_rdata;
     wire [31:0] ifu_araddr;
     assign ifu_araddr=IDLE_fire?pc_next:pc;
-    wire ifu_awready,ifu_wready,ifu_bvalid,ifu_bresp;
+    wire ifu_awready,ifu_wready,ifu_bvalid;
+    wire[1:0] ifu_bresp;
 
     assign IFU_MEM_wrapper={arvalid,ifu_araddr,rready,1'b0,32'd0,1'b0,32'd0,4'd0,1'b0};
     assign {arready,rvalid,ifu_rdata,ifu_rresp,ifu_awready,ifu_wready,ifu_bvalid,ifu_bresp}=MEM_IFU_wrapper;
