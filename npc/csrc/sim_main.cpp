@@ -10,6 +10,7 @@ void nvboard_bind_all_pins(TOP_NAME*top);
 void init_monitor(int, char *[]);
 void free_monitor();
 int main(int argc,char**argv){
+    Verilated::commandArgs(argc, argv);
     //nvboard_bind_all_pins(dut);
     //nvboard_init();
     //while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1)

@@ -1,21 +1,17 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_Xbar(clk,rst,
+    master_wrapper_in,master_wrapper_out,awsize,arsize,
     arvalid,arready,araddr,
     rvalid,rready,rdata,rresp,
     awvalid,awready,awaddr,
     wvalid,wready,wdata,wstrb,
     bvalid,bready,bresp
-`ifdef STA_MODE
-    ,dummy_wen,dummy_waddr,dummy_wdata
-`endif
 );
-`ifdef STA_MODE
-    //dummy
-    input dummy_wen;
-    input [31:0] dummy_wdata;
-    input [7:0] dummy_waddr;
-`endif
     input clk,rst;
+    //AXI-lite port
+    input [49:0]master_wrapper_in;
+    output [139:0] master_wrapper_out;
+    input [2:0] awsize,arsize;
     //read
     input arvalid;
     output arready;
@@ -39,99 +35,120 @@ module ysyx_26040117_Xbar(clk,rst,
     input bready;
     output[1:0] bresp;
     //aw_choose
-    wire dec_uart,dec_mem_w,sel_uart,sel_mem_w;
-    reg reg_uart,reg_mem_w,w_routed;
-    assign dec_uart=(awaddr>=32'h10000000&&awaddr<=32'h10000004)&&awvalid;
-    assign dec_mem_w=(awaddr>=32'h80000000&&awaddr<=32'h88000000&&awvalid);
+    wire dec_soc_w,sel_soc_w,dec_clint_w,sel_clint_w;
+    reg reg_soc_w,reg_clint_w,w_routed;
+    assign dec_soc_w=!dec_clint_w;//need change error
+    assign dec_clint_w=(awaddr>=32'h02000000&&awaddr<=32'h0200bfff)&&awvalid;
+    
     wire awfire,wfire;
     assign awfire=awvalid&&awready;
     assign wfire=wvalid&&wready;
     always @(posedge clk) begin
         if(rst)begin
-            reg_uart<=0;
-            reg_mem_w<=0;
-            w_routed<=0;
+            reg_soc_w<=1'b0;
+            reg_clint_w<=1'b0;
+            w_routed<=1'b0;
         end else if(awfire&&~wfire)begin
-            reg_uart<=dec_uart;
-            reg_mem_w<=dec_mem_w;
+            reg_soc_w<=dec_soc_w;
+            reg_clint_w<=dec_clint_w;
             w_routed<=1;
         end else if(wfire)begin
-            reg_uart<=0;
-            reg_mem_w<=0;
-            w_routed<=0;
+            reg_soc_w<=1'b0;
+            reg_clint_w<=1'b0;
+            w_routed<=1'b0;
         end
     end
-    assign sel_uart=w_routed?reg_uart:dec_uart;
-    assign sel_mem_w=w_routed?reg_mem_w:dec_mem_w;
+    assign sel_soc_w=w_routed?reg_soc_w:dec_soc_w;
+    assign sel_clint_w=w_routed?reg_clint_w:dec_clint_w;
     //ar_choose
-    wire dec_mem_r,dec_rtc;
-    reg reg_mem_r,reg_rtc;
-    wire arfire,rfire;
-    assign dec_mem_r=(araddr>=32'h80000000&&araddr<=32'h88000000&&arvalid);
-    assign dec_rtc=(araddr>=32'h10000048&&araddr<=32'h1000004c)&&arvalid;
-    assign arfire=arvalid&&arready;
-    assign rfire=rvalid&&rready;
-    //uart    
-    wire uart_arready_dummy,uart_rvalid_dummy;
-    wire[1:0] uart_rresp_dummy;
-    wire[31:0] uart_rdata_dummy;
-    wire uart_awvalid,uart_awready,uart_wvalid,uart_wready,uart_bvalid;
-    wire[1:0] uart_bresp;
-    assign uart_awvalid=dec_uart;
-    assign uart_wvalid=sel_uart&&wvalid;
-    ysyx_26040117_UART uart1(.clk(clk),.rst(rst),
-        .arvalid(1'b0),.arready(uart_arready_dummy),.araddr(32'd0),
-        .rvalid(uart_rvalid_dummy),.rready(1'b0),.rdata(uart_rdata_dummy),.rresp(uart_rresp_dummy),
-        .awvalid(uart_awvalid),.awready(uart_awready),.awaddr(awaddr),
-        .wvalid(uart_wvalid),.wready(uart_wready),.wdata(wdata),.wstrb(wstrb),
-        .bvalid(uart_bvalid),.bready(bready),.bresp(uart_bresp)
-);
-    //rtc
-    wire rtc_awready_dummy,rtc_wready_dummy,rtc_bvalid_dummy;
-    wire[1:0] rtc_bresp_dummy; 
-    wire rtc_arvalid,rtc_arready,rtc_rvalid; 
-    wire [31:0] rtc_rdata;
-    wire[1:0] rtc_rresp;
-    assign rtc_arvalid=dec_rtc;
+    wire dec_soc_r,dec_clint_r;
+    assign dec_soc_r=!dec_clint_r;//need change error
+    assign dec_clint_r=(araddr>=32'h02000000&&araddr<=32'h0200bfff)&&arvalid;
+    //clint
+    wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;
+    wire[1:0] clint_bresp,clint_rresp; 
+    wire clint_arvalid,clint_arready,clint_rvalid; 
+    wire [31:0] clint_rdata;
+    assign clint_arvalid=dec_clint_r;
+    assign clint_awvalid=dec_clint_w;
+    assign clint_wvalid=sel_clint_w&&wvalid;
     ysyx_26040117_CLINT clint1(.clk(clk),.rst(rst),
-        .arvalid(rtc_arvalid),.arready(rtc_arready),.araddr(araddr),
-        .rvalid(rtc_rvalid),.rready(rready),.rdata(rtc_rdata),.rresp(rtc_rresp),
-        .awvalid(1'b0),.awready(rtc_awready_dummy),.awaddr(32'd0),
-        .wvalid(1'b0),.wready(rtc_wready_dummy),.wdata(32'd0),.wstrb(4'd0),
-        .bvalid(rtc_bvalid_dummy),.bready(1'b0),.bresp(rtc_bresp_dummy)
-`ifdef STA_MODE
-        ,.dummy_wen(dummy_wen),.dummy_wdata(dummy_wdata),.dummy_waddr(dummy_waddr)
-`endif
-);
-    //mem_w
-    wire mem_awvalid,mem_awready,mem_wvalid,mem_wready,mem_bvalid;
-    wire[1:0]mem_bresp;
-    assign mem_awvalid=dec_mem_w;
-    assign mem_wvalid=sel_mem_w&&wvalid;
-    //mem_r
-    wire mem_arvalid,mem_arready,mem_rvalid;
-    wire [31:0] mem_rdata;
-    wire[1:0] mem_rresp;
-    assign mem_arvalid=dec_mem_r;
-    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
-        .arvalid(mem_arvalid),.arready(mem_arready),.araddr(araddr),
-        .rvalid(mem_rvalid),.rready(rready),.rdata(mem_rdata),.rresp(mem_rresp),
-        .awvalid(mem_awvalid),.awready(mem_awready),.awaddr(awaddr),
-        .wvalid(mem_wvalid),.wready(mem_wready),.wdata(wdata),.wstrb(wstrb),
-        .bvalid(mem_bvalid),.bready(bready),.bresp(mem_bresp)
-`ifdef STA_MODE
-        ,.dummy_wen(dummy_wen),.dummy_wdata(dummy_wdata),.dummy_waddr(dummy_waddr)
-`endif
+        .arvalid(clint_arvalid),.arready(clint_arready),.araddr(araddr),
+        .rvalid(clint_rvalid),.rready(rready),.rdata(clint_rdata),.rresp(clint_rresp),
+        .awvalid(clint_awvalid),.awready(clint_awready),.awaddr(awaddr),
+        .wvalid(clint_wvalid),.wready(clint_wready),.wdata(wdata),.wstrb(wstrb),
+        .bvalid(clint_bvalid),.bready(bready),.bresp(clint_bresp)
 );
     //output
-    assign arready=(dec_rtc&&rtc_arready)||(dec_mem_r&&mem_arready);
-    assign rvalid=mem_rvalid||rtc_rvalid;
-    assign rresp=2'b00;
-    assign rdata=({32{mem_rvalid}}&mem_rdata)|({32{rtc_rvalid}}&rtc_rdata);
+    assign arready=(dec_clint_r&&clint_arready)||(dec_soc_r&&io_master_arready);
+    assign rvalid=io_master_rvalid||clint_rvalid;
+    assign rresp=clint_rvalid?clint_rresp:io_master_rresp;
+    assign rdata=({32{io_master_rvalid}}&io_master_rdata)|({32{clint_rvalid}}&clint_rdata);
 
-    assign awready=(dec_uart&&uart_awready)||(dec_mem_w&&mem_awready);    
-    assign wready=(sel_uart&&uart_wready)||(sel_mem_w&&mem_wready); 
-    assign bvalid=uart_bvalid||mem_bvalid;
-    assign bresp=2'b00;
+    assign awready=(dec_clint_w&&clint_awready)||(dec_soc_w&&io_master_awready);    
+    assign wready=(sel_clint_w&&clint_wready)||(sel_soc_w&&io_master_wready); 
+    assign bvalid=clint_bvalid||io_master_bvalid;
+    assign bresp=clint_bvalid?clint_bresp:io_master_bresp;
+    
+    //AXI-lite 
+    wire         io_master_awready;
+    wire         io_master_awvalid;
+    wire [31:0]  io_master_awaddr;
+    wire [3:0]   io_master_awid;
+    wire [7:0]   io_master_awlen;
+    wire [2:0]   io_master_awsize;
+    wire [1:0]   io_master_awburst;
 
+    wire         io_master_wready;
+    wire         io_master_wvalid;
+    wire [31:0]  io_master_wdata;
+    wire [3:0]   io_master_wstrb;
+    wire         io_master_wlast;
+
+    wire         io_master_bready;
+    wire         io_master_bvalid;
+    wire [1:0]   io_master_bresp;
+    wire [3:0]   io_master_bid;
+
+    wire         io_master_arready;
+    wire         io_master_arvalid;
+    wire [31:0]  io_master_araddr;
+    wire [3:0]   io_master_arid;
+    wire [7:0]   io_master_arlen;
+    wire [2:0]   io_master_arsize;
+    wire [1:0]   io_master_arburst;
+
+    wire         io_master_rready;
+    wire         io_master_rvalid;
+    wire [1:0]   io_master_rresp;
+    wire [31:0]  io_master_rdata;
+    wire         io_master_rlast;
+    wire [3:0]   io_master_rid;
+    //decomposition
+    assign {io_master_awready,io_master_wready,io_master_bvalid,io_master_bresp,io_master_bid,io_master_arready,
+        io_master_rvalid,io_master_rresp,io_master_rdata,io_master_rlast,io_master_rid}=master_wrapper_in;
+    assign master_wrapper_out={io_master_awvalid,io_master_awaddr,io_master_awid,io_master_awlen,io_master_awsize,io_master_awburst,
+        io_master_wvalid,io_master_wdata,io_master_wstrb,io_master_wlast,io_master_bready,io_master_arvalid,
+        io_master_araddr,io_master_arid,io_master_arlen,io_master_arsize,io_master_arburst,io_master_rready};
+    //connect
+    assign io_master_awvalid=dec_soc_w;
+    assign io_master_awaddr=awaddr;
+    assign io_master_wvalid=sel_soc_w&&wvalid;
+    assign io_master_wdata=wdata;
+    assign io_master_wstrb=wstrb;
+    assign io_master_bready=bready;
+    assign io_master_arvalid=dec_soc_r;
+    assign io_master_araddr=araddr;
+    assign io_master_rready=rready;
+
+    assign io_master_awid=4'd0;
+    assign io_master_awlen=8'd0;
+    assign io_master_awsize=awsize;
+    assign io_master_awburst=2'd01;
+    assign io_master_wlast=1'b1;
+
+    assign io_master_arid=4'd0;
+    assign io_master_arlen=8'd0;
+    assign io_master_arsize=arsize;
+    assign io_master_arburst=2'b01;
 endmodule

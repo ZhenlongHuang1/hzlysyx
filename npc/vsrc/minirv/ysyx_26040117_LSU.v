@@ -14,13 +14,14 @@ module ysyx_26040117_LSU (clk,rst,
     output [1:0]rresp,bresp;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
-    output[104:0] LSU_MEM_wrapper;
+    output[107:0] LSU_MEM_wrapper;
 
 
     //read
     wire[31:0] rdata;
     wire arvalid,arready,rvalid,rready;
     wire [31:0] araddr;
+    wire [2:0] arsize;
     wire rIDLE_reqvalid,rfire,arfire;
     reg[1:0] rstate,rnext_state;
     localparam IDLE=2'd0,WAIT_READY=2'd1,WAIT_VALID=2'd2;
@@ -58,6 +59,7 @@ module ysyx_26040117_LSU (clk,rst,
         end
     end
     assign {araddr,ar_wmask,ar_ifsigned}=rIDLE_reqvalid?{addr,wmask,ifsigned}:{addr_reg,wmask_reg,ifsigned_reg};
+    assign arsize={1'b0,ar_wmask[3]&ar_wmask[2],ar_wmask[1]};
     //write
     wire awvalid,awready,wvalid,wready,bvalid,bready;
     wire aw_w_valid;
@@ -127,7 +129,7 @@ module ysyx_26040117_LSU (clk,rst,
     assign {wdata,wstrb}=wIDLE_reqvalid?{wdata_in,wmask}:{wdata_reg,wstrb_reg};
     assign awaddr=awIDLE_reqvalid?addr:awaddr_reg;
 
-    assign LSU_MEM_wrapper={arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
+    assign LSU_MEM_wrapper={arsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;
 //    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
 //        .arvalid(arvalid),.arready(arready),.araddr(araddr),

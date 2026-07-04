@@ -43,7 +43,7 @@ void init_difftest(const char *ref_so_file, long img_size) {
       "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
 
   ref_difftest_init(0);
-  ref_difftest_memcpy(PMEM_START, pmem, img_size, DIFFTEST_TO_REF);
+  ref_difftest_memcpy(PMEM_START, pmrom, img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }
 

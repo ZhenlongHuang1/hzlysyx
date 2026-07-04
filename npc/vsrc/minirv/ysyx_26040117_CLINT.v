@@ -26,7 +26,7 @@ module ysyx_26040117_CLINT(clk,rst,
     input [31:0]wdata;
     input [3:0]wstrb;
 
-    output reg bvalid;
+    output bvalid;
     input bready;
     output[1:0] bresp;
     //read
@@ -44,6 +44,12 @@ module ysyx_26040117_CLINT(clk,rst,
     end
     assign ar_ok=arfire?1'b1:ar_done;
     assign arready=!rvalid;
+    assign rresp=2'b00;
+    //write
+    assign awready=1'b0;
+    assign wready=1'b0;
+    assign bvalid=1'b0;
+    assign bresp=2'b0;
     //read FIFO
     reg [31:0] araddr_reg;
     wire [31:0] araddr_out;
@@ -59,7 +65,6 @@ module ysyx_26040117_CLINT(clk,rst,
             else if(ar_ok&&!rvalid) rvalid<=1'b1;
         end
     end
-    assign rresp=2'b00;
     //function
     reg [63:0]mtime;
     always @(posedge clk) begin
@@ -69,8 +74,9 @@ module ysyx_26040117_CLINT(clk,rst,
     always @(posedge clk) begin
         if(rst)begin
         end else if(ar_ok&&!rvalid)begin
-            if(araddr_out[2]==1'b0)rdata<=mtime[31:0];
-            else rdata<=mtime[63:32];
+            if(araddr_out==32'h0200bff8)rdata<=mtime[31:0];
+            else if(araddr_out==32'h0200bffc) rdata<=mtime[63:32];
+            else rdata<=32'd0;
         end
     end
 endmodule

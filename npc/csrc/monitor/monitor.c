@@ -26,7 +26,7 @@ static long load_img(){
     fseek(fp,0,SEEK_END);
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
-    int ret=fread(pmem,1,fpsize,fp);
+    int ret=fread(pmrom,1,fpsize,fp);
     printf("Opening image: %s, size: %ld\n", img_file, fpsize);
     assert(ret==fpsize);
     fclose(fp);

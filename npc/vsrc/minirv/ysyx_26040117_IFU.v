@@ -19,7 +19,7 @@ module ysyx_26040117_IFU(clk,rst,
     output[1:0] ifu_rresp;
     //IFU-MEM
     input [40:0]MEM_IFU_wrapper;
-    output[104:0] IFU_MEM_wrapper;
+    output[107:0] IFU_MEM_wrapper;
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
@@ -65,7 +65,7 @@ module ysyx_26040117_IFU(clk,rst,
                     ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
     always@(posedge clk)begin
         if(rst)
-            pc<=32'h80000000;
+            pc<=32'h20000000;
         else if(IDLE_fire)begin
             pc<=pc_next;
         end
@@ -77,7 +77,7 @@ module ysyx_26040117_IFU(clk,rst,
     wire ifu_awready,ifu_wready,ifu_bvalid;
     wire[1:0] ifu_bresp;
 
-    assign IFU_MEM_wrapper={arvalid,ifu_araddr,rready,1'b0,32'd0,1'b0,32'd0,4'd0,1'b0};
+    assign IFU_MEM_wrapper={3'b010,arvalid,ifu_araddr,rready,1'b0,32'd0,1'b0,32'd0,4'd0,1'b0};
     assign {arready,rvalid,ifu_rdata,ifu_rresp,ifu_awready,ifu_wready,ifu_bvalid,ifu_bresp}=MEM_IFU_wrapper;
 //    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
 //        .arvalid(arvalid),.arready(arready),.araddr(ifu_araddr),
