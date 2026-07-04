@@ -10,14 +10,14 @@ module ysyx_26040117_IDU(clk,rst,
     output IFU_IDU_ready;
     input [31:0] inst;
     input [31:0] pc,snpc;
-    input ifu_rresp;
+    input[1:0] ifu_rresp;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
     output [4:0] op;
     output[31:0] imm;
     output [8:0] mytype;
-    output[78:0]IDU_wrapper;
+    output[79:0]IDU_wrapper;
     assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,pc_out,snpc_out,ifu_rresp_out};
     //IDU-REGISTERS
     output [4:0] rs1,rs2;
@@ -50,12 +50,12 @@ module ysyx_26040117_IDU(clk,rst,
     assign IDU_EXU_valid=state==WAIT; 
     //FIFO
     reg[31:0] inst_reg,pc_reg,snpc_reg;//FIFO
-    reg ifu_rresp_reg;
+    reg[1:0] ifu_rresp_reg;
     wire [31:0] inst_out,pc_out,snpc_out;
-    wire ifu_rresp_out;
+    wire[1:0] ifu_rresp_out;
     always @(posedge clk) begin
         if(rst)begin
-            {inst_reg,pc_reg,snpc_reg,ifu_rresp_reg}<=97'h0;
+            {inst_reg,pc_reg,snpc_reg,ifu_rresp_reg}<=98'h0;
         end
         else if(IFU_IDU_fire)begin
             {inst_reg,pc_reg,snpc_reg,ifu_rresp_reg}<={inst,pc,snpc,ifu_rresp};

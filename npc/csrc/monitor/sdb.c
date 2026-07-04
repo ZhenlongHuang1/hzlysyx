@@ -60,8 +60,8 @@ static int cmd_x(char *args){
     }
     int j;uint32_t value;
     for(j=0;j<i;j++){
-        value=paddr_read(p+j*4);
-        printf("%02X %02X %02X %02X\n",(value>>24)&0xff,(value>>16)&0xff,(value>>8)&0xff,value&0xff);
+        //value=paddr_read(p+j*4);
+        //printf("%02X %02X %02X %02X\n",(value>>24)&0xff,(value>>16)&0xff,(value>>8)&0xff,value&0xff);
     }
     return 0;
 }

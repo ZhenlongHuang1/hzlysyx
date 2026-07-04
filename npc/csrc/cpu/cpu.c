@@ -12,8 +12,8 @@
 TOP_NAME* dut=NULL;
 VerilatedContext*contextp=NULL;
 VerilatedVcdC* tfp=NULL;
-NPC_state npc_state={NPC_RUNNING,0,0x80000000};
-CPU_state cpu_dut={{0},0x80000000};
+NPC_state npc_state={NPC_RUNNING,0,0x20000000};
+CPU_state cpu_dut={{0},0x20000000};
 uint32_t cpu_pc=0,cpu_dnpc=0;
 static char logbuf[128]={};
 static bool g_print_step=false;
@@ -47,19 +47,19 @@ int is_exit_status_bad() {
 }
 
 void single_cycle(){
-    dut->clk=1;dut->eval();
+    dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
             if(contextp->time()<=300000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
-    dut->clk=0;dut->eval();
+    dut->clock=0;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
             if(contextp->time()<=300000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
 }
 void reset(int n){
-    dut->rst=1;
+    dut->reset=1;
     while(n-->0)single_cycle();
-    dut->rst=0;
+    dut->reset=0;
 }
 static void itrace_record(uint32_t pc,uint32_t inst){
 #ifdef CONFIG_ITRACE
@@ -119,27 +119,27 @@ void ftrace_print(){
 }
 static void execute(uint64_t n){
     for(;n>0;n--){
-        while(dut->rootp->ysyx_26040117_top__DOT__IFU1__DOT__WBU_IFU_fire==0){
+        while(dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__WBU_IFU_fire==0){
         single_cycle();
         if(npc_state.state!=NPC_RUNNING)return;
         }
-        cpu_pc=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__pc_reg;
-        cpu_dnpc=dut->rootp->ysyx_26040117_top__DOT__IFU1__DOT__dnpc;
-        uint32_t inst=paddr_read(cpu_pc);
+        cpu_pc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__pc_reg;
+        cpu_dnpc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__dnpc;
+        uint32_t inst=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__inst_reg;
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
 
-        int trap_ctrl=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__trap_ctrl_reg;
-        int csr_addr=dut->rootp->ysyx_26040117_top__DOT__WBU1__DOT__imm_reg&0xfff;
+        int trap_ctrl=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_ctrl_reg;
+        int csr_addr=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__imm_reg&0xfff;
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
             difftest_skip_ref(1);
         }
-        if(dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__uart1__DOT__bfire||
-            dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__rtc1__DOT__rfire)
-            difftest_skip_ref(1);
+//        if(dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__uart1__DOT__bfire||
+//            dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__clint1__DOT__rfire)
+//            difftest_skip_ref(1);
         single_cycle();
         uint32_t old_cpu_pc=cpu_pc;
-        cpu_pc=dut->rootp->ysyx_26040117_top__DOT__ifu_idu_pc;
+        cpu_pc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_idu_pc;
         if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
         trace_and_difftest(old_cpu_pc);

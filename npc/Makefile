@@ -1,5 +1,6 @@
-TOPNAME=ysyx_26040117_top
+TOPNAME=ysyxSoCFull
 NXDC_FILES=constr/$(TOPNAME).nxdc
+YSYXSOC_HOME = $(abspath ../ysyxSoc)
 INC_PATH +=$(abspath ./csrc)
 AUTOCONF_H = $(abspath ./csrc/include/autoconf.h)
 IMG ?=
@@ -8,7 +9,8 @@ VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR_FLAGS += --trace-vcd
-VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv)
+VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv) -I$(YSYXSOC_HOME)/perip/uart16550/rtl -I$(YSYXSOC_HOME)/perip/spi/rtl
+VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
 
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -21,6 +23,9 @@ SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
+VSRCS += $(shell find $(YSYXSOC_HOME)/perip -name "*.v")
+VSRCS += $(YSYXSOC_HOME)/build/ysyxSoCFull.v
+
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 include $(NVBOARD_HOME)/scripts/nvboard.mk

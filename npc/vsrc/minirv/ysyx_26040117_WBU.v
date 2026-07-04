@@ -11,7 +11,7 @@ module ysyx_26040117_WBU(clk,rst,
     input [31:0] result,imm,src1,src2;
     input [8:0] mytype;
     input [4:0] op;
-    input [78:0]EXU_wrapper;
+    input [79:0]EXU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
@@ -33,7 +33,7 @@ module ysyx_26040117_WBU(clk,rst,
     wire [4:0]rd;
     wire ifsigned,ebreak;
     wire [31:0] pc,snpc;
-    wire ifu_error;
+    wire[1:0] ifu_error;
     assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc,ifu_error}=EXU_wrapper;
     //WBU-LSU
     assign lsu_wen=mytype_out[6]&&(state==WAIT);
