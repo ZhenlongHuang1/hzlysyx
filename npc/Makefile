@@ -10,7 +10,7 @@ VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR_FLAGS += --trace-vcd
 VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv) -I$(YSYXSOC_HOME)/perip/uart16550/rtl -I$(YSYXSOC_HOME)/perip/spi/rtl
-VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
+VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing --autoflush
 
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
