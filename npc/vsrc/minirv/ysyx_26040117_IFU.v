@@ -23,7 +23,7 @@ module ysyx_26040117_IFU(clk,rst,
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
-    reg arvalid;
+    reg arvalid=1'b0;;
     wire arready,rvalid,rready;
     wire rfire,arfire;
     wire[31:0]pc_next;
