@@ -26,9 +26,9 @@ static long load_img(){
     fseek(fp,0,SEEK_END);
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
-    //int ret=fread(pmem,1,fpsize,fp); error
-    //printf("Opening image: %s, size: %ld\n", img_file, fpsize);
-    //assert(ret==fpsize);
+    int ret=fread(pmrom,1,fpsize,fp);
+    printf("Opening image: %s, size: %ld\n", img_file, fpsize);
+    assert(ret==fpsize);
     fclose(fp);
     return fpsize;
 }
@@ -110,7 +110,7 @@ void init_monitor(int argc,char*argv[]){
         tfp->open("simx.vcd");
     })
     //reset
-    reset(20);
+    reset(30);
     //difftest
     IFDEF(CONFIG_DIFFTEST,init_difftest(str(NEMU_HOME_STR) "/build/riscv32-nemu-interpreter-so",img_size));
     IFDEF(CONFIG_ITRACE,init_disasm());

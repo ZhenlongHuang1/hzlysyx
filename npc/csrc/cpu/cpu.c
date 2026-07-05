@@ -58,6 +58,7 @@ void single_cycle(){
 }
 void reset(int n){
     dut->reset=1;
+    dut->clock=0;dut->eval();
     while(n-->0)single_cycle();
     dut->reset=0;
 }

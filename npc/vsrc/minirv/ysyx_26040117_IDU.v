@@ -104,6 +104,7 @@ module ysyx_26040117_IDU(clk,rst,
     assign funct3=inst_out[14:12];
     assign op = {1'b1,inst_out[30],funct3}&{type_B,type_R||(type_I_compute&&(funct3==3'b101)),{3{type_R||type_I_compute||type_B||trap_ctrl[0]}}};//srai,srli?
     
-    assign wmask={{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
+    //assign wmask={{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
+    assign wmask={2'b0,funct3[1:0]};
     assign ifsigned=~funct3[2];
 endmodule

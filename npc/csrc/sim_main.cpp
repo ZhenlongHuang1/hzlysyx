@@ -9,8 +9,6 @@
 void nvboard_bind_all_pins(TOP_NAME*top);
 void init_monitor(int, char *[]);
 void free_monitor();
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
-extern "C" void mrom_read(int32_t addr, int32_t *data) { assert(0); }
 int main(int argc,char**argv){
     Verilated::commandArgs(argc, argv);
     //nvboard_bind_all_pins(dut);
