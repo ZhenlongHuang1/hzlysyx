@@ -37,7 +37,8 @@ module ysyx_26040117_Xbar(clk,rst,
     //aw_choose
     wire dec_soc_w,sel_soc_w,dec_clint_w,sel_clint_w;
     reg reg_soc_w,reg_clint_w,w_routed;
-    assign dec_soc_w=awvalid&&(1'b0);
+    assign dec_soc_w=awvalid&&((awaddr>=32'h10000000&&awaddr<=32'h10000fff)
+        );
     assign dec_clint_w=(awaddr>=32'h02000000&&awaddr<=32'h0200bfff)&&awvalid;
     
     wire awfire,wfire;
