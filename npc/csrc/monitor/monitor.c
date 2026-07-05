@@ -110,7 +110,7 @@ void init_monitor(int argc,char*argv[]){
         tfp->open("simx.vcd");
     })
     //reset
-    reset(5);
+    reset(30);
     //difftest
     IFDEF(CONFIG_DIFFTEST,init_difftest(str(NEMU_HOME_STR) "/build/riscv32-nemu-interpreter-so",img_size));
     IFDEF(CONFIG_ITRACE,init_disasm());
