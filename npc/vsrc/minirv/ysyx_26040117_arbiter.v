@@ -5,7 +5,8 @@ module ysyx_26040117_arbiter(clk,rst,
     master_wrapper_in,master_wrapper_out
 );
     input clk,rst;
-    input [107:0] IFU_MEM_wrapper,LSU_MEM_wrapper;
+    input [107:0] IFU_MEM_wrapper;
+    input[110:0] LSU_MEM_wrapper;
     output [40:0] MEM_IFU_wrapper,MEM_LSU_wrapper;
     input [49:0]master_wrapper_in;
     output [139:0] master_wrapper_out;
@@ -15,9 +16,9 @@ module ysyx_26040117_arbiter(clk,rst,
     wire ifu_arready,ifu_rvalid,lsu_arready,lsu_rvalid;
     wire [31:0] ifu_rdata,lsu_rdata;
     wire[1:0] ifu_rresp,lsu_rresp;
-    wire [2:0] ifu_arsize,lsu_asize;
+    wire [2:0] ifu_arsize,lsu_arsize,lsu_awsize;
     assign {ifu_arsize,ifu_arvalid,ifu_araddr,ifu_rready}=IFU_MEM_wrapper[107:71];
-    assign {lsu_asize,lsu_arvalid,lsu_araddr,lsu_rready}=LSU_MEM_wrapper[107:71];
+    assign {lsu_arsize,lsu_awsize,lsu_arvalid,lsu_araddr,lsu_rready}=LSU_MEM_wrapper[110:71];
     assign MEM_IFU_wrapper[40:5]={ifu_arready,ifu_rvalid,ifu_rdata,ifu_rresp};
     assign MEM_LSU_wrapper[40:5]={lsu_arready,lsu_rvalid,lsu_rdata,lsu_rresp};
     //state machine
@@ -49,7 +50,7 @@ module ysyx_26040117_arbiter(clk,rst,
     wire [31:0] rdata;
     wire[1:0] rresp;
     wire[2:0] arsize;
-    assign {arsize,arvalid,rready,araddr}=({37{lsu_fire}}&{lsu_asize,lsu_arvalid,lsu_rready,lsu_araddr})|
+    assign {arsize,arvalid,rready,araddr}=({37{lsu_fire}}&{lsu_arsize,lsu_arvalid,lsu_rready,lsu_araddr})|
                                         ({37{ifu_fire}}&{ifu_arsize,ifu_arvalid,ifu_rready,ifu_araddr});
     assign {lsu_arready,lsu_rvalid,lsu_rdata,lsu_rresp}=lsu_fire?{arready,rvalid,rdata,rresp}:36'd0;
     assign {ifu_arready,ifu_rvalid,ifu_rdata,ifu_rresp}=ifu_fire?{arready,rvalid,rdata,rresp}:36'd0;
@@ -61,7 +62,7 @@ module ysyx_26040117_arbiter(clk,rst,
     wire awready,wready,bvalid;
     wire[1:0] bresp;
     wire[2:0] awsize;
-    assign awsize=({3{lsu_fire}}&lsu_asize)|({3{ifu_fire}}&3'b010);
+    assign awsize=({3{lsu_fire}}&lsu_awsize)|({3{ifu_fire}}&3'b010);
     assign {awvalid,awaddr,wvalid,wdata,wstrb,bready}=LSU_MEM_wrapper[70:0];
     assign MEM_LSU_wrapper[4:0]={awready,wready,bvalid,bresp};
     assign MEM_IFU_wrapper[4:0]=5'd0;

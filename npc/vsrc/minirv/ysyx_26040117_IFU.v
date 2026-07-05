@@ -23,7 +23,8 @@ module ysyx_26040117_IFU(clk,rst,
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
-    wire arvalid,arready,rvalid,rready;
+    reg arvalid;
+    wire arready,rvalid,rready;
     wire rfire,arfire;
     wire[31:0]pc_next;
     reg[1:0] state,next_state;
@@ -52,7 +53,13 @@ module ysyx_26040117_IFU(clk,rst,
     end
     wire IDLE_fire;
     assign IDLE_fire=state==IDLE&&WBU_IFU_fire;
-    assign arvalid=IDLE_fire||state==WAIT_READY;
+    always @(posedge clk) begin
+        if(rst)arvalid<=1'b0;
+        else begin
+            if(arfire) arvalid<=1'b0;
+            else if(IDLE_fire||state==WAIT_READY) arvalid<=1'b1;
+        end
+    end
     assign rready=state==WAIT_VALID&&IFU_IDU_ready;
     assign IFU_IDU_valid=state==WAIT_VALID&&(rvalid);
     assign WBU_IFU_ready=state==IDLE;

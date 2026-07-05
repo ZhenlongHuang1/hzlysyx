@@ -1,12 +1,12 @@
 module ysyx_26040117_LSU (clk,rst,
-    reqValid,respReady,wen,addr,wdata_in,wmask,ifsigned,
+    reqValid,respReady,wen,addr,wdata_in,size,ifsigned,
     respValid,rdata_out,rresp,bresp,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
     input reqValid,respReady,wen;
     input[31:0] addr,wdata_in;
-    input[3:0]wmask;
+    input[2:0]size;
     input ifsigned;
 
     output respValid;
@@ -14,12 +14,13 @@ module ysyx_26040117_LSU (clk,rst,
     output [1:0]rresp,bresp;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
-    output[107:0] LSU_MEM_wrapper;
+    output[110:0] LSU_MEM_wrapper;
 
 
     //read
     wire[31:0] rdata;
-    wire arvalid,arready,rvalid,rready;
+    wire arready,rvalid,rready;
+    reg arvalid;
     wire [31:0] araddr;
     wire [2:0] arsize;
     wire rIDLE_reqvalid,rfire,arfire;
@@ -44,24 +45,30 @@ module ysyx_26040117_LSU (clk,rst,
     assign rfire=rvalid&&rready;
     assign arfire=arvalid&&arready;
     assign rIDLE_reqvalid=rstate==IDLE&&reqValid&&!wen;
-    assign arvalid=rstate==WAIT_READY||(rIDLE_reqvalid);
-    assign rready=rstate==WAIT_VALID&&respReady;
-    reg[31:0] addr_reg;
-    reg[3:0] wmask_reg;
-    reg ifsigned_reg;
-    wire[3:0] ar_wmask;
-    wire ar_ifsigned;
-    always@(posedge clk)begin
-        if(rst)begin
-            {addr_reg,wmask_reg,ifsigned_reg}<=37'h0;
-        end else if(rIDLE_reqvalid)begin
-            {addr_reg,wmask_reg,ifsigned_reg}<={addr,wmask,ifsigned};
+    always @(posedge clk) begin
+        if(rst) arvalid<=1'b0;
+        else begin
+            if(arfire)arvalid<=1'b0;
+            else if(rstate==WAIT_READY||rIDLE_reqvalid)arvalid<=1'b1;
         end
     end
-    assign {araddr,ar_wmask,ar_ifsigned}=rIDLE_reqvalid?{addr,wmask,ifsigned}:{addr_reg,wmask_reg,ifsigned_reg};
-    assign arsize={1'b0,ar_wmask[3]&ar_wmask[2],ar_wmask[1]};
+    assign rready=rstate==WAIT_VALID&&respReady;
+    reg[31:0] araddr_reg;
+    reg[2:0] arsize_reg;
+    reg arifsigned_reg;
+    wire arifsigned;
+    always@(posedge clk)begin
+        if(rst)begin
+            {araddr_reg,arsize_reg,arifsigned_reg}<=36'h0;
+        end else if(rIDLE_reqvalid)begin
+            {araddr_reg,arsize_reg,arifsigned_reg}<={addr,size[2:0],ifsigned};
+        end
+    end
+    assign {araddr,arsize,arifsigned}=rIDLE_reqvalid?{addr,size[2:0],ifsigned}:{araddr_reg,arsize_reg,arifsigned_reg};
     //write
-    wire awvalid,awready,wvalid,wready,bvalid,bready;
+    wire awready,wready,bvalid,bready;
+    reg awvalid,wvalid;
+    wire [2:0] awsize;
     wire aw_w_valid;
     wire [31:0] awaddr,wdata;
     wire [3:0] wstrb;
@@ -86,7 +93,13 @@ module ysyx_26040117_LSU (clk,rst,
     end
     assign awfire=awvalid&&awready;
     assign awIDLE_reqvalid=awstate==IDLE&&reqValid&&wen;//modify?
-    assign awvalid=awstate==WAIT_READY||(awIDLE_reqvalid);
+    always @(posedge clk) begin
+        if(rst) awvalid<=1'b0;
+        else begin
+            if(awfire)awvalid<=1'b0;
+            else if(awstate==WAIT_READY||awIDLE_reqvalid)awvalid<=1'b1;
+        end
+    end
     //w
     always @(*) begin
         wnext_state=wstate;
@@ -102,7 +115,13 @@ module ysyx_26040117_LSU (clk,rst,
     end
     assign wfire=wvalid&&wready;
     assign wIDLE_reqvalid=wstate==IDLE&&reqValid&&wen;//modify?
-    assign wvalid=wstate==WAIT_READY||(wIDLE_reqvalid);
+    always @(posedge clk) begin
+        if(rst) wvalid<=1'b0;
+        else begin
+            if(wfire)wvalid<=1'b0;
+            else if(wstate==WAIT_READY||wIDLE_reqvalid)wvalid<=1'b1;
+        end
+    end
     //b
     always @(*) begin
         bnext_state=bstate;
@@ -115,41 +134,45 @@ module ysyx_26040117_LSU (clk,rst,
     assign aw_w_valid=awstate==WAIT_VALID&&wstate==WAIT_VALID;
     assign bfire=bready&&bvalid;
     assign bready=bstate==WAIT_VALID&&respReady;//modify?
-
+    //write function
+    wire[31:0] wdata_fomatted;
     reg[31:0] awaddr_reg,wdata_reg;
-    reg[3:0] wstrb_reg;
-    always @(posedge clk) begin
-        if(rst) awaddr_reg<=32'h0;
-        else if(awIDLE_reqvalid) awaddr_reg<=addr;
-    end
-    always@(posedge clk)begin
-        if(rst) {wdata_reg,wstrb_reg}<=36'h0;
-        else if(wIDLE_reqvalid) {wdata_reg,wstrb_reg}<={wdata_in,wmask};
-    end
-    assign {wdata,wstrb}=wIDLE_reqvalid?{wdata_in,wmask}:{wdata_reg,wstrb_reg};
-    assign awaddr=awIDLE_reqvalid?addr:awaddr_reg;
+    reg[2:0] awsize_reg;
+    wire[3:0] aw_mask;
+    wire[1:0] awaddr_shift;
 
-    assign LSU_MEM_wrapper={arsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
+    always @(posedge clk) begin
+        if(rst) {awaddr_reg,awsize_reg}<=35'h0;
+        else if(awIDLE_reqvalid) {awaddr_reg,awsize_reg}<={addr,size[2:0]};
+    end
+    assign wdata_fomatted=(size[1:0] == 2'b00) ? {4{wdata_in[7:0]}} :   // sb
+                        (size[1:0] == 2'b01) ? {2{wdata_in[15:0]}} :  // sh
+                        wdata_in;//sw
+    always@(posedge clk)begin
+        if(rst) {wdata_reg}<=32'h0;
+        else if(wIDLE_reqvalid) {wdata_reg}<={wdata_fomatted};
+    end
+    assign {wdata}=wIDLE_reqvalid?{wdata_fomatted}:{wdata_reg};
+    assign {awaddr,awsize}=awIDLE_reqvalid?{addr,size[2:0]}:{awaddr_reg,awsize_reg};
+    assign awaddr_shift=awaddr[1:0];
+    assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
+    assign wstrb=aw_mask<<awaddr_shift;
+    assign LSU_MEM_wrapper={arsize,awsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;
-//    ysyx_26040117_MEM mem1(.clk(clk),.rst(rst),
-//        .arvalid(arvalid),.arready(arready),.araddr(araddr),
-//        .rvalid(rvalid),.rready(rready),.rdata(rdata),.rresp(rresp),
-//        .awvalid(awvalid),.awready(awready),.awaddr(awaddr),
-//        .wvalid(wvalid),.wready(wready),.wdata(wdata),.wstrb(wstrb),
-//        .bvalid(bvalid),.bready(bready),.bresp(bresp)
-//);
     assign respValid=rfire||bfire;
 
     //read function
     reg[31:0] rdata2;
     wire[31:0] bitmask,bitnmask;
     wire[1:0] raddr_shift;
+    wire [3:0] ar_mask;
     wire signbit;
-    assign bitmask={{8{ar_wmask[3]}},{8{ar_wmask[2]}},{8{ar_wmask[1]}},{8{ar_wmask[0]}}};
-    assign bitnmask={{8{~ar_wmask[3]&&ar_ifsigned}},{8{~ar_wmask[2]&&ar_ifsigned}},{8{~ar_wmask[1]&&ar_ifsigned}},{8{~ar_wmask[0]&&ar_ifsigned}}};
+    assign ar_mask={arsize[1],arsize[1],arsize[1]|arsize[0],1'b1};
+    assign bitmask={{8{ar_mask[3]}},{8{ar_mask[2]}},{8{ar_mask[1]}},{8{ar_mask[0]}}};
+    assign bitnmask={{8{~ar_mask[3]&&arifsigned}},{8{~ar_mask[2]&&arifsigned}},{8{~ar_mask[1]&&arifsigned}},{8{~ar_mask[0]&&arifsigned}}};
     assign raddr_shift=araddr[1:0];
     assign rdata_out=(rdata2&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
-    assign signbit=(~ar_wmask[3]&&ar_wmask[1]&&rdata2[15])||(~(|ar_wmask[3:1])&&rdata2[7]);
+    assign signbit=(~ar_mask[3]&&ar_mask[1]&&rdata2[15])||(~(|ar_mask[3:1])&&rdata2[7]);
     always @(*) begin
         case (raddr_shift)
             2'b00: rdata2=rdata;
