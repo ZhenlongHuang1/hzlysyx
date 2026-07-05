@@ -12,9 +12,12 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
     assert(0);
 }
 extern "C" void mrom_read(int32_t addr, int32_t *data){
-    uint32_t raddr=(addr-PMEM_START)>>2;
+    uint32_t raddr=(addr-PMROM_START)>>2;
+    if(raddr>=PMROM_SIZE){
+        data[0]=0;
+        return ;
+    }
     data[0]=pmrom[raddr];
-    data[0]=0x00100073;
 #ifdef CONFIG_MTRACE
     if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
         Log("Read memory at addr=0x%08x,data=%08x",addr,data[0]);
@@ -22,7 +25,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data){
 }
 static void pmem_write(uint32_t addr,uint32_t data,uint32_t mask){
     uint32_t addr_shift=addr%4;
-    uint32_t raddr=(addr-PMEM_START)>>2;
+    uint32_t raddr=(addr-PMROM_START)>>2;
     uint32_t wdata1=data<<(addr_shift*8);
     uint32_t wdata2=pmrom[raddr]&~(mask<<(addr_shift*8));
     pmrom[raddr]=wdata1|wdata2; 

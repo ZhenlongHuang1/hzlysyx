@@ -4,12 +4,12 @@
 #include <stdint.h>
 #define MAX_LENGTH 134217728
 
-#define PMEM_START 0x20000000u
-#define PMEM_SIZE  0x08000000u
+#define PMROM_START 0x20000000u
+#define PMROM_SIZE  0x00000fffu
 extern uint32_t pmrom[MAX_LENGTH];
 
 static inline int in_pmrom(uint32_t addr){
-    return (addr-PMEM_START<PMEM_SIZE)&&(addr>=PMEM_START);
+    return (addr-PMROM_START<PMROM_SIZE)&&(addr>=PMROM_START);
 }
 extern "C" void flash_read(int32_t addr, int32_t *data);
 extern "C" void mrom_read(int32_t addr, int32_t *data);
