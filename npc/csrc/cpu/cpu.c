@@ -34,7 +34,7 @@ static void trace_and_difftest(uint32_t pc){
 
 }
 extern "C" void npc_trap(){
-    difftest_skip_ref(1); 
+    difftest_skip_ref(); 
     npc_state.state=NPC_END;
     npc_state.halt_pc=cpu_pc;//?
     npc_state.halt_ret=cpu_gpr(10);
@@ -133,11 +133,8 @@ static void execute(uint64_t n){
         int trap_ctrl=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_ctrl_reg;
         int csr_addr=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__imm_reg&0xfff;
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
-            difftest_skip_ref(1);
+            difftest_skip_ref();
         }
-//        if(dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__uart1__DOT__bfire||
-//            dut->rootp->ysyx_26040117_top__DOT__arbiter1__DOT__xbar1__DOT__clint1__DOT__rfire)
-//            difftest_skip_ref(1);
         single_cycle();
         uint32_t old_cpu_pc=cpu_pc;
         cpu_pc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_idu_pc;
