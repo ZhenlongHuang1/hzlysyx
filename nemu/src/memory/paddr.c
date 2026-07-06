@@ -42,9 +42,6 @@ static word_t pmem_read(paddr_t addr, int len) {
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
-    if(in_mrom(addr)){
-        Log("ERROR: write MROM at addr " FMT_PADDR, addr);
-    }
     host_write(guest_to_host(addr), len, data);
     #ifdef CONFIG_MTRACE
         if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
