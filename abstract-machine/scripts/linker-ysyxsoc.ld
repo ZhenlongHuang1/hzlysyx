@@ -24,11 +24,10 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
   }
+  _heap_end = _heap_start + 0x1000;
+  _stack_top = _heap_end;
 
-  . = _stack_top + 0x1000;
-  _stack_pointer = .;
-  _heap_start = _stack_pointer;
-  . = _heap_end;
+  . = _stack_pointer;
   end = .;
   _end = .;
 }
