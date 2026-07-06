@@ -66,11 +66,12 @@ module ysyx_26040117_Xbar(clk,rst,
     assign sel_clint_w=w_routed?reg_clint_w:dec_clint_w;
     //ar_choose
     wire dec_soc_r,dec_clint_r;
-    wire ar_in_mrom,ar_in_sram,ar_in_clint;
+    wire ar_in_mrom,ar_in_sram,ar_in_clint,ar_in_uart;
+    assign ar_in_uart=araddr>=32'h10000000&&araddr<=32'h10000fff;//UART16550
     assign ar_in_mrom=araddr>=32'h20000000&&araddr<=32'h20000fff;//MROM
     assign ar_in_sram=araddr>=32'h0f000000&&araddr<=32'h0f001fff;//SRAM
     assign ar_in_clint=araddr>=32'h02000000&&araddr<=32'h0200bfff;//clint
-    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram);
+    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart);
     assign dec_clint_r=arvalid&&ar_in_clint;
 
     //clint

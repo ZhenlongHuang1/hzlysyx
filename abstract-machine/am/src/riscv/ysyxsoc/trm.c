@@ -15,12 +15,12 @@ int main(const char *args);
 Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 #define UART_BASE 0x10000000
-#define UART_THR UART_BASE
-#define UART_FCR UART_BASE+0x2
-#define UART_LCR UART_BASE+0x3
-#define UART_LSR UART_BASE+0x5
-#define UART_DLL UART_BASE+0x0
-#define UART_DLM UART_BASE+0x1
+#define UART_THR (UART_BASE+0x0)
+#define UART_FCR (UART_BASE+0x2)
+#define UART_LCR (UART_BASE+0x3)
+#define UART_LSR (UART_BASE+0x5)
+#define UART_DLL (UART_BASE+0x0)
+#define UART_DLM (UART_BASE+0x1)
 void uart_init(){
     outb(UART_LCR,0x80);
     outb(UART_DLL,0x01);//波特率
