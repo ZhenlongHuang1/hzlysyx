@@ -2,11 +2,10 @@
 #define __PMEM_H__
 #include <sys/time.h>
 #include <stdint.h>
-#define MAX_LENGTH 134217728
 
 #define PMROM_START 0x20000000u
-#define PMROM_SIZE  0x00000fffu
-extern uint32_t pmrom[MAX_LENGTH];
+#define PMROM_SIZE  0x00001000u
+extern uint32_t pmrom[PMROM_SIZE];
 
 static inline int in_pmrom(uint32_t addr){
     return (addr-PMROM_START<PMROM_SIZE)&&(addr>=PMROM_START);

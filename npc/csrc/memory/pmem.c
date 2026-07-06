@@ -6,7 +6,7 @@
 #include "cpu/cpu.h"
 #include "include/autoconf.h"
 void difftest_skip_ref();
-uint32_t pmrom[MAX_LENGTH]={0};
+uint32_t pmrom[PMROM_SIZE]={0};
 
 extern "C" void flash_read(int32_t addr, int32_t *data) {
     assert(0);
