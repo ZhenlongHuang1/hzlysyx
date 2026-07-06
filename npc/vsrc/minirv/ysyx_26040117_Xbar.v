@@ -37,8 +37,9 @@ module ysyx_26040117_Xbar(clk,rst,
     //aw_choose
     wire dec_soc_w,sel_soc_w,dec_clint_w,sel_clint_w;
     reg reg_soc_w,reg_clint_w,w_routed;
-    assign dec_soc_w=awvalid&&((awaddr>=32'h10000000&&awaddr<=32'h10000fff)
-        );
+    assign dec_soc_w=awvalid&&((awaddr>=32'h10000000&&awaddr<=32'h10000fff)|| //UART16550
+                            (awaddr>=32'h0f000000&&awaddr<=32'h0f001fff)      //SRAM
+    );
     assign dec_clint_w=(awaddr>=32'h02000000&&awaddr<=32'h0200bfff)&&awvalid;
     
     wire awfire,wfire;
@@ -63,8 +64,9 @@ module ysyx_26040117_Xbar(clk,rst,
     assign sel_clint_w=w_routed?reg_clint_w:dec_clint_w;
     //ar_choose
     wire dec_soc_r,dec_clint_r;
-    assign dec_soc_r=arvalid&&((araddr>=32'h2000000&&araddr<=32'h20000fff)
-                            );
+    assign dec_soc_r=arvalid&&((araddr>=32'h2000000&&araddr<=32'h20000fff)|| //MROM
+                            (araddr>=32'h0f00000&&araddr<=32'h0f001fff)      //SRAM
+    );
     assign dec_clint_r=(araddr>=32'h02000000&&araddr<=32'h0200bfff)&&arvalid;
     //clint
     wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;
