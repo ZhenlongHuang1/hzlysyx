@@ -8,10 +8,9 @@ AM_SRCS := riscv/ysyxsoc/start.S \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 
-CFLAGS    += -fdata-sections -ffunction-sections
+CFLAGS    += -fdata-sections -ffunction-sections #函数和变量放到子段中
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
-LDFLAGS   += --defsym=_pmem_start=0x20000000 --defsym=_stack_pointer=0x0f002000 --defsym=_heap_start=0x0f000000 --defsym=_entry_offset=0x0
-LDFLAGS   += --gc-sections -e _start
+LDFLAGS   += --gc-sections -e _start #回收无用段
 #NPCFLAGS  += -b
 
 MAINARGS_MAX_LEN = 64
