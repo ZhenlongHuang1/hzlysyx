@@ -1,8 +1,8 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_WBU(clk,rst,
     EXU_WBU_ready,EXU_WBU_valid,result,EXU_wrapper,imm,src1,src2,mytype,op,
-    WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,jalr,rd_out,register_wen,
-    reqValid,respReady,respValid,lsu_wen,result_out,src2_out,wmask_out,ifsigned_out,ramdata
+    WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,jalr,rd_out,register_wen,lsu_error,
+    reqValid,respReady,respValid,lsu_wen,result_out,src2_out,wmask_out,ifsigned_out,ramdata,lsu_rresp,lsu_bresp
 );
     input clk,rst;
     //EXU-WBU
@@ -11,7 +11,7 @@ module ysyx_26040117_WBU(clk,rst,
     input [31:0] result,imm,src1,src2;
     input [8:0] mytype;
     input [4:0] op;
-    input [79:0]EXU_wrapper;
+    input [77:0]EXU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
@@ -20,9 +20,11 @@ module ysyx_26040117_WBU(clk,rst,
     output jump,jalr;
     output [4:0]rd_out;
     output register_wen;
+    output lsu_error;
     //WBU-LSU
     input respValid;
     input [31:0]ramdata;
+    input [1:0] lsu_rresp,lsu_bresp;
     output reqValid,respReady,lsu_wen;
     output ifsigned_out;
     output [31:0] result_out,src2_out;
@@ -33,8 +35,7 @@ module ysyx_26040117_WBU(clk,rst,
     wire [4:0]rd;
     wire ifsigned,ebreak;
     wire [31:0] pc,snpc;
-    wire[1:0] ifu_error;
-    assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc,ifu_error}=EXU_wrapper;
+    assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc}=EXU_wrapper;
     //WBU-LSU
     assign lsu_wen=mytype_out[6]&&(state==WAIT);
     assign reqValid=lsu_wen||(mytype_out[5]&&(state==WAIT));
@@ -106,6 +107,7 @@ module ysyx_26040117_WBU(clk,rst,
                 ({32{mytype_out[1]}}&dnpc)|
                 ({32{trap_ctrl_out[0]}}&csr_rdata);
     assign jump=(mytype_out[3]||mytype_out[2]||privil||(mytype_out[4]&&br_token));
+    assign lsu_error=reqValid&&respValid&&(mytype_out[5]?lsu_rresp[1]:lsu_bresp[1]);
 `ifndef STA_MODE
     import "DPI-C" function void npc_trap();
     always@(posedge clk)begin

@@ -1,6 +1,6 @@
 module ysyx_26040117_LSU (clk,rst,
     reqValid,respReady,wen,addr,wdata_in,size,ifsigned,
-    respValid,rdata_out,rresp,bresp,
+    respValid,rdata_out2,rresp_out,bresp_out,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
@@ -10,8 +10,8 @@ module ysyx_26040117_LSU (clk,rst,
     input ifsigned;
 
     output respValid;
-    output [31:0]rdata_out;
-    output [1:0]rresp,bresp;
+    output [31:0]rdata_out2;
+    output [1:0]rresp_out,bresp_out;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
     output[110:0] LSU_MEM_wrapper;
@@ -19,6 +19,7 @@ module ysyx_26040117_LSU (clk,rst,
 
     //read
     wire[31:0] rdata;
+    wire[1:0] rresp;
     wire arready,rvalid,rready;
     reg arvalid;
     wire [31:0] araddr;
@@ -52,7 +53,7 @@ module ysyx_26040117_LSU (clk,rst,
             else if(rstate==WAIT_READY||rIDLE_reqvalid)arvalid<=1'b1;
         end
     end
-    assign rready=rstate==WAIT_VALID&&respReady;
+    assign rready=rstate==WAIT_VALID&&!lsu_buf_valid;
     reg[31:0] araddr_reg;
     reg[2:0] arsize_reg;
     reg arifsigned_reg;
@@ -68,6 +69,7 @@ module ysyx_26040117_LSU (clk,rst,
     //write
     wire awready,wready,bvalid,bready;
     reg awvalid,wvalid;
+    wire[1:0] bresp;
     wire [2:0] awsize;
     wire aw_w_valid;
     wire [31:0] awaddr,wdata;
@@ -133,7 +135,7 @@ module ysyx_26040117_LSU (clk,rst,
     end
     assign aw_w_valid=awstate==WAIT_VALID&&wstate==WAIT_VALID;
     assign bfire=bready&&bvalid;
-    assign bready=bstate==WAIT_VALID&&respReady;//modify?
+    assign bready=bstate==WAIT_VALID&&!lsu_buf_valid;//modify?
     //write function
     wire[31:0] wdata_fomatted;
     reg[31:0] awaddr_reg,wdata_reg;
@@ -157,10 +159,36 @@ module ysyx_26040117_LSU (clk,rst,
     assign awaddr_shift=awaddr[1:0];
     assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
     assign wstrb=aw_mask<<awaddr_shift;
+    //FIFO
     assign LSU_MEM_wrapper={arsize,awsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
-    assign respValid=rfire||bfire;
 
+    reg[31:0] rdata_reg;
+    reg[1:0] rresp_reg,bresp_reg;
+    reg lsu_buf_valid,is_read;
+    wire[31:0] rdata_out;
+    always @(posedge clk) begin
+        if(rst)begin
+            {rdata_reg,rresp_reg,bresp_reg,lsu_buf_valid,is_read}<=38'd0;
+        end else begin
+            if(respValid&&respReady)
+               lsu_buf_valid<=1'b0;
+            else if(rfire)begin
+                rdata_reg<=rdata;
+                rresp_reg<=rresp;
+                lsu_buf_valid<=1'b1;
+                is_read<=1'b1;
+            end else if(bfire)begin
+                bresp_reg<=bresp;
+                lsu_buf_valid<=1'b1;
+                is_read<=1'b0;
+            end
+        end
+    end
+    assign respValid=lsu_buf_valid||rfire||bfire;
+    assign rdata_out=lsu_buf_valid&&is_read?rdata_reg:rdata;
+    assign rresp_out=lsu_buf_valid&&is_read?rresp_reg:rresp;
+    assign bresp_out=lsu_buf_valid&&!is_read?bresp_reg:bresp;
     //read function
     reg[31:0] rdata2;
     wire[31:0] bitmask,bitnmask;
@@ -171,15 +199,15 @@ module ysyx_26040117_LSU (clk,rst,
     assign bitmask={{8{ar_mask[3]}},{8{ar_mask[2]}},{8{ar_mask[1]}},{8{ar_mask[0]}}};
     assign bitnmask={{8{~ar_mask[3]&&arifsigned}},{8{~ar_mask[2]&&arifsigned}},{8{~ar_mask[1]&&arifsigned}},{8{~ar_mask[0]&&arifsigned}}};
     assign raddr_shift=araddr[1:0];
-    assign rdata_out=(rdata2&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
+    assign rdata_out2=(rdata2&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
     assign signbit=(~ar_mask[3]&&ar_mask[1]&&rdata2[15])||(~(|ar_mask[3:1])&&rdata2[7]);
     always @(*) begin
         case (raddr_shift)
-            2'b00: rdata2=rdata;
-            2'b01: rdata2={8'h0,rdata[31:8]}; 
-            2'b10: rdata2={16'h0,rdata[31:16]};
-            2'b11: rdata2={24'h0,rdata[31:24]};
-            default:rdata2=rdata;
+            2'b00: rdata2=rdata_out;
+            2'b01: rdata2={8'h0,rdata_out[31:8]}; 
+            2'b10: rdata2={16'h0,rdata_out[31:16]};
+            2'b11: rdata2={24'h0,rdata_out[31:24]};
+            default:rdata2=rdata_out;
         endcase
     end
     //difftest
