@@ -9,14 +9,15 @@ void difftest_skip_ref();
 uint32_t mrom[MROM_SIZE]={0};
 uint32_t flash[FLASH_SIZE]={0};
 extern "C" void flash_read(int32_t addr, int32_t *data) {
-    if(addr>=FLASH_SIZE){
+    uint32_t raddr=((uint32_t)addr)>>2;
+    if(raddr>=FLASH_SIZE){
         data[0]=0;
         return ;
     }
-    data[0]=flash[addr];
+    data[0]=flash[raddr];
 #ifdef CONFIG_MTRACE
-    if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
-        Log("Read flash at addr=0x%08x,data=%08x",addr,data[0]);
+    if(raddr>=CONFIG_MTRACE_START&&raddr<=CONFIG_MTRACE_END)
+        Log("Read flash at addr=0x%08x,data=%08x",raddr,data[0]);
 #endif
 }
 extern "C" void mrom_read(int32_t addr, int32_t *data){
