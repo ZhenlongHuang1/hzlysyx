@@ -42,10 +42,18 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                         case 'x':
                         case 'o':
                         case 'd':
+                                int is_signed = (*ptr == 'd');
+                                if (mylong == 0) {
+                                    tmp = is_signed?va_arg(ap, int):va_arg(ap, unsigned int);
+                                } else if (mylong == 1) {
+                                    tmp = is_signed?va_arg(ap, long):va_arg(ap, unsigned long);
+                                } else {
+                                    tmp = is_signed?va_arg(ap, long long):va_arg(ap, unsigned long long);
+                                }
                                 if(mylong==0)tmp=va_arg(ap,int);
                                 else if(mylong==1)tmp=va_arg(ap,long);
                                 else tmp=va_arg(ap,long long);
-                                num+=intcatstr(out+num,tmp,fc,width,(*ptr)=='d'?10:((*ptr=='x')?16:8),(*ptr)=='d'?1:0);
+                                num+=intcatstr(out+num,tmp,fc,width,(*ptr)=='d'?10:((*ptr=='x')?16:8),is_signed);
                                 flag=0;
                                 break;
                         case 's':string=va_arg(ap,char*);
