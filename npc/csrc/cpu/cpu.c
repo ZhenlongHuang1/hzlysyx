@@ -12,8 +12,8 @@
 TOP_NAME* dut=NULL;
 VerilatedContext*contextp=NULL;
 VerilatedVcdC* tfp=NULL;
-NPC_state npc_state={NPC_RUNNING,0,0x20000000};
-CPU_state cpu_dut={{0},0x20000000};
+NPC_state npc_state={NPC_RUNNING,0,0x30000000};
+CPU_state cpu_dut={{0},0x30000000};
 uint32_t cpu_pc=0,cpu_dnpc=0;
 static char logbuf[128]={};
 static bool g_print_step=false;
