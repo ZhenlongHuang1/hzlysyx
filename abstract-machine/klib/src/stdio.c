@@ -24,7 +24,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
     int num=0;
     int64_t tmp;
     char *string;
-    int flag=0,fc,width,mylong=0;
+    int flag=0,fc,width,mylong=0,is_signed;
     while(*ptr){
         switch (*ptr) {
             case '%':{
@@ -42,7 +42,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                         case 'x':
                         case 'o':
                         case 'd':
-                                int is_signed = (*ptr == 'd');
+                                is_signed = (*ptr == 'd');
                                 if (mylong == 0) {
                                     tmp = is_signed?va_arg(ap, int):va_arg(ap, unsigned int);
                                 } else if (mylong == 1) {
@@ -50,9 +50,6 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                                 } else {
                                     tmp = is_signed?va_arg(ap, long long):va_arg(ap, unsigned long long);
                                 }
-                                if(mylong==0)tmp=va_arg(ap,int);
-                                else if(mylong==1)tmp=va_arg(ap,long);
-                                else tmp=va_arg(ap,long long);
                                 num+=intcatstr(out+num,tmp,fc,width,(*ptr)=='d'?10:((*ptr=='x')?16:8),is_signed);
                                 flag=0;
                                 break;
