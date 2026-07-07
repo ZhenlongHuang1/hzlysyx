@@ -1,9 +1,9 @@
 #ifndef __AUTOCONF_H__
 #define __AUTOCONF_H__
 //mtrace
-//#define CONFIG_MTRACE 1
+#define CONFIG_MTRACE 1
 #define CONFIG_MTRACE_START 0x30000000
-#define CONFIG_MTRACE_END 0x30000000
+#define CONFIG_MTRACE_END 0x30001000
 
 //itrace
 //#define CONFIG_ITRACE 1
