@@ -9,13 +9,11 @@ void difftest_skip_ref();
 uint32_t mrom[MROM_SIZE]={0};
 uint32_t flash[FLASH_SIZE]={0};
 extern "C" void flash_read(int32_t addr, int32_t *data) {
-    printf("diaoyon%x\n",addr);
-    uint32_t raddr=(addr-FLASH_START)>>2;
-    if(raddr>=FLASH_SIZE){
+    if(addr>=FLASH_SIZE){
         data[0]=0;
         return ;
     }
-    data[0]=flash[raddr];
+    data[0]=flash[addr];
 #ifdef CONFIG_MTRACE
     if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
         Log("Read flash at addr=0x%08x,data=%08x",addr,data[0]);
