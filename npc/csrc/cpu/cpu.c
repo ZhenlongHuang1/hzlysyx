@@ -63,6 +63,7 @@ void reset(int n){
     dut->reset=0;
 }
 static void itrace_record(uint32_t pc,uint32_t inst){
+    printf("pc:%08x,inst:%08x\n",pc,inst);
 #ifdef CONFIG_ITRACE
     char *p=logbuf;
     p+=snprintf(p,sizeof(logbuf),"0x%08x %08x",pc,inst);
