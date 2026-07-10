@@ -70,7 +70,7 @@ module ysyx_26040117_IFU(clk,rst,
                     ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
     always@(posedge clk)begin
         if(rst)
-            pc<=32'h30000000;
+            pc<=32'h20000000;
         else begin
             if(ifu_rresp[1]||lsu_error)
                 pc<=32'h00000000;
