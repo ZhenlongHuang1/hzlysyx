@@ -27,7 +27,7 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
     _bss_end = .;
-  } > sram AT> sram : data
+  } > sram AT> flash : data
   _heap_start = ALIGN(4);
   _heap_end = ORIGIN(sram) + 0x1000;
 
