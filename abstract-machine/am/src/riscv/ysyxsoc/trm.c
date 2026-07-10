@@ -39,22 +39,22 @@ void halt(int code) {
     while (1);
 }
 
-static void test_mcycle(){
-    uint32_t low,high;
-    asm volatile("csrr %0, mcycle" :"=r"(low));
-    asm volatile("csrr %0, mcycleh" :"=r"(high));
-    //printf("Number of operating cycles=%lld\n",((uint64_t)high<<32)|low);
-
-}
+//static void test_mcycle(){
+//    uint32_t low,high;
+//    asm volatile("csrr %0, mcycle" :"=r"(low));
+//    asm volatile("csrr %0, mcycleh" :"=r"(high));
+//      printf("Number of operating cycles=%lld\n",((uint64_t)high<<32)|low);
+//}
 void _trm_init() {
     memcpy(&_data_vma_start,&_data_lma_start,(&_data_vma_end-&_data_vma_start));
     memset(&_bss_start,0,(&_bss_end-&_bss_start));
     uart_init();
-    uint32_t project,id;
-    asm volatile("csrr %0, mvendorid":"=r"(project));
-    asm volatile("csrr %0, marchid":"=r"(id));
-    printf("student number:%c%c%c%c_%d\n",(project&0xff000000)>>24,(project&0xff0000)>>16,(project&0xff00)>>8,(project&0xff),id);
+    //uint32_t project,id;
+    //asm volatile("csrr %0, mvendorid":"=r"(project));
+    //asm volatile("csrr %0, marchid":"=r"(id));
+    //printf("student number:%c%c%c%c_%d\n",(project&0xff000000)>>24,(project&0xff0000)>>16,(project&0xff00)>>8,(project&0xff),id);
     int ret = main(mainargs);
-    test_mcycle();
+    //int ret = main("");
+    //test_mcycle();
     halt(ret);
 }
