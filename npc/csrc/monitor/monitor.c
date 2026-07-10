@@ -104,6 +104,7 @@ void init_monitor(int argc,char*argv[]){
     parse_args(argc,argv);
     //read pmem of IMG file
     long img_size=load_img();
+    init_flash();
     //init ftrace 
     IFDEF(CONFIG_FTRACE,init_func();)
     //initial verilator
