@@ -26,7 +26,7 @@ static long load_img(){
     fseek(fp,0,SEEK_END);
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
-    int ret=fread(mrom,1,fpsize,fp);
+    int ret=fread(flash,1,fpsize,fp);
     printf("Opening image: %s, size: %ld\n", img_file, fpsize);
     assert(ret==fpsize);
     fclose(fp);
@@ -92,22 +92,10 @@ static int parse_args(int argc, char *argv[]) {
   }
   return 0;
 }
-void init_flash() {
-    FILE *fp = fopen("/home/hzl/Desktop/ysyx-workbench/am-kernels/tests/cpu-tests/char-test.bin", "rb");
-    if (fp) {
-        fread(flash, 1, 16 * 1024 * 1024, fp);
-        fclose(fp);
-        printf("Load bin to Flash:%x\n",FLASH_START);
-    }else{
-        printf("error load flash");
-
-    }
-}
 void init_monitor(int argc,char*argv[]){
     parse_args(argc,argv);
     //read pmem of IMG file
     long img_size=load_img();
-    init_flash();
     //init ftrace 
     IFDEF(CONFIG_FTRACE,init_func();)
     //initial verilator
