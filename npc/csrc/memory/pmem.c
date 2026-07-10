@@ -9,6 +9,7 @@ void difftest_skip_ref();
 uint32_t mrom[MROM_SIZE]={0};
 uint32_t flash[FLASH_SIZE]={0};
 extern "C" void flash_read(int32_t addr, int32_t *data) {
+    printf("flash%x\n",addr);
     uint32_t raddr=((uint32_t)addr)>>2;
     if(raddr>=FLASH_SIZE){
         data[0]=0;
