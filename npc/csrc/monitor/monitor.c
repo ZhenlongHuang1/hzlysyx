@@ -98,6 +98,9 @@ void init_flash() {
         fread(flash, 1, 16 * 1024 * 1024, fp);
         fclose(fp);
         printf("Load bin to Flash:%x\n",FLASH_START);
+    }else{
+        printf("error load flash");
+
     }
 }
 void init_monitor(int argc,char*argv[]){
