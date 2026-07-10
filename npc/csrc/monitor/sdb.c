@@ -60,7 +60,10 @@ static int cmd_x(char *args){
     }
     int j;uint32_t value;
     for(j=0;j<i;j++){
-        mrom_read(p+j*4,(int32_t*)&value);
+        if((p+j*4)>=MROM_START&&(p+j*4)<MROM_START+MROM_SIZE)
+            mrom_read(p+j*4,(int32_t*)&value);
+        else
+            flash_read(p+j*4-FLASH_START,(int32_t*)&value);
         printf("%02X %02X %02X %02X\n",(value>>24)&0xff,(value>>16)&0xff,(value>>8)&0xff,value&0xff);
     }
     return 0;
