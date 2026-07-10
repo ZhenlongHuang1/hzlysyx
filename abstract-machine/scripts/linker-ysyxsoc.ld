@@ -21,7 +21,7 @@ SECTIONS {
     _data_vma_end = .;
   } > sram AT> flash : data
   _data_lma_start = LOADADDR(.data);
-  .bss : ALIGN(4){
+  .bss(NOLOAD) : ALIGN(4){
 	_bss_start = .;
     *(.bss*)
     *(.sbss*)
