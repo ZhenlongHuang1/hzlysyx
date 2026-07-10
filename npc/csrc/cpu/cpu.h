@@ -28,7 +28,7 @@ typedef struct {
 extern CPU_state cpu_dut;
 void get_cpu_state(CPU_state *cpu_dut);
 #define cpu cpu_dut
-void difftest_skip_ref(int skip_ref);
+extern "C" void difftest_skip_ref();
 void init_difftest(const char *ref_so_file, long img_size);
 void difftest_step(uint32_t pc, uint32_t npc);
 #define MAX_FUNC_CNT 1024

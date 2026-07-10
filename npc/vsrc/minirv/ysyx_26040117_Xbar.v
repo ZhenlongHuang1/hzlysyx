@@ -37,9 +37,14 @@ module ysyx_26040117_Xbar(clk,rst,
     //aw_choose
     wire dec_soc_w,sel_soc_w,dec_clint_w,sel_clint_w;
     reg reg_soc_w,reg_clint_w,w_routed;
-    assign dec_soc_w=awvalid&&((awaddr>=32'h10000000&&awaddr<=32'h10000fff)
-        );
-    assign dec_clint_w=(awaddr>=32'h02000000&&awaddr<=32'h0200bfff)&&awvalid;
+    wire aw_in_uart,aw_in_sram,aw_in_clint,aw_in_flash,aw_in_spi;
+    assign aw_in_spi   =awaddr>=32'h10001000&&awaddr<=32'h10001fff;//SPI-master
+    assign aw_in_flash =awaddr>=32'h30000000&&awaddr<=32'h3fffffff;//FLASH
+    assign aw_in_uart  =awaddr>=32'h10000000&&awaddr<=32'h10000fff;//UART16550
+    assign aw_in_sram  =awaddr>=32'h0f000000&&awaddr<=32'h0f001fff;//SRAM
+    assign aw_in_clint =awaddr>=32'h02000000&&awaddr<=32'h0200bfff;//CLINT
+    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi); 
+    assign dec_clint_w=awvalid&&aw_in_clint;
     
     wire awfire,wfire;
     assign awfire=awvalid&&awready;
@@ -63,9 +68,16 @@ module ysyx_26040117_Xbar(clk,rst,
     assign sel_clint_w=w_routed?reg_clint_w:dec_clint_w;
     //ar_choose
     wire dec_soc_r,dec_clint_r;
-    assign dec_soc_r=arvalid&&((araddr>=32'h2000000&&araddr<=32'h20000fff)
-                            );
-    assign dec_clint_r=(araddr>=32'h02000000&&araddr<=32'h0200bfff)&&arvalid;
+    wire ar_in_mrom,ar_in_sram,ar_in_clint,ar_in_uart,ar_in_flash,ar_in_spi;
+    assign ar_in_spi   =araddr>=32'h10001000&&araddr<=32'h10001fff;//SPI-master
+    assign ar_in_flash =araddr>=32'h30000000&&araddr<=32'h3fffffff;//FLASH
+    assign ar_in_uart  =araddr>=32'h10000000&&araddr<=32'h10000fff;//UART16550
+    assign ar_in_mrom  =araddr>=32'h20000000&&araddr<=32'h20000fff;//MROM
+    assign ar_in_sram  =araddr>=32'h0f000000&&araddr<=32'h0f001fff;//SRAM
+    assign ar_in_clint =araddr>=32'h02000000&&araddr<=32'h0200bfff;//clint
+    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart||ar_in_flash||ar_in_spi);
+    assign dec_clint_r=arvalid&&ar_in_clint;
+
     //clint
     wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;
     wire[1:0] clint_bresp,clint_rresp; 

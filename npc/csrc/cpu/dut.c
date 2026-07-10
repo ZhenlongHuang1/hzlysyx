@@ -11,8 +11,8 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
 static int is_skip_ref = false;
 
-void difftest_skip_ref(int skip_ref) {
-  is_skip_ref = skip_ref;
+extern "C" void difftest_skip_ref() {
+  is_skip_ref = 1;
 }
 
 
@@ -43,7 +43,7 @@ void init_difftest(const char *ref_so_file, long img_size) {
       "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
 
   ref_difftest_init(0);
-  ref_difftest_memcpy(PMROM_START, pmrom, img_size, DIFFTEST_TO_REF);//error need change
+  ref_difftest_memcpy(MROM_START, mrom, img_size, DIFFTEST_TO_REF);//error need change
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }
 

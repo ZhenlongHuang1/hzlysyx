@@ -18,14 +18,19 @@
 #include <device/mmio.h>
 #include <isa.h>
 
-#if   defined(CONFIG_PMEM_MALLOC)
-static uint8_t *pmem = NULL;
-#else // CONFIG_PMEM_GARRAY
-static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
-#endif
+static uint8_t mrom[CONFIG_MSIZE] PG_ALIGN = {};
+static uint8_t sram[CONFIG_SSIZE] PG_ALIGN = {};
 
-uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
-paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
+uint8_t* guest_to_host(paddr_t paddr) { 
+    if(in_mrom(paddr)) return mrom + paddr - CONFIG_MBASE;
+    if(in_sram(paddr)) return sram + paddr - CONFIG_SBASE;
+    return NULL;
+}
+paddr_t host_to_guest(uint8_t *haddr) { 
+    if(haddr>=mrom&&haddr<=mrom+CONFIG_MSIZE) return haddr - mrom + CONFIG_MBASE;
+    if(haddr>=sram&&haddr<=sram+CONFIG_SSIZE) return haddr - sram + CONFIG_SBASE;
+    return 0;
+}
 
 static word_t pmem_read(paddr_t addr, int len) {
     word_t ret = host_read(guest_to_host(addr), len);
@@ -50,11 +55,7 @@ static void out_of_bound(paddr_t addr) {
 }
 
 void init_mem() {
-#if   defined(CONFIG_PMEM_MALLOC)
-  pmem = malloc(CONFIG_MSIZE);
-  assert(pmem);
-#endif
-  IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
+  IFDEF(CONFIG_MEM_RANDOM, memset(mrom, rand(), CONFIG_MSIZE));
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 

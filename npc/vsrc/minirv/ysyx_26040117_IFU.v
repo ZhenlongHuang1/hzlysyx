@@ -1,6 +1,6 @@
 module ysyx_26040117_IFU(clk,rst,
-    WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,rresp_out,
+    WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,lsu_error,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,
     MEM_IFU_wrapper,IFU_MEM_wrapper
 );
     input clk,rst;
@@ -10,13 +10,13 @@ module ysyx_26040117_IFU(clk,rst,
     output WBU_IFU_ready;
     input jump,jalr;
     input[31:0]dnpc/* verilator public_flat_rd */;
+    input lsu_error;
     //IFU-IDU
     input IFU_IDU_ready;
     output IFU_IDU_valid;
     output [31:0]inst;
     output reg[31:0]pc;
     output[31:0] snpc;
-    output[1:0] rresp_out;
     //IFU-MEM
     input [40:0]MEM_IFU_wrapper;
     output[107:0] IFU_MEM_wrapper;
@@ -64,14 +64,18 @@ module ysyx_26040117_IFU(clk,rst,
     assign IFU_IDU_valid=(state==WAIT_VALID&&(rvalid))||inst_valid;
     assign WBU_IFU_ready=state==IDLE;
     //pc_next计算
+    wire[1:0] ifu_rresp;
     assign snpc=pc+32'd4;
     assign pc_next=({32{~jump}}&snpc)|                    //FIFO
                     ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
     always@(posedge clk)begin
         if(rst)
             pc<=32'h20000000;
-        else if(IDLE_fire)begin
-            pc<=pc_next;
+        else begin
+            if(ifu_rresp[1]||lsu_error)
+                pc<=32'h00000000;
+            if(IDLE_fire)
+                pc<=pc_next;
         end
     end
     //取指
@@ -103,5 +107,5 @@ module ysyx_26040117_IFU(clk,rst,
         end
     end
     assign inst=inst_valid?inst_reg:rdata; //save?
-    assign rresp_out=inst_valid?rresp_reg:rresp; 
+    assign ifu_rresp=inst_valid?rresp_reg:rresp; 
 endmodule
