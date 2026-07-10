@@ -33,6 +33,7 @@ static csh handle;
 
 void init_disasm() {
   void *dl_handle;
+  printf(str(NEMU_HOME_STR) "/tools/capstone/repo/libcapstone.");
   dl_handle = dlopen(str(NEMU_HOME_STR) "/tools/capstone/repo/libcapstone." CS_LIB_SUFFIX, RTLD_LAZY);
   assert(dl_handle);
 
