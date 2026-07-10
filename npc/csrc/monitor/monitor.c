@@ -92,6 +92,14 @@ static int parse_args(int argc, char *argv[]) {
   }
   return 0;
 }
+void init_flash() {
+    FILE *fp = fopen("~/Desktop/ysyx-workbench/am-kernels/tests/cpu-tests/build/char-test-riscv32e-ysyxsoc.bin", "rb");
+    if (fp) {
+        fread(flash, 1, 16 * 1024 * 1024, fp);
+        fclose(fp);
+        printf("Load bin to Flash:%x\n",FLASH_START);
+    }
+}
 void init_monitor(int argc,char*argv[]){
     parse_args(argc,argv);
     //read pmem of IMG file
