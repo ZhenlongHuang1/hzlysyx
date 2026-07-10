@@ -93,7 +93,7 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 void init_flash() {
-    FILE *fp = fopen("/home/hzl/Desktop/ysyx-workbench/am-kernels/tests/cpu-tests/build/char-test-riscv32e-ysyxsoc.bin", "rb");
+    FILE *fp = fopen("/home/hzl/Desktop/ysyx-workbench/am-kernels/tests/cpu-tests/char-test.bin", "rb");
     if (fp) {
         fread(flash, 1, 16 * 1024 * 1024, fp);
         fclose(fp);
