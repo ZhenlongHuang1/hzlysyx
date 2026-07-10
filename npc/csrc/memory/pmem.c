@@ -21,6 +21,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 #endif
 }
 extern "C" void mrom_read(int32_t addr, int32_t *data){
+    printf("mrom%x\n",addr);
     uint32_t raddr=(addr-MROM_START)>>2;
     if(raddr>=MROM_SIZE){
         data[0]=0;
