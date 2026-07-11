@@ -18,6 +18,8 @@ SECTIONS {
   .data : ALIGN(4){
     _data_vma_start = .;
     *(.data*)
+    *(.sdata*)
+    *(.sdata2*)
     _data_vma_end = .;
   } > sram AT> flash : data
   _data_lma_start = LOADADDR(.data);
