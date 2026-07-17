@@ -212,11 +212,12 @@ module ysyx_26040117_LSU (clk,rst,
     end
     //difftest
     import "DPI-C" function void difftest_skip_ref();
-    wire is_mimo,is_mrom,is_sram,is_flash;
-    assign is_flash=addr>= 32'h30000000 && addr <= 32'h3fffffff;
-    assign is_mrom=addr >= 32'h20000000 && addr <= 32'h20000fff;
-    assign is_sram=addr >= 32'h0f000000 && addr <= 32'h0f001fff;
-    assign is_mimo=reqValid&&!is_mrom&&!is_sram&&!is_flash;
+    wire is_mimo,is_mrom,is_sram,is_flash,is_psram;
+    assign is_psram=addr >= 32'h80000000 && addr <= 32'h9fffffff;
+    assign is_flash=addr >= 32'h30000000 && addr <= 32'h3fffffff;
+    assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
+    assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
+    assign is_mimo =reqValid&&!is_mrom&&!is_sram&&!is_flash&&!is_psram;
     always @(posedge clk) begin
        if(is_mimo&&respReady&&respValid)
            difftest_skip_ref();
