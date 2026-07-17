@@ -8,6 +8,26 @@
 void difftest_skip_ref();
 uint32_t mrom[MROM_SIZE]={0};
 uint32_t flash[FLASH_SIZE]={0};
+uint32_t psram[PSRAM_SIZE]={0};
+extern "C" void psram_read(int32_t addr, int32_t *data){
+    uint32_t raddr=((uint32_t)addr)>>2;
+    if(raddr>=PSRAM_SIZE){
+        data[0]=0;
+        return ;
+    }
+    data[0]=psram[raddr];
+#ifdef CONFIG_MTRACE
+    if(raddr>=CONFIG_MTRACE_START&&raddr<=CONFIG_MTRACE_END)
+        Log("Read psram at addr=0x%08x,data=%08x",raddr,data[0]);
+#endif
+}
+extern "C" void psram_write(int32_t addr, int32_t data){
+    uint32_t raddr=((uint32_t)addr)>>2;
+    if(raddr>=PSRAM_SIZE){
+        return;
+    }
+    psram[raddr]=data;
+}
 extern "C" void flash_read(int32_t addr, int32_t *data) {
     uint32_t raddr=((uint32_t)addr)>>2;
     if(raddr>=FLASH_SIZE){
