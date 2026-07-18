@@ -29,9 +29,9 @@ extern "C" void psram_write(int32_t addr, int32_t data,int32_t count){
     if(raddr>=PSRAM_SIZE){
         return;
     }
-    psram[raddr]=(uint8_t)data;
+    psram[raddr+count]=(uint8_t)data;
 #ifdef CONFIG_MTRACE
-    Log("Write psram at addr=0x%08x,data=%08x",raddr,data);
+    Log("Write psram at addr=0x%08x,data=%08x",raddr+count,data);
 #endif
 }
 extern "C" void flash_read(int32_t addr, int32_t *data) {
