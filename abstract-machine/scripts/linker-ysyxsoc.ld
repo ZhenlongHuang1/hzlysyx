@@ -24,6 +24,7 @@ SECTIONS {
 
   .rodata : ALIGN(4){
     *(.rodata*)
+    *(.srodata*)
     . = ALIGN(4);
     _text_vma_end = .;
   } > psram AT> flash : text
@@ -32,6 +33,7 @@ SECTIONS {
   .data : ALIGN(4){
     _data_vma_start = .;
     *(.data*)
+    *(.data.extra*)
     *(.sdata*)
     *(.sdata2*)
     _data_vma_end = .;
@@ -40,6 +42,7 @@ SECTIONS {
   .bss(NOLOAD) : ALIGN(4){
 	_bss_start = .;
     *(.bss*)
+    *(.bss.extra*)
     *(.sbss*)
     *(.scommon)
     _bss_end = .;
