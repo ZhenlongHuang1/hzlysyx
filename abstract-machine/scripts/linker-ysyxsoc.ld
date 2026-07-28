@@ -1,5 +1,10 @@
 ENTRY(_start)
-PHDRS { boot PT_LOAD; text PT_LOAD; data PT_LOAD; }
+PHDRS { 
+    boot PT_LOAD FLAGS(5); 
+    text PT_LOAD FLAGS(5); 
+    data PT_LOAD FLAGS(6); 
+    bss PT_LOAD  FLAGS(6);
+}
 MEMORY {
   flash : ORIGIN = 0x30000000, LENGTH = 256M
   sram  : ORIGIN = 0x0f000000, LENGTH = 8K
@@ -38,7 +43,7 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
     _bss_end = .;
-  } > psram AT> flash : data
+  } > psram AT> flash : bss
   _heap_start = ALIGN(4);
   _heap_end = ORIGIN(psram) + LENGTH(psram);
 
