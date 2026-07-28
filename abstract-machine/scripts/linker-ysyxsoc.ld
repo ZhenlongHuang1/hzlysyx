@@ -31,18 +31,16 @@ SECTIONS {
     _text_lma_start = LOADADDR(.text);
 
   .data : ALIGN(4){
-    _data_vma_start = .;
+    PROVIDE(_data_vma_start = .);
     *(.data*)
-    *(.data.extra*)
     *(.sdata*)
     *(.sdata2*)
     _data_vma_end = .;
   } > psram AT> flash : data
-  _data_lma_start = LOADADDR(.data);
+  PROVIDE(_data_lma_start = LOADADDR(.data));
   .bss(NOLOAD) : ALIGN(4){
-	_bss_start = .;
+	PROVIDE(_bss_start = .);
     *(.bss*)
-    *(.bss.extra*)
     *(.sbss*)
     *(.scommon)
     _bss_end = .;
