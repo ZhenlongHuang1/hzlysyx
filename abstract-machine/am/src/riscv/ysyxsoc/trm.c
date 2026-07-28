@@ -4,9 +4,15 @@
 #include "klib.h"
 extern char _heap_start;
 extern char _heap_end;
+
 extern char _data_lma_start;
 extern char _data_vma_start;
 extern char _data_vma_end;
+
+extern char _ssbl_lma_start;
+extern char _ssbl_vma_start;
+extern char _ssbl_vma_end;
+
 extern char _text_lma_start;
 extern char _text_vma_start;
 extern char _text_vma_end;
@@ -60,8 +66,8 @@ void _trm_init() {
     //test_mcycle();
     halt(ret);
 }
-__attribute__((section(".text.bootloader")))
-void bootloader(){
+__attribute__((section(".text.ssbl"),noinline))
+void ssbl(){
     volatile uint8_t *src;
     volatile uint8_t *dst;
     volatile uint8_t *end;
@@ -79,4 +85,18 @@ void bootloader(){
         *dst++ = *src++;
     }
     _trm_init();
+}
+__attribute__((section(".text.fsbl"),noinline))
+void fsbl(){
+    volatile uint8_t *src;
+    volatile uint8_t *dst;
+    volatile uint8_t *end;
+    src = (volatile uint8_t *)&_ssbl_lma_start;
+    dst = (volatile uint8_t *)&_ssbl_vma_start;
+    end = (volatile uint8_t *)&_ssbl_vma_end;
+    while (dst < end) {
+        *dst++ = *src++;
+    }
+    
+    ssbl();
 }

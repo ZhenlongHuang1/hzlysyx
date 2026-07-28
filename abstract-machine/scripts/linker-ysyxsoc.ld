@@ -1,6 +1,7 @@
 ENTRY(_start)
 PHDRS { 
     boot PT_LOAD FLAGS(5); 
+    ssbl PT_LOAD FLAGS(5);
     text PT_LOAD FLAGS(5); 
     data PT_LOAD FLAGS(6); 
     bss PT_LOAD  FLAGS(6);
@@ -14,8 +15,15 @@ SECTIONS {
   . = ORIGIN(flash);
   .boot : {
       *(entry)
-      *(.text.bootloader*)
+      *(.text.fsbl*)
   } > flash AT> flash : boot
+
+  .ssbl : ALIGN(4){
+      _ssbl_vma_start = .;
+      *(.text.ssbl*)
+      _ssbl_vma_end = .;
+  } > sram AT> flash : ssbl
+  _ssbl_lma_start = LOADADDR(.ssbl);
 
   .text : ALIGN(4){
     _text_vma_start = .;
@@ -25,7 +33,6 @@ SECTIONS {
   .rodata : ALIGN(4){
     *(.rodata*)
     *(.srodata*)
-    . = ALIGN(4);
     _text_vma_end = .;
   } > psram AT> flash : text
     _text_lma_start = LOADADDR(.text);
@@ -38,6 +45,7 @@ SECTIONS {
     _data_vma_end = .;
   } > psram AT> flash : data
   PROVIDE(_data_lma_start = LOADADDR(.data));
+
   .bss(NOLOAD) : ALIGN(4){
 	PROVIDE(_bss_start = .);
     *(.bss*)
@@ -45,9 +53,11 @@ SECTIONS {
     *(.scommon)
     _bss_end = .;
   } > psram AT> flash : bss
+
   _heap_start = ALIGN(4);
   _heap_end = ORIGIN(psram) + LENGTH(psram);
 
-  _stack_top = ORIGIN(sram);
+  _stack_top = _ssbl_vma_end;
   _stack_pointer = ORIGIN(sram) + LENGTH(sram);
+  ASSERT(_ssbl_vma_end < _stack_pointer , "SSBL clash stack")
 }
