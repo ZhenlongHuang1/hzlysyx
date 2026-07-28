@@ -52,7 +52,7 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
     _bss_end = .;
-  } > psram AT> flash : bss
+  } > psram : bss
 
   _heap_start = ALIGN(4);
   _heap_end = ORIGIN(psram) + LENGTH(psram);
