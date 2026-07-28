@@ -15,13 +15,13 @@ SECTIONS {
   .text : ALIGN(4){
     _text_vma_start = .;
     *(.text*)
-  } > sram AT> flash : text
+  } > psram AT> flash : text
 
   .rodata : ALIGN(4){
     *(.rodata*)
     . = ALIGN(4);
     _text_vma_end = .;
-  } > sram AT> flash : text
+  } > psram AT> flash : text
     _text_lma_start = LOADADDR(.text);
 
   .data : ALIGN(4){
@@ -30,7 +30,7 @@ SECTIONS {
     *(.sdata*)
     *(.sdata2*)
     _data_vma_end = .;
-  } > sram AT> flash : data
+  } > psram AT> flash : data
   _data_lma_start = LOADADDR(.data);
   .bss(NOLOAD) : ALIGN(4){
 	_bss_start = .;
@@ -38,10 +38,10 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
     _bss_end = .;
-  } > sram AT> flash : data
+  } > psram : data
   _heap_start = ALIGN(4);
-  _heap_end = ORIGIN(sram) + LENGTH(sram) - 0x400;
+  _heap_end = ORIGIN(psram) + LENGTH(psram);
 
-  _stack_top = _heap_end;
+  _stack_top = ORIGIN(sram);
   _stack_pointer = ORIGIN(sram) + LENGTH(sram);
 }
