@@ -7,9 +7,10 @@ PHDRS {
     bss PT_LOAD  FLAGS(6);
 }
 MEMORY {
-  flash : ORIGIN = 0x30000000, LENGTH = 256M
+  flash : ORIGIN = 0x30000000, LENGTH = 16M
   sram  : ORIGIN = 0x0f000000, LENGTH = 8K
   psram : ORIGIN = 0x80000000, LENGTH = 4M
+  sdram : ORIGIN = 0xa0000000, LENGTH = 32M
 }
 SECTIONS {
   . = ORIGIN(flash);
