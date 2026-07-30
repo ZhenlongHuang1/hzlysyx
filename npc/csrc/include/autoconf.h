@@ -1,7 +1,9 @@
 #ifndef __AUTOCONF_H__
 #define __AUTOCONF_H__
 //mtrace
-#define CONFIG_MTRACE 1
+#define CONFIG_MTRACE_SDRAM 1
+//#define CONFIG_MTRACE_FLASH 1
+//#define CONFIG_MTRACE_PSRAM 1
 #define CONFIG_MTRACE_START 0x00000000
 #define CONFIG_MTRACE_END   0x00000000
 

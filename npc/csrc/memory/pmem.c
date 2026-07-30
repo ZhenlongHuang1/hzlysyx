@@ -19,7 +19,7 @@ extern "C" void sdram_read(int32_t addr, int32_t *data){
     uint8_t *ptr=(uint8_t*)data;
     ptr[0]=sdram[raddr];
     ptr[1]=sdram[raddr+1];
-#ifdef CONFIG_MTRACE
+#ifdef CONFIG_MTRACE_SDRAM
     Log("Read sdram at addr=0x%08x,data=%08x",raddr,data[0]);
 #endif
 }
@@ -34,7 +34,7 @@ extern "C" void sdram_write(int32_t addr, int32_t data,int32_t dqm){
     if((dqm&0x0002)==0){
         sdram[raddr+1]=(data>>8)&0xff;
     }
-#ifdef CONFIG_MTRACE
+#ifdef CONFIG_MTRACE_SDRAM
     Log("Write sdram at addr=0x%08x,data=%08x,dqm=%x",raddr,data,dqm);
 #endif
 }
@@ -49,7 +49,7 @@ extern "C" void psram_read(int32_t addr, int32_t *data){
     ptr[1]=psram[raddr+1];
     ptr[2]=psram[raddr+2];
     ptr[3]=psram[raddr+3];
-#ifdef CONFIG_MTRACE
+#ifdef CONFIG_MTRACE_PSRAM
     Log("Read psram at addr=0x%08x,data=%08x",raddr,data[0]);
 #endif
 }
@@ -59,7 +59,7 @@ extern "C" void psram_write(int32_t addr, int32_t data,int32_t count){
         return;
     }
     psram[raddr+count]=(uint8_t)data;
-#ifdef CONFIG_MTRACE
+#ifdef CONFIG_MTRACE_PSRAM
     Log("Write psram at addr=0x%08x,data=%08x",raddr+count,data);
 #endif
 }
@@ -70,9 +70,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
         return ;
     }
     data[0]=flash[raddr];
-#ifdef CONFIG_MTRACE
-    if(raddr>=CONFIG_MTRACE_START&&raddr<=CONFIG_MTRACE_END)
-        Log("Read flash at addr=0x%08x,data=%08x",raddr,data[0]);
+#ifdef CONFIG_MTRACE_FLASH
+    Log("Read flash at addr=0x%08x,data=%08x",raddr,data[0]);
 #endif
 }
 extern "C" void mrom_read(int32_t addr, int32_t *data){
@@ -82,9 +81,8 @@ extern "C" void mrom_read(int32_t addr, int32_t *data){
         return ;
     }
     data[0]=mrom[raddr];
-#ifdef CONFIG_MTRACE
-    if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
-        Log("Read mrom at addr=0x%08x,data=%08x",addr,data[0]);
+#ifdef CONFIG_MTRACE_FLASH
+    Log("Read mrom at addr=0x%08x,data=%08x",addr,data[0]);
 #endif
 }
 uint64_t get_time(){
