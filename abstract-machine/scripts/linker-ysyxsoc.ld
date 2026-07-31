@@ -29,13 +29,13 @@ SECTIONS {
   .text : ALIGN(4){
     _text_vma_start = .;
     *(.text*)
-  } > psram AT> flash : text
+  } > sdram AT> flash : text
 
   .rodata : ALIGN(4){
     *(.rodata*)
     *(.srodata*)
     _text_vma_end = .;
-  } > psram AT> flash : text
+  } > sdram AT> flash : text
     _text_lma_start = LOADADDR(.text);
 
   .data : ALIGN(4){
@@ -44,7 +44,7 @@ SECTIONS {
     *(.sdata*)
     *(.sdata2*)
     _data_vma_end = .;
-  } > psram AT> flash : data
+  } > sdram AT> flash : data
   PROVIDE(_data_lma_start = LOADADDR(.data));
 
   .bss(NOLOAD) : ALIGN(4){
@@ -53,10 +53,10 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
     _bss_end = .;
-  } > psram : bss
+  } > sdram : bss
 
   _heap_start = ALIGN(4);
-  _heap_end = ORIGIN(psram) + LENGTH(psram);
+  _heap_end = ORIGIN(sdram) + LENGTH(sdram);
 
   _stack_top = _ssbl_vma_end;
   _stack_pointer = ORIGIN(sram) + LENGTH(sram);
