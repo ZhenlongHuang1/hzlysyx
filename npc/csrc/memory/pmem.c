@@ -9,30 +9,45 @@ void difftest_skip_ref();
 uint32_t mrom[MROM_SIZE]={0};
 uint32_t flash[FLASH_SIZE]={0};
 uint8_t psram[PSRAM_SIZE]={0};
-uint8_t sdram[SDRAM_SIZE]={0};
-extern "C" void sdram_read(int32_t addr, int32_t *data){
+uint8_t sdram0[SDRAM_SIZE]={0};
+uint8_t sdram1[SDRAM_SIZE]={0};
+extern "C" void sdram_read(int32_t id,int32_t addr, int32_t *data){
     uint32_t raddr=(uint32_t)addr<<1;
     if(raddr>=SDRAM_SIZE){
         data[0]=0;
         return ;
     }
     uint8_t *ptr=(uint8_t*)data;
-    ptr[0]=sdram[raddr];
-    ptr[1]=sdram[raddr+1];
+    if(id==0){
+        ptr[0]=sdram0[raddr];
+        ptr[1]=sdram0[raddr+1];
+    }else if(id==1){
+        ptr[0]=sdram1[raddr];
+        ptr[1]=sdram1[raddr+1];
+    }
 #ifdef CONFIG_MTRACE_SDRAM
     Log("Read sdram at addr=0x%08x,data=%08x",raddr,data[0]);
 #endif
 }
-extern "C" void sdram_write(int32_t addr, int32_t data,int32_t dqm){
+extern "C" void sdram_write(int32_t id,int32_t addr, int32_t data,int32_t dqm){
     uint32_t raddr=(uint32_t)addr<<1;
     if(raddr>=SDRAM_SIZE){
         return;
     }
-    if((dqm&0x0001)==0){
-        sdram[raddr]=data&0x00ff;
-    }
-    if((dqm&0x0002)==0){
-        sdram[raddr+1]=(data>>8)&0xff;
+    if(id==0){
+        if((dqm&0x0001)==0){
+            sdram0[raddr]=data&0x00ff;
+        }
+        if((dqm&0x0002)==0){
+            sdram0[raddr+1]=(data>>8)&0xff;
+        }
+    }else if(id==1){
+        if((dqm&0x0001)==0){
+            sdram1[raddr]=data&0x00ff;
+        }
+        if((dqm&0x0002)==0){
+            sdram1[raddr+1]=(data>>8)&0xff;
+        }
     }
 #ifdef CONFIG_MTRACE_SDRAM
     Log("Write sdram at addr=0x%08x,data=%08x,dqm=%x",raddr,data,dqm);

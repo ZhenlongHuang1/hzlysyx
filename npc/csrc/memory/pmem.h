@@ -18,8 +18,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data);
 extern "C" void mrom_read(int32_t addr, int32_t *data);
 extern "C" void psram_read(int32_t addr, int32_t *data);
 extern "C" void psram_write(int32_t addr, int32_t data,int32_t count);
-extern "C" void sdram_read(int32_t addr, int32_t *data);
-extern "C" void sdram_write(int32_t addr, int32_t data,int32_t dqm);
+extern "C" void sdram_read(int32_t id,int32_t addr, int32_t *data);
+extern "C" void sdram_write(int32_t id,int32_t addr, int32_t data,int32_t dqm);
 
 uint64_t get_time();
 #endif
