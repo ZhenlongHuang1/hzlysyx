@@ -37,7 +37,8 @@ module ysyx_26040117_Xbar(clk,rst,
     //aw_choose
     wire dec_soc_w,sel_soc_w,dec_clint_w,sel_clint_w;
     reg reg_soc_w,reg_clint_w,w_routed;
-    wire aw_in_uart,aw_in_sram,aw_in_clint,aw_in_flash,aw_in_spi,aw_in_psram,aw_in_sdram;
+    wire aw_in_uart,aw_in_sram,aw_in_clint,aw_in_flash,aw_in_spi,aw_in_psram,aw_in_sdram,aw_in_gpio;
+    assign aw_in_gpio  =awaddr>=32'h10002000&&awaddr<=32'h1000200f;//GPIO
     assign aw_in_sdram =awaddr>=32'ha0000000&&awaddr<=32'hbfffffff;//SDRAM
     assign aw_in_psram =awaddr>=32'h80000000&&awaddr<=32'h9fffffff;//PSRAM
     assign aw_in_spi   =awaddr>=32'h10001000&&awaddr<=32'h10001fff;//SPI-master
@@ -45,7 +46,7 @@ module ysyx_26040117_Xbar(clk,rst,
     assign aw_in_uart  =awaddr>=32'h10000000&&awaddr<=32'h10000fff;//UART16550
     assign aw_in_sram  =awaddr>=32'h0f000000&&awaddr<=32'h0f001fff;//SRAM
     assign aw_in_clint =awaddr>=32'h02000000&&awaddr<=32'h0200bfff;//CLINT
-    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi||aw_in_psram||aw_in_sdram); 
+    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi||aw_in_psram||aw_in_sdram||aw_in_gpio); 
     assign dec_clint_w=awvalid&&aw_in_clint;
     
     wire awfire,wfire;
@@ -70,7 +71,8 @@ module ysyx_26040117_Xbar(clk,rst,
     assign sel_clint_w=w_routed?reg_clint_w:dec_clint_w;
     //ar_choose
     wire dec_soc_r,dec_clint_r;
-    wire ar_in_mrom,ar_in_sram,ar_in_clint,ar_in_uart,ar_in_flash,ar_in_spi,ar_in_psram,ar_in_sdram;
+    wire ar_in_mrom,ar_in_sram,ar_in_clint,ar_in_uart,ar_in_flash,ar_in_spi,ar_in_psram,ar_in_sdram,ar_in_gpio;
+    assign ar_in_gpio  =araddr>=32'h10002000&&araddr<=32'h1000200f;//GPIO
     assign ar_in_sdram =araddr>=32'ha0000000&&araddr<=32'hbfffffff;//SDRAM
     assign ar_in_psram =araddr>=32'h80000000&&araddr<=32'h9fffffff;//PSRAM
     assign ar_in_spi   =araddr>=32'h10001000&&araddr<=32'h10001fff;//SPI-master
@@ -79,7 +81,7 @@ module ysyx_26040117_Xbar(clk,rst,
     assign ar_in_mrom  =araddr>=32'h20000000&&araddr<=32'h20000fff;//MROM
     assign ar_in_sram  =araddr>=32'h0f000000&&araddr<=32'h0f001fff;//SRAM
     assign ar_in_clint =araddr>=32'h02000000&&araddr<=32'h0200bfff;//clint
-    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart||ar_in_flash||ar_in_spi||ar_in_psram||ar_in_sdram);
+    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart||ar_in_flash||ar_in_spi||ar_in_psram||ar_in_sdram||ar_in_gpio);
     assign dec_clint_r=arvalid&&ar_in_clint;
 
     //clint
