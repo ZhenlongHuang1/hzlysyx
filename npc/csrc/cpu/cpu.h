@@ -1,5 +1,6 @@
 #ifndef __CPU_H__
 #define __CPU_H__
+#include<nvboard.h>
 #include<verilated.h>
 #include"verilated_vcd_c.h"
 #include "include/macro.h"

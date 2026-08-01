@@ -1,6 +1,5 @@
 #include "cpu/cpu.h"
 #include "memory/pmem.h"
-#include "include/mydpi.h"
 #include "include/macro.h"
 #include "include/autoconf.h"
 #include "include/debug.h"
@@ -121,6 +120,7 @@ void ftrace_print(){
 }
 static void execute(uint64_t n){
     for(;n>0;n--){
+        nvboard_update();
         while(dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__WBU_IFU_fire==0){
         single_cycle();
         if(npc_state.state!=NPC_RUNNING)return;

@@ -1,6 +1,6 @@
 #include<stdlib.h>
 #include<assert.h>
-//#include<nvboard.h>
+#include<nvboard.h>
 #include "cpu/cpu.h"
 #include "monitor/sdb.h"
 #include "memory/pmem.h"
@@ -11,9 +11,8 @@ void init_monitor(int, char *[]);
 void free_monitor();
 int main(int argc,char**argv){
     Verilated::commandArgs(argc, argv);
-    //nvboard_bind_all_pins(dut);
-    //nvboard_init();
-    //while((USE_NVBOARD||!contextp->gotFinish()&&contextp->time()<sim_time)&&npc_state==1)
+    nvboard_bind_all_pins(dut);
+    nvboard_init();
 
     init_monitor(argc,argv);
 
