@@ -12,8 +12,8 @@
 TOP_NAME* dut=NULL;
 VerilatedContext*contextp=NULL;
 VerilatedVcdC* tfp=NULL;
-NPC_state npc_state={NPC_RUNNING,0,MROM_START};
-CPU_state cpu_dut={{0},MROM_START};
+NPC_state npc_state={NPC_RUNNING,0,FLASH_START};
+CPU_state cpu_dut={{0},FLASH_START};
 uint32_t cpu_pc=0,cpu_dnpc=0;
 static char logbuf[128]={};
 static bool g_print_step=false;
@@ -49,11 +49,11 @@ int is_exit_status_bad() {
 void single_cycle(){
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
-            if(contextp->time()<=300000){tfp->dump(contextp->time());}
+            if(contextp->time()<1000000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
     dut->clock=0;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
-            if(contextp->time()<=300000){tfp->dump(contextp->time());}
+            if(contextp->time()<1000000){tfp->dump(contextp->time());}
             contextp->timeInc(1);)
 }
 void reset(int n){

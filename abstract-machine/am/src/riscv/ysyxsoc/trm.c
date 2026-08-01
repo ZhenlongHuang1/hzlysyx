@@ -4,9 +4,19 @@
 #include "klib.h"
 extern char _heap_start;
 extern char _heap_end;
+
 extern char _data_lma_start;
 extern char _data_vma_start;
 extern char _data_vma_end;
+
+extern char _ssbl_lma_start;
+extern char _ssbl_vma_start;
+extern char _ssbl_vma_end;
+
+extern char _text_lma_start;
+extern char _text_vma_start;
+extern char _text_vma_end;
+
 extern char _bss_start;
 extern char _bss_end;
 int main(const char *args);
@@ -46,15 +56,47 @@ void halt(int code) {
 //      printf("Number of operating cycles=%lld\n",((uint64_t)high<<32)|low);
 //}
 void _trm_init() {
-    memcpy(&_data_vma_start,&_data_lma_start,(&_data_vma_end-&_data_vma_start));
     memset(&_bss_start,0,(&_bss_end-&_bss_start));
     uart_init();
-    //uint32_t project,id;
-    //asm volatile("csrr %0, mvendorid":"=r"(project));
-    //asm volatile("csrr %0, marchid":"=r"(id));
+    uint32_t project,id;
+    asm volatile("csrr %0, mvendorid":"=r"(project));
+    asm volatile("csrr %0, marchid":"=r"(id));
     //printf("student number:%c%c%c%c_%d\n",(project&0xff000000)>>24,(project&0xff0000)>>16,(project&0xff00)>>8,(project&0xff),id);
     int ret = main(mainargs);
-    //int ret = main("");
     //test_mcycle();
     halt(ret);
+}
+__attribute__((section(".text.ssbl"),noinline))
+void ssbl(){
+    volatile uint8_t *src;
+    volatile uint8_t *dst;
+    volatile uint8_t *end;
+    src = (volatile uint8_t *)&_text_lma_start;
+    dst = (volatile uint8_t *)&_text_vma_start;
+    end = (volatile uint8_t *)&_text_vma_end;
+    while (dst < end) {
+        *dst++ = *src++;
+    }
+
+    src = (volatile uint8_t *)&_data_lma_start;
+    dst = (volatile uint8_t *)&_data_vma_start;
+    end = (volatile uint8_t *)&_data_vma_end;
+    while (dst < end) {
+        *dst++ = *src++;
+    }
+    _trm_init();
+}
+__attribute__((section(".text.fsbl"),noinline))
+void fsbl(){
+    volatile uint8_t *src;
+    volatile uint8_t *dst;
+    volatile uint8_t *end;
+    src = (volatile uint8_t *)&_ssbl_lma_start;
+    dst = (volatile uint8_t *)&_ssbl_vma_start;
+    end = (volatile uint8_t *)&_ssbl_vma_end;
+    while (dst < end) {
+        *dst++ = *src++;
+    }
+    
+    ssbl();
 }
