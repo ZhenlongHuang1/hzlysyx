@@ -33,6 +33,8 @@ extern "C" void sdram_read(int32_t id,int32_t addr, int32_t *data){
         ptr[0]=sdram3[raddr];
         ptr[1]=sdram3[raddr+1];
     }
+    if(id>1)
+        printf("Read sdram at addr=0x%08x,data=%08x",raddr,data[0]);
 #ifdef CONFIG_MTRACE_SDRAM
     Log("Read sdram at addr=0x%08x,data=%08x",raddr,data[0]);
 #endif
@@ -55,6 +57,8 @@ extern "C" void sdram_write(int32_t id,int32_t addr, int32_t data,int32_t dqm){
         if((dqm&0x0001)==0) sdram3[raddr]=data&0x00ff;
         if((dqm&0x0002)==0) sdram3[raddr+1]=(data>>8)&0xff;
     }
+    if(id>1)
+        printf("Write sdram at addr=0x%08x,data=%08x,dqm=%x",raddr,data,dqm);
 #ifdef CONFIG_MTRACE_SDRAM
     Log("Write sdram at addr=0x%08x,data=%08x,dqm=%x",raddr,data,dqm);
 #endif
