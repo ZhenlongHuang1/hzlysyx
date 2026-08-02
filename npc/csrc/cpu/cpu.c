@@ -46,6 +46,7 @@ int is_exit_status_bad() {
 }
 
 void single_cycle(){
+    nvboard_update();
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
             if(contextp->time()<1000000){tfp->dump(contextp->time());}
@@ -120,7 +121,6 @@ void ftrace_print(){
 }
 static void execute(uint64_t n){
     for(;n>0;n--){
-        nvboard_update();
         while(dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__WBU_IFU_fire==0){
         single_cycle();
         if(npc_state.state!=NPC_RUNNING)return;
