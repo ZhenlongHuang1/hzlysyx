@@ -26,6 +26,7 @@ Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 #define UART_BASE 0x10000000
 #define UART_THR (UART_BASE+0x0)
+#define UART_RBR (UART_BASE+0x0)
 #define UART_FCR (UART_BASE+0x2)
 #define UART_LCR (UART_BASE+0x3)
 #define UART_LSR (UART_BASE+0x5)
@@ -44,7 +45,10 @@ void putch(char ch) {
     outb(UART_THR, ch);
 }
 void __am_uart_rx(AM_UART_RX_T* rx){
-    rx->data=inb(UART_THR);
+    if((inb(UART_LSR)&0x1))
+        rx->data=inb(UART_THR);
+    else
+        rx->data=0xff;
 } 
 void halt(int code) {
     nemu_trap(code);
