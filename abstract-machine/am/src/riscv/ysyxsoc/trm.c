@@ -74,19 +74,19 @@ void _trm_init() {
 }
 __attribute__((section(".text.ssbl"),noinline))
 void ssbl(){
-    volatile uint8_t *src;
-    volatile uint8_t *dst;
-    volatile uint8_t *end;
-    src = (volatile uint8_t *)&_text_lma_start;
-    dst = (volatile uint8_t *)&_text_vma_start;
-    end = (volatile uint8_t *)&_text_vma_end;
+    volatile uint32_t *src;
+    volatile uint32_t *dst;
+    volatile uint32_t *end;
+    src = (volatile uint32_t *)&_text_lma_start;
+    dst = (volatile uint32_t *)&_text_vma_start;
+    end = (volatile uint32_t *)&_text_vma_end;
     while (dst < end) {
         *dst++ = *src++;
     }
 
-    src = (volatile uint8_t *)&_data_lma_start;
-    dst = (volatile uint8_t *)&_data_vma_start;
-    end = (volatile uint8_t *)&_data_vma_end;
+    src = (volatile uint32_t *)&_data_lma_start;
+    dst = (volatile uint32_t *)&_data_vma_start;
+    end = (volatile uint32_t *)&_data_vma_end;
     while (dst < end) {
         *dst++ = *src++;
     }
@@ -94,12 +94,12 @@ void ssbl(){
 }
 __attribute__((section(".text.fsbl"),noinline))
 void fsbl(){
-    volatile uint8_t *src;
-    volatile uint8_t *dst;
-    volatile uint8_t *end;
-    src = (volatile uint8_t *)&_ssbl_lma_start;
-    dst = (volatile uint8_t *)&_ssbl_vma_start;
-    end = (volatile uint8_t *)&_ssbl_vma_end;
+    volatile uint32_t *src;
+    volatile uint32_t *dst;
+    volatile uint32_t *end;
+    src = (volatile uint32_t *)&_ssbl_lma_start;
+    dst = (volatile uint32_t *)&_ssbl_vma_start;
+    end = (volatile uint32_t *)&_ssbl_vma_end;
     while (dst < end) {
         *dst++ = *src++;
     }
