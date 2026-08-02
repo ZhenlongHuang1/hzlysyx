@@ -21,7 +21,7 @@ extern char _bss_start;
 extern char _bss_end;
 int main(const char *args);
 
-# define nemu_trap(code) asm volatile("mv a0, %0; ebreak" : :"r"(code))
+#define nemu_trap(code) asm volatile("mv a0, %0; ebreak" : :"r"(code))
 Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 #define UART_BASE 0x10000000
@@ -31,6 +31,7 @@ static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); /
 #define UART_LSR (UART_BASE+0x5)
 #define UART_DLL (UART_BASE+0x0)
 #define UART_DLM (UART_BASE+0x1)
+
 void uart_init(){
     outb(UART_LCR,0x80);
     outb(UART_DLM,0x00);
@@ -38,12 +39,13 @@ void uart_init(){
     outb(UART_LCR,0x03);//[1:0]:字符长度是8位, [3]:不带校验位, [2]:1位停止位.
     outb(UART_FCR,0x07);//[0]openFIFO,[1]clearRFIFO,[2]clearTFIFO
 }
-
 void putch(char ch) {
     while ((inb(UART_LSR)&0x20)==0) ;
     outb(UART_THR, ch);
 }
-
+void __am_uart_rx(AM_UART_RX_T* rx){
+    rx->data=inb(UART_THR);
+} 
 void halt(int code) {
     nemu_trap(code);
     while (1);
