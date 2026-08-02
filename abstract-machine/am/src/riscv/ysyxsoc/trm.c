@@ -33,8 +33,8 @@ static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); /
 #define UART_DLM (UART_BASE+0x1)
 void uart_init(){
     outb(UART_LCR,0x80);
-    outb(UART_DLL,0x01);//波特率
     outb(UART_DLM,0x00);
+    outb(UART_DLL,0x01);//波特率
     outb(UART_LCR,0x03);//[1:0]:字符长度是8位, [3]:不带校验位, [2]:1位停止位.
     outb(UART_FCR,0x07);//[0]openFIFO,[1]clearRFIFO,[2]clearTFIFO
 }
