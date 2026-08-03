@@ -9,6 +9,10 @@ extern char _data_lma_start;
 extern char _data_vma_start;
 extern char _data_vma_end;
 
+extern char _rodata_lma_start;
+extern char _rodata_vma_start;
+extern char _rodata_vma_end;
+
 extern char _ssbl_lma_start;
 extern char _ssbl_vma_start;
 extern char _ssbl_vma_end;
@@ -84,6 +88,12 @@ void ssbl(){
         *dst++ = *src++;
     }
 
+    src = (volatile uint32_t *)&_rodata_lma_start;
+    dst = (volatile uint32_t *)&_rodata_vma_start;
+    end = (volatile uint32_t *)&_rodata_vma_end;
+    while (dst < end) {
+        *dst++ = *src++;
+    }
     src = (volatile uint32_t *)&_data_lma_start;
     dst = (volatile uint32_t *)&_data_vma_start;
     end = (volatile uint32_t *)&_data_vma_end;
