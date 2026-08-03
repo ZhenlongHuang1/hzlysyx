@@ -2,11 +2,12 @@ AM_SRCS := riscv/ysyxsoc/start.S \
            riscv/ysyxsoc/trm.c \
            riscv/ysyxsoc/ioe.c \
            riscv/ysyxsoc/timer.c \
+           riscv/ysyxsoc/vga.c \
            riscv/ysyxsoc/input.c \
            riscv/ysyxsoc/cte.c \
            riscv/ysyxsoc/trap.S \
            platform/dummy/vme.c \
-           platform/dummy/mpe.c
+           platform/dummy/mpe.c \
 
 CFLAGS    += -fdata-sections -ffunction-sections #函数和变量放到子段中
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
