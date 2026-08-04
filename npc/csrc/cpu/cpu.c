@@ -1,6 +1,5 @@
 #include "cpu/cpu.h"
 #include "memory/pmem.h"
-#include "include/mydpi.h"
 #include "include/macro.h"
 #include "include/autoconf.h"
 #include "include/debug.h"
@@ -47,6 +46,7 @@ int is_exit_status_bad() {
 }
 
 void single_cycle(){
+    nvboard_update();
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
             if(contextp->time()<1000000){tfp->dump(contextp->time());}

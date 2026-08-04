@@ -92,6 +92,7 @@ static int parse_args(int argc, char *argv[]) {
   }
   return 0;
 }
+void nvboard_bind_all_pins(TOP_NAME*top);
 void init_monitor(int argc,char*argv[]){
     parse_args(argc,argv);
     //read pmem of IMG file
@@ -109,6 +110,10 @@ void init_monitor(int argc,char*argv[]){
         dut->trace(tfp,CONFIG_VCD_TRACE_LENGTH);
         tfp->open("simx.vcd");
     })
+    //nvboard
+    nvboard_bind_all_pins(dut);
+    nvboard_init();
+
     //reset
     reset(30);
     //difftest
