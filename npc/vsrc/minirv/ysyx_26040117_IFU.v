@@ -84,7 +84,7 @@ module ysyx_26040117_IFU(clk,rst,
     wire awready,wready,bvalid;
     wire[1:0] rresp,bresp;
 
-    assign araddr=IDLE_fire?pc_next:pc;
+    assign araddr=pc;
     assign IFU_MEM_wrapper={3'b010,arvalid,araddr,rready,1'b0,32'd0,1'b0,32'd0,4'd0,1'b0};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_IFU_wrapper;
     //FIFO
