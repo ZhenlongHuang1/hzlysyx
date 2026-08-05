@@ -178,9 +178,9 @@ module ysyx_26040117(
     always @(negedge clock) begin
         if(!reset&&perf_done)begin
             $display("Performance Counters");
-            $display("IFU fetch = %0d",IFU1.ifu_fetch_inst_count);
-            $display("IFU AR wait = %0d",IFU1.ifu_arwait_count);
-            $display("IFU R wait = %0d",IFU1.ifu_rwait_count);
+            $display("IFU fetch       = %0d",IFU1.ifu_fetch_inst_count);
+            $display("IFU AR wait     = %0d",IFU1.ifu_arwait_count);
+            $display("IFU R wait      = %0d",IFU1.ifu_rwait_count);
         end
     end 
 `endif
