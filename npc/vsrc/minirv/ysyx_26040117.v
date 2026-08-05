@@ -172,5 +172,16 @@ module ysyx_26040117(
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper),
         .master_wrapper_in(master_wrapper_in),.master_wrapper_out(master_wrapper_out)
     );
-
+`ifdef PERF_COUNTER
+    wire perf_done;
+    assign perf_done=WBU1.ebreak_out&&WBU1.WBU_IFU_fire;
+    always @(negedge clock) begin
+        if(!reset&&perf_done)begin
+            $display("Performance Counters");
+            $display("IFU fetch = %0d",IFU1.ifu_fetch_inst_count);
+            $display("IFU AR wait = %0d",IFU1.ifu_arwait_count);
+            $display("IFU R wait = %0d",IFU1.ifu_rwait_count);
+        end
+    end 
+`endif
 endmodule

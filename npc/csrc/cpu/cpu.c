@@ -42,7 +42,7 @@ extern "C" void npc_trap(){
     printf("ret=%d\n",npc_state.halt_ret);
 }
 int is_exit_status_bad() {
-    printf("Dynamic instruction count=%llu\ncycles count=%llu\nCycles Per Instruction=%.6f\ninstructions Per Cycle=%.6f\n",
+    printf("Dynamic instruction count=%lu\ncycles count=%lu\nCycles Per Instruction=%.6f\ninstructions Per Cycle=%.6f\n",
             DIC,DCC,(double)DCC/(double)DIC,(double)DIC/(double)DCC);
     int good=(npc_state.state==NPC_END&&npc_state.halt_ret==0)||
         (npc_state.state==NPC_QUIT);

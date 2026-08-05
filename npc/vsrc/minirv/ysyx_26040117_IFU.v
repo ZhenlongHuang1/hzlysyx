@@ -108,4 +108,22 @@ module ysyx_26040117_IFU(clk,rst,
     end
     assign inst=inst_valid?inst_reg:rdata; //save?
     assign ifu_rresp=inst_valid?rresp_reg:rresp; 
+`ifdef PERF_COUNTER
+    reg [63:0] ifu_fetch_inst_count,ifu_arwait_count,ifu_rwait_count;
+    always @(posedge clk) begin
+        if(rst)begin
+            ifu_fetch_inst_count<=64'd0;
+            ifu_arwait_count<=64'd0;
+            ifu_rwait_count<=64'd0;
+        end else begin
+            if(rfire)
+                ifu_fetch_inst_count<=ifu_fetch_inst_count+64'd1;
+            if(arvalid&&!arready)
+                ifu_arwait_count<=ifu_arwait_count+64'd1;
+            if((state==WAIT_VALID)&&!rvalid)
+                ifu_rwait_count<=ifu_rwait_count+64'd1;
+        end
+    end
+
+`endif
 endmodule
