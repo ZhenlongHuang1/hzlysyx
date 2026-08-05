@@ -259,7 +259,7 @@ module ysyx_26040117_LSU (clk,rst,
             lsu_pending_wen       <= 1'b0;
         end else begin
             lsu_cycle <= lsu_cycle + 64'd1;
-            if (reqValid&&(((rstate==IDLE)&&~wen)||((awstate==IDLE)&&wen) ))begin
+            if (!lsu_pending&&(rIDLE_reqvalid||(awIDLE_reqvalid&&wIDLE_reqvalid)))begin
                 lsu_start_cycle <= lsu_cycle;
                 lsu_pending     <= 1'b1;
                 lsu_pending_wen <= wen;
