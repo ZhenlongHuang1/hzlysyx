@@ -175,45 +175,47 @@ module ysyx_26040117(
 `ifdef PERF_COUNTER
     wire perf_done;
     assign perf_done=WBU1.ebreak_out&&WBU1.WBU_IFU_fire;
-    always @(negedge clock) begin
+    always @(posedge clock) begin
         if(!reset&&perf_done)begin
-            $display("Performance Counters");
-            $display("IFU fetch cycle    = %0d",IFU1.ifu_fetch_inst_count);
-            $display("IFU no fetch cycle = %0d",IFU1.ifu_no_fetch_count);
-            $display("IFU wait wbu cycle = %0d",IFU1.ifu_wait_wbu_count);
-            $display("IFU AR wait        = %0d",IFU1.ifu_arwait_count);
-            $display("IFU protocol wait  = %0d",IFU1.ifu_protocol_count);
-            $display("IFU R wait         = %0d",IFU1.ifu_rwait_count);
-            $display("IFU idu wait       = %0d",IFU1.ifu_idublock_count);
+            $strobe("Performance Counters");
+            $strobe("IFU fetch cycle    = %0d",IFU1.ifu_fetch_inst_count);
+            $strobe("IFU no fetch cycle = %0d",IFU1.ifu_no_fetch_count);
+            $strobe("IFU wait wbu cycle = %0d",IFU1.ifu_wait_wbu_count);
+            $strobe("IFU AR wait        = %0d",IFU1.ifu_arwait_count);
+            $strobe("IFU protocol wait  = %0d",IFU1.ifu_protocol_count);
+            $strobe("IFU R wait         = %0d",IFU1.ifu_rwait_count);
+            $strobe("IFU idu wait       = %0d",IFU1.ifu_idublock_count);
+            $strobe("");
 
-            $display("LSU LOAD        = %0d",LSU1.lsu_load_count);
-            $display("LSU R wait      = %0d",LSU1.lsu_rwait_count);
-            $display("LSU STORE       = %0d",LSU1.lsu_store_count);
-            $display("LSU B wait      = %0d",LSU1.lsu_bwait_count);
+            $strobe("LSU LOAD        = %0d",LSU1.lsu_load_count);
+            $strobe("LSU R wait      = %0d",LSU1.lsu_rwait_count);
+            $strobe("LSU STORE       = %0d",LSU1.lsu_store_count);
+            $strobe("LSU B wait      = %0d",LSU1.lsu_bwait_count);
+            $strobe("");
 
-            $display("IDU decode      = %0d",IDU1.idu_decode_count);
-            $display("IDU LUI         = %0d",IDU1.idu_lui_count);
-            $display("IDU LUI cycle   = %0d",perf_lui_cycle);
-            $display("IDU AUIPC       = %0d",IDU1.idu_auipc_count);
-            $display("IDU AUIPC cycle = %0d",perf_auipc_cycle);
-            $display("IDU JUMP        = %0d",IDU1.idu_jump_count);
-            $display("IDU JUMP cycle  = %0d",perf_jump_cycle);
-            $display("IDU LOAD        = %0d",IDU1.idu_load_count);
-            $display("IDU LOAD cycle  = %0d",perf_load_cycle);
-            $display("IDU STORE       = %0d",IDU1.idu_store_count);
-            $display("IDU STORE cycle = %0d",perf_store_cycle);
-            $display("IDU BRANCH      = %0d",IDU1.idu_branch_count);
-            $display("IDU BRANCH cycle= %0d",perf_branch_cycle);
-            $display("IDU ALU         = %0d",IDU1.idu_alu_count);
-            $display("IDU ALU cycle   = %0d",perf_alu_cycle);
-            $display("IDU ALUI        = %0d",IDU1.idu_alui_count);
-            $display("IDU ALUI cycle  = %0d",perf_alui_cycle);
-            $display("IDU SYSTEM      = %0d",IDU1.idu_system_count);
-            $display("IDU SYSTEM cycle= %0d",perf_system_cycle);
-            $display("IDU FENCE       = %0d",IDU1.idu_fence_count);
-            $display("IDU FENCE cycle = %0d",perf_fence_cycle);
-            $display("IDU OTHER       = %0d",IDU1.idu_other_count);
-            $display("IDU OTHER cycle = %0d",perf_other_cycle);
+            $strobe("IDU decode      = %0d",IDU1.idu_decode_count);
+            $strobe("IDU LUI         = %0d",IDU1.idu_lui_count);
+            $strobe("IDU LUI cycle   = %0d",perf_lui_cycle);
+            $strobe("IDU AUIPC       = %0d",IDU1.idu_auipc_count);
+            $strobe("IDU AUIPC cycle = %0d",perf_auipc_cycle);
+            $strobe("IDU JUMP        = %0d",IDU1.idu_jump_count);
+            $strobe("IDU JUMP cycle  = %0d",perf_jump_cycle);
+            $strobe("IDU LOAD        = %0d",IDU1.idu_load_count);
+            $strobe("IDU LOAD cycle  = %0d",perf_load_cycle);
+            $strobe("IDU STORE       = %0d",IDU1.idu_store_count);
+            $strobe("IDU STORE cycle = %0d",perf_store_cycle);
+            $strobe("IDU BRANCH      = %0d",IDU1.idu_branch_count);
+            $strobe("IDU BRANCH cycle= %0d",perf_branch_cycle);
+            $strobe("IDU ALU         = %0d",IDU1.idu_alu_count);
+            $strobe("IDU ALU cycle   = %0d",perf_alu_cycle);
+            $strobe("IDU ALUI        = %0d",IDU1.idu_alui_count);
+            $strobe("IDU ALUI cycle  = %0d",perf_alui_cycle);
+            $strobe("IDU SYSTEM      = %0d",IDU1.idu_system_count);
+            $strobe("IDU SYSTEM cycle= %0d",perf_system_cycle);
+            $strobe("IDU FENCE       = %0d",IDU1.idu_fence_count);
+            $strobe("IDU FENCE cycle = %0d",perf_fence_cycle);
+            $strobe("IDU OTHER       = %0d",IDU1.idu_other_count);
+            $strobe("IDU OTHER cycle = %0d",perf_other_cycle);
         end
     end 
 
