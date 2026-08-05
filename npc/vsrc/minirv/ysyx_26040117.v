@@ -178,9 +178,13 @@ module ysyx_26040117(
     always @(negedge clock) begin
         if(!reset&&perf_done)begin
             $display("Performance Counters");
-            $display("IFU fetch       = %0d",IFU1.ifu_fetch_inst_count);
-            $display("IFU AR wait     = %0d",IFU1.ifu_arwait_count);
-            $display("IFU R wait      = %0d",IFU1.ifu_rwait_count);
+            $display("IFU fetch cycle    = %0d",IFU1.ifu_fetch_inst_count);
+            $display("IFU no fetch cycle = %0d",IFU1.ifu_no_fetch_count);
+            $display("IFU wait wbu cycle = %0d",IFU1.ifu_wait_wbu_count);
+            $display("IFU AR wait        = %0d",IFU1.ifu_arwait_count);
+            $display("IFU protocol wait  = %0d",IFU1.ifu_protocol_count);
+            $display("IFU R wait         = %0d",IFU1.ifu_rwait_count);
+            $display("IFU idu wait       = %0d",IFU1.ifu_idublock_count);
 
             $display("LSU LOAD        = %0d",LSU1.lsu_load_count);
             $display("LSU R wait      = %0d",LSU1.lsu_rwait_count);

@@ -109,19 +109,38 @@ module ysyx_26040117_IFU(clk,rst,
     assign inst=inst_valid?inst_reg:rdata; //save?
     assign ifu_rresp=inst_valid?rresp_reg:rresp; 
 `ifdef PERF_COUNTER
-    reg [63:0] ifu_fetch_inst_count,ifu_arwait_count,ifu_rwait_count;
+    reg [63:0] ifu_fetch_inst_count;
+    reg [63:0] ifu_no_fetch_count;
+    reg [63:0] ifu_wait_wbu_count;
+    reg [63:0] ifu_arwait_count;
+    reg [63:0] ifu_rwait_count;
+    reg [63:0] ifu_idublock_count;
+    reg [63:0] ifu_protocol_count;
     always @(posedge clk) begin
         if(rst)begin
             ifu_fetch_inst_count<=64'd0;
-            ifu_arwait_count<=64'd0;
-            ifu_rwait_count<=64'd0;
+            ifu_no_fetch_count     <= 64'd0;
+            ifu_wait_wbu_count <= 64'd0;
+            ifu_arwait_count       <= 64'd0;
+            ifu_rwait_count        <= 64'd0;
+            ifu_idublock_count       <= 64'd0;
+            ifu_protocol_count     <= 64'd0;
         end else begin
             if(rfire)
                 ifu_fetch_inst_count<=ifu_fetch_inst_count+64'd1;
-            if(arvalid&&!arready)
-                ifu_arwait_count<=ifu_arwait_count+64'd1;
-            if((state==WAIT_VALID)&&!rvalid)
-                ifu_rwait_count<=ifu_rwait_count+64'd1;
+            if(!rfire)begin
+                ifu_no_fetch_count <= ifu_no_fetch_count + 64'd1;
+                if ((state == IDLE) && !arvalid)
+                    ifu_wait_wbu_count <=ifu_wait_wbu_count + 64'd1;
+                else if(arvalid&&!arready)
+                    ifu_arwait_count<=ifu_arwait_count+64'd1;
+                else if((state==WAIT_VALID)&&!rvalid)
+                    ifu_rwait_count<=ifu_rwait_count+64'd1;
+                else if ((state == WAIT_VALID) &&rvalid && !rready)
+                    ifu_idublock_count <=ifu_idublock_count + 64'd1;
+                else 
+                    ifu_protocol_count<=ifu_protocol_count+64'd1;
+            end
         end
     end
 
