@@ -187,10 +187,12 @@ module ysyx_26040117(
             $strobe("IFU idu wait       = %0d",IFU1.ifu_idublock_count);
             $strobe("");
 
-            $strobe("LSU LOAD        = %0d",LSU1.lsu_load_count);
-            $strobe("LSU R wait      = %0d",LSU1.lsu_rwait_count);
-            $strobe("LSU STORE       = %0d",LSU1.lsu_store_count);
-            $strobe("LSU B wait      = %0d",LSU1.lsu_bwait_count);
+            $strobe("LSU LOAD         = %0d",LSU1.lsu_load_count);
+            $strobe("LSU R wait       = %0d",LSU1.lsu_rwait_count);
+            $strobe("LSU LOAD latency = %0d",LSU1.lsu_load_latency_sum);
+            $strobe("LSU STORE        = %0d",LSU1.lsu_store_count);
+            $strobe("LSU B wait       = %0d",LSU1.lsu_bwait_count);
+            $strobe("LSU STORE latency= %0d",LSU1.lsu_store_latency_sum);
             $strobe("");
 
             $strobe("IDU decode      = %0d",IDU1.idu_decode_count);
