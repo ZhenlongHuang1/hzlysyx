@@ -189,17 +189,109 @@ module ysyx_26040117(
 
             $display("IDU decode      = %0d",IDU1.idu_decode_count);
             $display("IDU LUI         = %0d",IDU1.idu_lui_count);
+            $display("IDU LUI cycle   = %0d",perf_lui_cycle);
             $display("IDU AUIPC       = %0d",IDU1.idu_auipc_count);
+            $display("IDU AUIPC cycle = %0d",perf_auipc_cycle);
             $display("IDU JUMP        = %0d",IDU1.idu_jump_count);
+            $display("IDU JUMP cycle  = %0d",perf_jump_cycle);
             $display("IDU LOAD        = %0d",IDU1.idu_load_count);
+            $display("IDU LOAD cycle  = %0d",perf_load_cycle);
             $display("IDU STORE       = %0d",IDU1.idu_store_count);
+            $display("IDU STORE cycle = %0d",perf_store_cycle);
             $display("IDU BRANCH      = %0d",IDU1.idu_branch_count);
+            $display("IDU BRANCH cycle= %0d",perf_branch_cycle);
             $display("IDU ALU         = %0d",IDU1.idu_alu_count);
+            $display("IDU ALU cycle   = %0d",perf_alu_cycle);
             $display("IDU ALUI        = %0d",IDU1.idu_alui_count);
+            $display("IDU ALUI cycle  = %0d",perf_alui_cycle);
             $display("IDU SYSTEM      = %0d",IDU1.idu_system_count);
+            $display("IDU SYSTEM cycle= %0d",perf_system_cycle);
             $display("IDU FENCE       = %0d",IDU1.idu_fence_count);
+            $display("IDU FENCE cycle = %0d",perf_fence_cycle);
             $display("IDU OTHER       = %0d",IDU1.idu_other_count);
+            $display("IDU OTHER cycle = %0d",perf_other_cycle);
         end
     end 
+
+    localparam PERF_LUI    = 4'd0;
+    localparam PERF_AUIPC  = 4'd1;
+    localparam PERF_JUMP   = 4'd2;
+    localparam PERF_LOAD   = 4'd3;
+    localparam PERF_STORE  = 4'd4;
+    localparam PERF_BRANCH = 4'd5;
+    localparam PERF_ALU    = 4'd6;
+    localparam PERF_ALUI   = 4'd7;
+    localparam PERF_SYSTEM = 4'd8;
+    localparam PERF_FENCE  = 4'd9;
+    localparam PERF_OTHER  = 4'd10;
+    wire perf_idu_exu_fire;
+    wire perf_exu_ifu_fire;
+    assign perf_idu_exu_fire = IDU_EXU_valid && IDU_EXU_ready;
+    assign perf_exu_ifu_fire = WBU_IFU_valid && WBU_IFU_ready;
+    reg [3:0] perf_inst_type;
+    reg [63:0] perf_inst_cycle;
+    reg [63:0] perf_alu_cycle;
+    reg [63:0] perf_alui_cycle;
+    reg [63:0] perf_lui_cycle;
+    reg [63:0] perf_auipc_cycle;
+    reg [63:0] perf_load_cycle;
+    reg [63:0] perf_store_cycle;
+    reg [63:0] perf_branch_cycle;
+    reg [63:0] perf_jump_cycle;
+    reg [63:0] perf_system_cycle;
+    reg [63:0] perf_fence_cycle;
+    reg [63:0] perf_other_cycle;
+    always @(posedge clock) begin
+        if (reset) begin
+            perf_inst_type    <= PERF_OTHER;
+            perf_inst_cycle   <= 64'd0;
+            perf_alu_cycle    <= 64'd0;
+            perf_alui_cycle   <= 64'd0;
+            perf_lui_cycle    <= 64'd0;
+            perf_auipc_cycle  <= 64'd0;
+            perf_load_cycle   <= 64'd0;
+            perf_store_cycle  <= 64'd0;
+            perf_branch_cycle <= 64'd0;
+            perf_jump_cycle   <= 64'd0;
+            perf_system_cycle <= 64'd0;
+            perf_fence_cycle  <= 64'd0;
+            perf_other_cycle  <= 64'd0;
+        end else begin
+            perf_inst_cycle <= perf_inst_cycle + 64'd1;
+            if (perf_idu_exu_fire) begin
+                case (IDU1.opcode)
+                    7'b0110011: perf_inst_type <= PERF_ALU;
+                    7'b0010011: perf_inst_type <= PERF_ALUI;
+                    7'b0110111: perf_inst_type <= PERF_LUI;
+                    7'b0010111: perf_inst_type <= PERF_AUIPC;
+                    7'b0000011: perf_inst_type <= PERF_LOAD;
+                    7'b0100011: perf_inst_type <= PERF_STORE;
+                    7'b1100011: perf_inst_type <= PERF_BRANCH;
+                    7'b1101111,
+                    7'b1100111: perf_inst_type <= PERF_JUMP;
+                    7'b1110011: perf_inst_type <= PERF_SYSTEM;
+                    7'b0001111: perf_inst_type <= PERF_FENCE;
+                    default: perf_inst_type <= PERF_OTHER;
+                endcase
+            end
+            if (perf_exu_ifu_fire) begin
+                case (perf_inst_type)
+                    PERF_ALU:   perf_alu_cycle   <=perf_alu_cycle    + perf_inst_cycle + 64'd1;
+                    PERF_ALUI:  perf_alui_cycle  <=perf_alui_cycle   + perf_inst_cycle + 64'd1;
+                    PERF_LUI:   perf_lui_cycle   <=perf_lui_cycle    + perf_inst_cycle + 64'd1;
+                    PERF_AUIPC: perf_auipc_cycle <=perf_auipc_cycle  + perf_inst_cycle + 64'd1;
+                    PERF_LOAD:  perf_load_cycle  <=perf_load_cycle   + perf_inst_cycle + 64'd1;
+                    PERF_STORE: perf_store_cycle <=perf_store_cycle  + perf_inst_cycle + 64'd1;
+                    PERF_BRANCH:perf_branch_cycle<=perf_branch_cycle + perf_inst_cycle + 64'd1;
+                    PERF_JUMP:  perf_jump_cycle  <=perf_jump_cycle   + perf_inst_cycle + 64'd1;
+                    PERF_SYSTEM:perf_system_cycle<=perf_system_cycle + perf_inst_cycle + 64'd1;
+                    PERF_FENCE: perf_fence_cycle <=perf_fence_cycle  + perf_inst_cycle + 64'd1;
+                    default:    perf_other_cycle <=perf_other_cycle  + perf_inst_cycle + 64'd1;
+                endcase
+                perf_inst_cycle <= 64'd0;
+            end
+        end
+    end
+
 `endif
 endmodule
