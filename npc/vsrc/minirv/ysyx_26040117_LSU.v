@@ -223,4 +223,25 @@ module ysyx_26040117_LSU (clk,rst,
        if(is_mimo&&respReady&&respValid)
            difftest_skip_ref();
     end
+`ifdef PERF_COUNTER
+    reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;
+    always @(posedge clk) begin
+        if(rst)begin
+            lsu_load_count<=64'd0;
+            lsu_rwait_count<=64'd0;
+            lsu_store_count<=64'd0;
+            lsu_bwait_count<=64'd0;
+        end else begin
+            if(rfire)
+                lsu_load_count<=lsu_load_count+64'd1;
+            if((rstate==WAIT_VALID)&&!rvalid)
+                lsu_rwait_count<=lsu_rwait_count+64'd1;
+            if(bfire)
+                lsu_store_count<=lsu_store_count+64'd1;
+            if((bstate==WAIT_VALID)&&!bvalid)
+                lsu_bwait_count<=lsu_bwait_count+64'd1;
+        end
+    end
+
+`endif
 endmodule

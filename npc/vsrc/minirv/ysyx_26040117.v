@@ -181,6 +181,24 @@ module ysyx_26040117(
             $display("IFU fetch       = %0d",IFU1.ifu_fetch_inst_count);
             $display("IFU AR wait     = %0d",IFU1.ifu_arwait_count);
             $display("IFU R wait      = %0d",IFU1.ifu_rwait_count);
+
+            $display("LSU LOAD        = %0d",LSU1.lsu_load_count);
+            $display("LSU R wait      = %0d",LSU1.lsu_rwait_count);
+            $display("LSU STORE       = %0d",LSU1.lsu_store_count);
+            $display("LSU B wait      = %0d",LSU1.lsu_bwait_count);
+
+            $display("IDU decode      = %0d",IDU1.idu_decode_count);
+            $display("IDU LUI         = %0d",IDU1.idu_lui_count);
+            $display("IDU AUIPC       = %0d",IDU1.idu_auipc_count);
+            $display("IDU JUMP        = %0d",IDU1.idu_jump_count);
+            $display("IDU LOAD        = %0d",IDU1.idu_load_count);
+            $display("IDU STORE       = %0d",IDU1.idu_store_count);
+            $display("IDU BRANCH      = %0d",IDU1.idu_branch_count);
+            $display("IDU ALU         = %0d",IDU1.idu_alu_count);
+            $display("IDU ALUI        = %0d",IDU1.idu_alui_count);
+            $display("IDU SYSTEM      = %0d",IDU1.idu_system_count);
+            $display("IDU FENCE       = %0d",IDU1.idu_fence_count);
+            $display("IDU OTHER       = %0d",IDU1.idu_other_count);
         end
     end 
 `endif
