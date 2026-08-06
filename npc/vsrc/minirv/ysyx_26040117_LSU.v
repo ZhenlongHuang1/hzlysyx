@@ -219,10 +219,12 @@ module ysyx_26040117_LSU (clk,rst,
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
     assign is_mimo =reqValid&&!is_mrom&&!is_sram&&!is_flash&&!is_psram&&!is_sdram;
+`ifndef STA_MODE
     always @(posedge clk) begin
        if(is_mimo&&respReady&&respValid)
            difftest_skip_ref();
     end
+`endif
 `ifdef PERF_COUNTER
     reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;
     always @(posedge clk) begin

@@ -180,17 +180,17 @@ module ysyx_26040117(
             $strobe("Performance Counters");
             $strobe("IFU fetch cycle    = %0d",IFU1.ifu_fetch_inst_count);
             $strobe("IFU no fetch cycle = %0d",IFU1.ifu_no_fetch_count);
-            $strobe("IFU no fetch CPI   = %0d",IFU1.ifu_no_fetch_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IFU no fetch CPI   = %.2f",IFU1.ifu_no_fetch_count/IFU1.ifu_fetch_inst_count);
             $strobe("IFU wait wbu cycle = %0d",IFU1.ifu_wait_wbu_count);
-            $strobe("IFU wait wbu CPI   = %0d",IFU1.ifu_wait_wbu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IFU wait wbu CPI   = %.2f",IFU1.ifu_wait_wbu_count/IFU1.ifu_fetch_inst_count);
             $strobe("IFU AR wait        = %0d",IFU1.ifu_arwait_count);
-            $strobe("IFU AR wait CPI   = %0d",IFU1.ifu_arwait_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IFU AR wait CPI    = %.2f",IFU1.ifu_arwait_count/IFU1.ifu_fetch_inst_count);
             $strobe("IFU protocol wait  = %0d",IFU1.ifu_protocol_count);
-            $strobe("IFU protocol CPI   = %0d",IFU1.ifu_protocol_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IFU protocol CPI   = %.2f",IFU1.ifu_protocol_count/IFU1.ifu_fetch_inst_count);
             $strobe("IFU R wait         = %0d",IFU1.ifu_rwait_count);
-            $strobe("IFU R wait CPI   = %0d",IFU1.ifu_rwait_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IFU R wait CPI     = %.2f",IFU1.ifu_rwait_count/IFU1.ifu_fetch_inst_count);
             $strobe("IFU idu wait       = %0d",IFU1.ifu_idublock_count);
-            $strobe("IFU idu wait CPI   = %0d",IFU1.ifu_idublock_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IFU idu wait CPI   = %.2f",IFU1.ifu_idublock_count/IFU1.ifu_fetch_inst_count);
             $strobe("");
 
             $strobe("LSU LOAD         = %0d",LSU1.lsu_load_count);

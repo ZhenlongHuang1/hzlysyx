@@ -1,4 +1,6 @@
 TOPNAME=ysyxSoCFull
+SYN_TOP = ysyx_26040117
+STA_FREQ_MHZ ?= 720
 NXDC_FILES=constr/$(TOPNAME).nxdc
 YSYXSOC_HOME = $(abspath ../ysyxSoc)
 INC_PATH +=$(abspath ./csrc)
@@ -25,6 +27,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
 VSRCS += $(shell find $(YSYXSOC_HOME)/perip -name "*.v")
 VSRCS += $(YSYXSOC_HOME)/build/ysyxSoCFull.v
+SYN_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
 
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
@@ -73,10 +76,10 @@ clean:
 include ../Makefile
 sta:
 	@mkdir -p $(SYN_DIR)
-	$(MAKE) -C $(YOSYS_HOME) sta DESIGN=$(TOPNAME) \
-		RTL_FILES="$(VSRCS)" O=$(SYN_DIR)
+	$(MAKE) -C $(YOSYS_HOME) sta DESIGN=$(SYN_TOP) \
+		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=clock O=$(SYN_DIR)
 syn:
 	@mkdir -p $(SYN_DIR)
-	$(MAKE) -C $(YOSYS_HOME) syn DESIGN=$(TOPNAME) \
-		RTL_FILES="$(VSRCS)" O=$(SYN_DIR)
+	$(MAKE) -C $(YOSYS_HOME) syn DESIGN=$(SYN_TOP) \
+		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=clock O=$(SYN_DIR)
 
