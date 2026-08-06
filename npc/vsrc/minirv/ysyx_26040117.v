@@ -198,26 +198,37 @@ module ysyx_26040117(
             $strobe("IDU decode      = %0d",IDU1.idu_decode_count);
             $strobe("IDU LUI         = %0d",IDU1.idu_lui_count);
             $strobe("IDU LUI cycle   = %0d",perf_lui_cycle);
+            $strobe("IDU LUI CPI     = %.2f",perf_lui_cycle/IDU1.idu_lui_count);
             $strobe("IDU AUIPC       = %0d",IDU1.idu_auipc_count);
             $strobe("IDU AUIPC cycle = %0d",perf_auipc_cycle);
+            $strobe("IDU AUIPC CPI   = %.2f",perf_auipc_cycle/IDU1.idu_auipc_count);
             $strobe("IDU JUMP        = %0d",IDU1.idu_jump_count);
             $strobe("IDU JUMP cycle  = %0d",perf_jump_cycle);
+            $strobe("IDU JUMP CPI    = %.2f",perf_jump_cycle/IDU1.idu_jump_count);
             $strobe("IDU LOAD        = %0d",IDU1.idu_load_count);
             $strobe("IDU LOAD cycle  = %0d",perf_load_cycle);
+            $strobe("IDU LOAD CPI    = %.2f",perf_load_cycle/IDU1.idu_load_count);
             $strobe("IDU STORE       = %0d",IDU1.idu_store_count);
             $strobe("IDU STORE cycle = %0d",perf_store_cycle);
+            $strobe("IDU STORE CPI   = %.2f",perf_store_cycle/IDU1.idu_store_count);
             $strobe("IDU BRANCH      = %0d",IDU1.idu_branch_count);
             $strobe("IDU BRANCH cycle= %0d",perf_branch_cycle);
+            $strobe("IDU BRANCH CPI  = %.2f",perf_branch_cycle/IDU1.idu_branch_count);
             $strobe("IDU ALU         = %0d",IDU1.idu_alu_count);
             $strobe("IDU ALU cycle   = %0d",perf_alu_cycle);
+            $strobe("IDU ALU CPI     = %.2f",perf_alu_cycle/IDU1.idu_alu_count);
             $strobe("IDU ALUI        = %0d",IDU1.idu_alui_count);
             $strobe("IDU ALUI cycle  = %0d",perf_alui_cycle);
+            $strobe("IDU ALUI CPI    = %.2f",perf_alui_cycle/IDU1.idu_alui_count);
             $strobe("IDU SYSTEM      = %0d",IDU1.idu_system_count);
             $strobe("IDU SYSTEM cycle= %0d",perf_system_cycle);
+            $strobe("IDU SYSTEM CPI  = %.2f",perf_system_cycle/IDU1.idu_system_count);
             $strobe("IDU FENCE       = %0d",IDU1.idu_fence_count);
             $strobe("IDU FENCE cycle = %0d",perf_fence_cycle);
+            $strobe("IDU FENCE CPI   = %.2f",perf_fence_cycle/IDU1.idu_fence_count);
             $strobe("IDU OTHER       = %0d",IDU1.idu_other_count);
             $strobe("IDU OTHER cycle = %0d",perf_other_cycle);
+            $strobe("IDU OTHER CPI   = %.2f",perf_other_cycle/IDU1.idu_other_count);
         end
     end 
 
