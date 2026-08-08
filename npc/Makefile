@@ -85,3 +85,10 @@ syn:
 	$(MAKE) -C $(YOSYS_HOME) syn DESIGN=$(SYN_TOP) \
 		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR)
 
+MICROBENCH_HOME ?= $(abspath ../am-kernels/benchmarks/microbench)
+.PHONY: perf
+perf:
+	$(MAKE) -C $(MICROBENCH_HOME) \
+		ARCH=riscv32e-ysyxsoc  \
+		mainargs=train \
+		run
