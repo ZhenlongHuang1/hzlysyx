@@ -134,11 +134,11 @@ extern "C" void paddr_write(int32_t addr, int32_t data, int32_t mask) {
         if((mask&0b1)==1)
             psram_write(paddr,data&0xff,0);
         if((mask&0b10)==0b10)
-            psram_write(paddr,data&0xff00,1);
+            psram_write(paddr,(data&0xff00)>>8,1);
         if((mask&0b100)==0b100)
-            psram_write(paddr,data&0xff0000,2);
+            psram_write(paddr,(data&0xff0000)>>16,2);
         if((mask&0b1000)==0b1000)
-            psram_write(paddr,data&0xff000000,3);
+            psram_write(paddr,(data&0xff000000)>>24,3);
     }else if(addr==0x10000000)
         putc((char)data&0xff,stderr);
 }
