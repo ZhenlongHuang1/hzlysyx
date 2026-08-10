@@ -124,13 +124,13 @@ uint64_t get_time(){
 }
 extern "C" void paddr_read(int32_t addr,int32_t *data){
     if(addr>=0x80000000&&addr<=0x9fffffff){
-        psram_read(addr&0x00ffffff,data);
+        psram_read(addr&0x00fffffc,data);
     }
 }
 extern "C" void paddr_write(int32_t addr, int32_t data, int32_t mask) {
     if(addr>=0x80000000&&addr<=0x9fffffff){
         int32_t paddr;
-        paddr=addr&0x00ffffff;
+        paddr=addr&0x00fffffc;
         if((mask&0b1)==1)
             psram_write(paddr,data&0xff,0);
         if((mask&0b10)==0b10)
