@@ -79,7 +79,7 @@ module ysyx_26040117_SIM(
     end
 
 
-    ysyx_26040117 cpu (
+    ysyx_26040117 #(.RESET_VECTOR(32'h8000_0000))cpu (
     .clock                   (clock),
     .reset                   (reset),
     .io_interrupt            (1'h0),	
