@@ -31,13 +31,6 @@ void get_cpu_state(CPU_state *cpu_dut){
     for(i=0;i<32;i++){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
-    printf(
-    "DIFF pc=%08x, rtl_a3=%08x,rtl_a4=%08x, rtl_a5=%08x\n",
-    cpu_pc,
-    cpu_gpr(13),
-    cpu_gpr(14),
-    cpu_gpr(15)
-);
     cpu_dut->pc=cpu_pc;
 }
 static void trace_and_difftest(uint32_t pc){
