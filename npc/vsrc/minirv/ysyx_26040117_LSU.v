@@ -75,10 +75,10 @@ module ysyx_26040117_LSU (clk,rst,
     wire [31:0] awaddr,wdata;
     wire [3:0] wstrb;
     wire awIDLE_reqvalid,wIDLE_reqvalid,wfire,awfire,bfire;
-    reg[1:0] awstate,awnext_state,wstate,wnext_state,bstate,bnext_state;
+    reg[1:0] awstate,awnext_state,wstate,wnext_state;
     always @(posedge clk) begin
-        if(rst) {awstate,wstate,bstate}<={IDLE,IDLE,IDLE};
-        else {awstate,wstate,bstate}<={awnext_state,wnext_state,bnext_state};
+        if(rst) {awstate,wstate}<={IDLE,IDLE};
+        else {awstate,wstate}<={awnext_state,wnext_state};
     end
     //aw
     always @(*) begin
@@ -125,17 +125,9 @@ module ysyx_26040117_LSU (clk,rst,
         end
     end
     //b
-    always @(*) begin
-        bnext_state=bstate;
-        case(bstate)
-            IDLE:if(aw_w_valid)bnext_state=WAIT_VALID;
-            WAIT_VALID:if(bfire)bnext_state=IDLE;
-            default:bnext_state=bstate;
-        endcase
-    end
     assign aw_w_valid=awstate==WAIT_VALID&&wstate==WAIT_VALID;
     assign bfire=bready&&bvalid;
-    assign bready=bstate==WAIT_VALID&&!lsu_buf_valid;//modify?
+    assign bready=aw_w_valid&&!lsu_buf_valid;//modify?
     //write function
     wire[31:0] wdata_fomatted;
     reg[31:0] awaddr_reg,wdata_reg;
@@ -240,7 +232,7 @@ module ysyx_26040117_LSU (clk,rst,
                 lsu_rwait_count<=lsu_rwait_count+64'd1;
             if(bfire)
                 lsu_store_count<=lsu_store_count+64'd1;
-            if((bstate==WAIT_VALID)&&!bvalid)
+            if(aw_w_valid&&!bvalid)
                 lsu_bwait_count<=lsu_bwait_count+64'd1;
         end
     end
