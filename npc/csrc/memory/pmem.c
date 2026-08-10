@@ -122,27 +122,27 @@ uint64_t get_time(){
 
     return now-bool_time;
 }
-extern "C" void paddr_read(int32_t raddr,int32_t *data){
-    if(raddr>=0x80000000&&raddr<=0x9fffffff){
-        psram_read(raddr&0x00ffffff,data);
+extern "C" void paddr_read(int32_t addr,int32_t *data){
+    if(addr>=0x80000000&&addr<=0x9fffffff){
+        psram_read(addr&0x00ffffff,data);
     }
 }
-extern "C" void paddr_write(int32_t waddr, int32_t wdata, char wmask) {
-    if(waddr>=0x80000000&&waddr<=0x9fffffff){
+extern "C" void paddr_write(int32_t addr, int32_t data, int32_t mask) {
+    if(addr>=0x80000000&&addr<=0x9fffffff){
         int32_t paddr;
-        paddr=waddr&0x00ffffff;
-        if(wmask==1){
-            psram_write(paddr,wdata&0xff,0);
-        }else if(wmask==3){
-            psram_write(paddr,wdata&0xff,0);
-            psram_write(paddr,wdata&0xff00,1);
+        paddr=addr&0x00ffffff;
+        if(mask==1){
+            psram_write(paddr,data&0xff,0);
+        }else if(mask==3){
+            psram_write(paddr,data&0xff,0);
+            psram_write(paddr,data&0xff00,1);
         }else{
-            psram_write(paddr,wdata&0xff,0);
-            psram_write(paddr,wdata&0xff00,1);
-            psram_write(paddr,wdata&0xff0000,2);
-            psram_write(paddr,wdata&0xff000000,3);
+            psram_write(paddr,data&0xff,0);
+            psram_write(paddr,data&0xff00,1);
+            psram_write(paddr,data&0xff0000,2);
+            psram_write(paddr,data&0xff000000,3);
         }
-    }else if(waddr==0x10000000)
-        putc((char)wdata&0xff,stderr);
+    }else if(addr==0x10000000)
+        putc((char)data&0xff,stderr);
 }
 
