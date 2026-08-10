@@ -1,4 +1,6 @@
-module ysyx_26040117_IFU(clk,rst,
+module ysyx_26040117_IFU #(
+    parameter [31:0] RESET_VECTOR=32'h3000_0000
+)(clk,rst,
     WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,lsu_error,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,
     MEM_IFU_wrapper,IFU_MEM_wrapper
@@ -70,7 +72,7 @@ module ysyx_26040117_IFU(clk,rst,
                     ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
     always@(posedge clk)begin
         if(rst)
-            pc<=32'h30000000;
+            pc<=RESET_VECTOR;
         else begin
             if(ifu_rresp[1]||lsu_error)
                 pc<=32'h00000000;

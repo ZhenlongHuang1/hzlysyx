@@ -51,7 +51,7 @@ int is_exit_status_bad() {
 
 void single_cycle(){
     DCC++;
-    nvboard_update();
+    IFDEF(USE_NVBOARD,nvboard_update();)
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
             if(contextp->time()<1000000){tfp->dump(contextp->time());}

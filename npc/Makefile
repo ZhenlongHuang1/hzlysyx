@@ -1,6 +1,18 @@
+SIM_ENV ?=ysyxsoc
+YSYXSOC_HOME := $(abspath ../ysyxSoc)
+VSRCS := $(shell find $(abspath ./vsrc/minirv) -name "*.v")
+ifeq ($(SIM_ENV),ysyxsoc)
 TOPNAME=ysyxSoCFull
-NXDC_FILES=constr/$(TOPNAME).nxdc
-YSYXSOC_HOME = $(abspath ../ysyxSoc)
+VSRCS += $(shell find $(YSYXSOC_HOME)/perip -name "*.v")
+VSRCS += $(YSYXSOC_HOME)/build/ysyxSoCFull.v
+VERILATOR_FLAGS += -I$(YSYXSOC_HOME)/perip/uart16550/rtl -I$(YSYXSOC_HOME)/perip/spi/rtl
+CXXFLAGS +=-DUSE_NVBOARD
+else ifeq ($(SIM_ENV),npc)
+TOPNAME=ysyx_26040117_SIM
+VSRCS += $(shell find $(abspath ./vsrc/riscv32e_npc) -name "*.v")
+CXXFLAGS+=-DRISCV32E_NPC
+endif
+
 INC_PATH +=$(abspath ./csrc)
 AUTOCONF_H = $(abspath ./csrc/include/autoconf.h)
 IMG ?=
@@ -9,24 +21,24 @@ VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR_FLAGS += --trace-vcd
-VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv) -I$(YSYXSOC_HOME)/perip/uart16550/rtl -I$(YSYXSOC_HOME)/perip/spi/rtl
+VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv)
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing --autoflush#uart flush
 
 BUILD_DIR =./build
-OBJ_DIR = $(BUILD_DIR)/obj_dir
-BIN = $(BUILD_DIR)/$(TOPNAME)
+OBJ_DIR = $(BUILD_DIR)/sim/$(SIM_ENV)/obj_dir
+BIN = $(BUILD_DIR)/sim/$(SIM_ENV)/$(TOPNAME)
 default: $(BIN)
-$(shell mkdir -p $(BUILD_DIR))
+
+CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+ifeq ($(SIM_ENV),ysyxsoc)
+NXDC_FILES=constr/$(TOPNAME).nxdc
 SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
-VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
-VSRCS += $(shell find $(YSYXSOC_HOME)/perip -name "*.v")
-VSRCS += $(YSYXSOC_HOME)/build/ysyxSoCFull.v
-
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
+endif
+
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O2 #-flto
 LDFLAGS += -lreadline #-flto
@@ -52,6 +64,7 @@ endif
 
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VERILATOR_FLAGS)\
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
@@ -63,6 +76,10 @@ all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN) $(ARGS) $(IMG)
+sim_ysyxsoc: 
+	$(MAKE) sim SIM_ENV=ysyxsoc
+sim_npc: 
+	$(MAKE) sim SIM_ENV=npc
 gdb: $(BIN)
 	gdb --args $(BIN) $(ARGS) $(IMG)
 
@@ -86,7 +103,7 @@ syn:
 		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR)
 
 MICROBENCH_HOME ?= $(abspath ../am-kernels/benchmarks/microbench)
-.PHONY: perf
+.PHONY: default all sim sim_ysyxsoc sim_npc lint gdb clean sta syn perf
 perf:
 	$(MAKE) -C $(MICROBENCH_HOME) \
 		ARCH=riscv32e-ysyxsoc  \

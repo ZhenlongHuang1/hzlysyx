@@ -13,6 +13,7 @@
 #define SDRAM_SIZE  0x2000000u
 extern uint32_t mrom[MROM_SIZE];
 extern uint32_t flash[FLASH_SIZE];
+extern uint8_t psram[PSRAM_SIZE];
 
 extern "C" void flash_read(int32_t addr, int32_t *data);
 extern "C" void mrom_read(int32_t addr, int32_t *data);

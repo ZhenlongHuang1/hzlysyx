@@ -1,5 +1,7 @@
 `include "ysyx_26040117__defines.vh"
-module ysyx_26040117(
+module ysyx_26040117 #(
+    parameter [31:0] RESET_VECTOR=32'h3000_0000
+)(
     input  wire         clock,
     input  wire         reset,          
     input  wire         io_interrupt,
@@ -103,7 +105,7 @@ module ysyx_26040117(
     wire WBU_IFU_valid,WBU_IFU_ready;
     wire [40:0]MEM_IFU_wrapper;
     wire [107:0]IFU_MEM_wrapper;
-    ysyx_26040117_IFU IFU1(.clk(clock),.rst(reset),
+    ysyx_26040117_IFU #(.RESET_VECTOR(RESET_VECTOR))IFU1(.clk(clock),.rst(reset),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jalr(jalr),.jump(jump),.dnpc(dnpc),.lsu_error(lsu_error),
         //.dummy_ifu_wen(dummy_ifu_wen),.dummy_ifu_wdata(dummy_ifu_wdata),.dummy_ifu_waddr(dummy_ifu_waddr),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc),
