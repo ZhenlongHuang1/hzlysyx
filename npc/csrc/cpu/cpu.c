@@ -32,8 +32,9 @@ void get_cpu_state(CPU_state *cpu_dut){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
     printf(
-    "DIFF pc=%08x, rtl_a4=%08x, rtl_a5=%08x\n",
+    "DIFF pc=%08x, rtl_a3=%08x,rtl_a4=%08x, rtl_a5=%08x\n",
     cpu_pc,
+    cpu_gpr(13),
     cpu_gpr(14),
     cpu_gpr(15)
 );
