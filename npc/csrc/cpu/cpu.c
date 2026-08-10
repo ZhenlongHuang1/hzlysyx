@@ -11,8 +11,13 @@
 TOP_NAME* dut=NULL;
 VerilatedContext*contextp=NULL;
 VerilatedVcdC* tfp=NULL;
+#ifdef RISCV32E_NPC
+NPC_state npc_state={NPC_RUNNING,0,PSRAM_START};
+CPU_state cpu_dut={{0},PSRAM_START};
+#else
 NPC_state npc_state={NPC_RUNNING,0,FLASH_START};
 CPU_state cpu_dut={{0},FLASH_START};
+#endif
 uint32_t cpu_pc=0,cpu_dnpc=0;
 static char logbuf[128]={};
 static bool g_print_step=false;
