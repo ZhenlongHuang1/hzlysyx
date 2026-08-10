@@ -23,6 +23,7 @@ VERILATOR_CFLAGS += -MMD --build -cc \
 VERILATOR_FLAGS += --trace-vcd
 VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv)
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing --autoflush#uart flush
+VERILATOR_FLAGS += -DPERF_COUNTER
 
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/sim/$(SIM_ENV)/obj_dir
