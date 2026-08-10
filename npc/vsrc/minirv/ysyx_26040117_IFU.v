@@ -1,4 +1,6 @@
-module ysyx_26040117_IFU(clk,rst,
+module ysyx_26040117_IFU #(
+    parameter [31:0] RESET_VECTOR=32'h3000_0000
+)(clk,rst,
     WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,lsu_error,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,
     MEM_IFU_wrapper,IFU_MEM_wrapper
@@ -70,7 +72,7 @@ module ysyx_26040117_IFU(clk,rst,
                     ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
     always@(posedge clk)begin
         if(rst)
-            pc<=32'h30000000;
+            pc<=RESET_VECTOR;
         else begin
             if(ifu_rresp[1]||lsu_error)
                 pc<=32'h00000000;
@@ -108,4 +110,41 @@ module ysyx_26040117_IFU(clk,rst,
     end
     assign inst=inst_valid?inst_reg:rdata; //save?
     assign ifu_rresp=inst_valid?rresp_reg:rresp; 
+`ifdef PERF_COUNTER
+    reg [63:0] ifu_fetch_inst_count;
+    reg [63:0] ifu_no_fetch_count;
+    reg [63:0] ifu_wait_wbu_count;
+    reg [63:0] ifu_arwait_count;
+    reg [63:0] ifu_rwait_count;
+    reg [63:0] ifu_idublock_count;
+    reg [63:0] ifu_protocol_count;
+    always @(posedge clk) begin
+        if(rst)begin
+            ifu_fetch_inst_count<=64'd0;
+            ifu_no_fetch_count     <= 64'd0;
+            ifu_wait_wbu_count <= 64'd0;
+            ifu_arwait_count       <= 64'd0;
+            ifu_rwait_count        <= 64'd0;
+            ifu_idublock_count       <= 64'd0;
+            ifu_protocol_count     <= 64'd0;
+        end else begin
+            if(rfire)
+                ifu_fetch_inst_count<=ifu_fetch_inst_count+64'd1;
+            if(!rfire)begin
+                ifu_no_fetch_count <= ifu_no_fetch_count + 64'd1;
+                if ((state == IDLE) && !arvalid)
+                    ifu_wait_wbu_count <=ifu_wait_wbu_count + 64'd1;
+                else if(arvalid&&!arready)
+                    ifu_arwait_count<=ifu_arwait_count+64'd1;
+                else if((state==WAIT_VALID)&&!rvalid)
+                    ifu_rwait_count<=ifu_rwait_count+64'd1;
+                else if ((state == WAIT_VALID) &&rvalid && !rready)
+                    ifu_idublock_count <=ifu_idublock_count + 64'd1;
+                else 
+                    ifu_protocol_count<=ifu_protocol_count+64'd1;
+            end
+        end
+    end
+
+`endif
 endmodule

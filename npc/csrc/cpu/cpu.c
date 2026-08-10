@@ -19,6 +19,8 @@ static bool g_print_step=false;
 static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;
 static int depth=0;
+static uint64_t DIC=0;//Dynamic instruction count
+static uint64_t DCC=0;//Dynamic cycles count
 void get_cpu_state(CPU_state *cpu_dut){
     int i;
     for(i=0;i<32;i++){
@@ -40,12 +42,15 @@ extern "C" void npc_trap(){
     printf("ret=%d\n",npc_state.halt_ret);
 }
 int is_exit_status_bad() {
+    printf("Dynamic instruction count=%lu\ncycles count=%lu\nCycles Per Instruction=%.6f\ninstructions Per Cycle=%.6f\n",
+            DIC,DCC,(double)DCC/(double)DIC,(double)DIC/(double)DCC);
     int good=(npc_state.state==NPC_END&&npc_state.halt_ret==0)||
         (npc_state.state==NPC_QUIT);
     return !good;
 }
 
 void single_cycle(){
+    DCC++;
     nvboard_update();
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
@@ -60,7 +65,9 @@ void reset(int n){
     dut->reset=1;
     dut->clock=0;dut->eval();
     while(n-->0)single_cycle();
-    dut->reset=0;
+    dut->reset=0;dut->eval();
+    DIC = 0;
+    DCC = 0;
 }
 static void itrace_record(uint32_t pc,uint32_t inst){
     printf("pc:%08x,inst:%08x\n",pc,inst);
@@ -122,8 +129,8 @@ void ftrace_print(){
 static void execute(uint64_t n){
     for(;n>0;n--){
         while(dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__WBU_IFU_fire==0){
-        single_cycle();
-        if(npc_state.state!=NPC_RUNNING)return;
+            single_cycle();
+            if(npc_state.state!=NPC_RUNNING)return;
         }
         cpu_pc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__pc_reg;
         cpu_dnpc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__dnpc;
@@ -136,7 +143,9 @@ static void execute(uint64_t n){
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
             difftest_skip_ref();
         }
+         /* 完成WBU_IFU_fire */
         single_cycle();
+        DIC++;
         uint32_t old_cpu_pc=cpu_pc;
         cpu_pc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_idu_pc;
         if(npc_state.state!=NPC_RUNNING)return;

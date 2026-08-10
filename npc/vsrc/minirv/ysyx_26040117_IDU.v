@@ -104,4 +104,71 @@ module ysyx_26040117_IDU(clk,rst,
     //assign wmask={{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
     assign wmask={2'b0,funct3[1:0]};
     assign ifsigned=~funct3[2];
+`ifdef PERF_COUNTER
+
+    reg [63:0] idu_decode_count;
+
+    reg [63:0] idu_alu_count;
+    reg [63:0] idu_alui_count;
+    reg [63:0] idu_lui_count;
+    reg [63:0] idu_auipc_count;
+    reg [63:0] idu_load_count;
+    reg [63:0] idu_store_count;
+    reg [63:0] idu_branch_count;
+    reg [63:0] idu_jump_count;
+    reg [63:0] idu_system_count;
+    reg [63:0] idu_fence_count;
+    reg [63:0] idu_other_count;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            idu_decode_count   <= 64'd0;
+
+            idu_alu_count      <= 64'd0;
+            idu_alui_count     <= 64'd0;
+            idu_lui_count      <= 64'd0;
+            idu_auipc_count    <= 64'd0;
+            idu_load_count     <= 64'd0;
+            idu_store_count    <= 64'd0;
+            idu_branch_count   <= 64'd0;
+            idu_jump_count     <= 64'd0;
+            idu_system_count   <= 64'd0;
+            idu_fence_count    <= 64'd0;
+            idu_other_count    <= 64'd0;
+        end else begin
+            if (IDU_EXU_fire) begin
+                idu_decode_count <= idu_decode_count + 64'd1;
+
+                case (opcode)
+                    // R型、I型计算、LUI、AUIPC
+                    7'b0110011://ADD~AND
+                        idu_alu_count <= idu_alu_count + 64'd1;
+                    7'b0010011://ADDI~SRAI
+                        idu_alui_count <= idu_alui_count + 64'd1;
+                    7'b0110111://LUI
+                        idu_lui_count <= idu_lui_count+64'd1;
+                    7'b0010111://AUIPC
+                        idu_auipc_count <= idu_auipc_count + 64'd1;
+                    7'b0000011://LB~LHU
+                        idu_load_count <= idu_load_count + 64'd1;
+                    7'b0100011://SB~SW
+                        idu_store_count <= idu_store_count + 64'd1;
+                    7'b1100011://BEQ~BGEU
+                        idu_branch_count <= idu_branch_count + 64'd1;
+                    7'b1101111,// JAL和JALR
+                    7'b1100111:
+                        idu_jump_count <= idu_jump_count + 64'd1;
+                    7'b1110011:// CSR、ECALL、EBREAK、MRET
+                        idu_system_count <= idu_system_count + 64'd1;
+                    7'b0001111:// FENCE、FENCE.I
+                        idu_fence_count <= idu_fence_count + 64'd1;
+
+                    default:
+                        idu_other_count <= idu_other_count + 64'd1;
+                endcase
+            end
+        end
+    end
+
+`endif
 endmodule

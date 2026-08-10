@@ -14,8 +14,6 @@ VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing --autoflush#uart flush
 
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
-SYN_DIR=$(abspath $(BUILD_DIR)/syn)
-YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 BIN = $(BUILD_DIR)/$(TOPNAME)
 default: $(BIN)
 $(shell mkdir -p $(BUILD_DIR))
@@ -71,12 +69,26 @@ gdb: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
+SYN_TOP = ysyx_26040117
+STA_FREQ_MHZ ?= 728
+SYN_DIR=$(abspath $(BUILD_DIR)/syn)
+YOSYS_HOME=$(HOME)/Desktop/yosys-sta
+SYN_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
+CLK_PORT_NAME=clock
 sta:
 	@mkdir -p $(SYN_DIR)
-	$(MAKE) -C $(YOSYS_HOME) sta DESIGN=$(TOPNAME) \
-		RTL_FILES="$(VSRCS)" O=$(SYN_DIR)
+	$(MAKE) -C $(YOSYS_HOME) sta DESIGN=$(SYN_TOP) \
+		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR) \
+		2>&1 | tee sta.log
 syn:
 	@mkdir -p $(SYN_DIR)
-	$(MAKE) -C $(YOSYS_HOME) syn DESIGN=$(TOPNAME) \
-		RTL_FILES="$(VSRCS)" O=$(SYN_DIR)
+	$(MAKE) -C $(YOSYS_HOME) syn DESIGN=$(SYN_TOP) \
+		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR)
 
+MICROBENCH_HOME ?= $(abspath ../am-kernels/benchmarks/microbench)
+.PHONY: perf
+perf:
+	$(MAKE) -C $(MICROBENCH_HOME) \
+		ARCH=riscv32e-ysyxsoc  \
+		mainargs=train \
+		run

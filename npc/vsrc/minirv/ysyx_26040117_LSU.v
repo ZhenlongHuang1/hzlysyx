@@ -219,8 +219,63 @@ module ysyx_26040117_LSU (clk,rst,
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
     assign is_mimo =reqValid&&!is_mrom&&!is_sram&&!is_flash&&!is_psram&&!is_sdram;
+`ifndef STA_MODE
     always @(posedge clk) begin
        if(is_mimo&&respReady&&respValid)
            difftest_skip_ref();
     end
+`endif
+`ifdef PERF_COUNTER
+    reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;
+    always @(posedge clk) begin
+        if(rst)begin
+            lsu_load_count<=64'd0;
+            lsu_rwait_count<=64'd0;
+            lsu_store_count<=64'd0;
+            lsu_bwait_count<=64'd0;
+        end else begin
+            if(rfire)
+                lsu_load_count<=lsu_load_count+64'd1;
+            if((rstate==WAIT_VALID)&&!rvalid)
+                lsu_rwait_count<=lsu_rwait_count+64'd1;
+            if(bfire)
+                lsu_store_count<=lsu_store_count+64'd1;
+            if((bstate==WAIT_VALID)&&!bvalid)
+                lsu_bwait_count<=lsu_bwait_count+64'd1;
+        end
+    end
+    reg [63:0] lsu_cycle;
+    reg [63:0] lsu_start_cycle;
+    reg [63:0] lsu_load_latency_sum;
+    reg [63:0] lsu_store_latency_sum;
+    reg        lsu_pending;
+    reg        lsu_pending_wen;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            lsu_cycle             <= 64'd0;
+            lsu_start_cycle       <= 64'd0;
+            lsu_load_latency_sum  <= 64'd0;
+            lsu_store_latency_sum <= 64'd0;
+            lsu_pending           <= 1'b0;
+            lsu_pending_wen       <= 1'b0;
+        end else begin
+            lsu_cycle <= lsu_cycle + 64'd1;
+            if (!lsu_pending&&(rIDLE_reqvalid||(awIDLE_reqvalid&&wIDLE_reqvalid)))begin
+                lsu_start_cycle <= lsu_cycle;
+                lsu_pending     <= 1'b1;
+                lsu_pending_wen <= wen;
+            end
+            if (lsu_pending && !lsu_pending_wen && rfire) begin
+                lsu_load_latency_sum <=lsu_load_latency_sum +(lsu_cycle - lsu_start_cycle);
+                lsu_pending <= 1'b0;
+            end
+            if (lsu_pending && lsu_pending_wen && bfire) begin
+                lsu_store_latency_sum <=lsu_store_latency_sum +(lsu_cycle - lsu_start_cycle);
+                lsu_pending <= 1'b0;
+            end
+        end
+    end
+
+`endif
 endmodule
