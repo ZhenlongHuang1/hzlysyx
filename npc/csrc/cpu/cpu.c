@@ -150,7 +150,7 @@ static void execute(uint64_t n){
         DIC++;
         if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
-        //trace_and_difftest(old_cpu_pc);
+        trace_and_difftest(old_cpu_pc);
     }
 }
 void cpu_exec(uint64_t n){
