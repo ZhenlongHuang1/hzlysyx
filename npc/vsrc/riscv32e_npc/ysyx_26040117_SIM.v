@@ -19,7 +19,7 @@ module ysyx_26040117_SIM(
     wire         io_master_bready;
     reg          io_master_bvalid;
     wire [1:0]   io_master_bresp;
-    wire [3:0]   io_master_bid;
+    reg [3:0]    io_master_bid;
 
     wire         io_master_arready;
     wire         io_master_arvalid;
@@ -34,15 +34,13 @@ module ysyx_26040117_SIM(
     wire [1:0]   io_master_rresp;
     reg  [31:0]  io_master_rdata;
     wire         io_master_rlast;
-    wire [3:0]   io_master_rid;
+    reg [3:0]    io_master_rid;
     
-    assign io_master_awready=1'b1;
-    assign io_master_wready=1'b1;
-    assign io_master_arready=1'b1;
+    assign io_master_awready=!io_master_bvalid;
+    assign io_master_wready=!io_master_bvalid;
+    assign io_master_arready=!io_master_rvalid;
     assign io_master_bresp=2'b0;
-    assign io_master_bid=4'b0;
     assign io_master_rresp=2'b0;
-    assign io_master_rid=4'b0;
     assign io_master_rlast=(io_master_arlen==8'd0);
     wire awfire,wfire,arfire,rfire,bfire;
     assign awfire=io_master_awvalid&&io_master_awready;
@@ -56,42 +54,30 @@ module ysyx_26040117_SIM(
             io_master_rvalid<=1'b0;
             io_master_rdata<=32'd0;
         end else begin
-            io_master_bvalid<=awfire&&wfire;
-            io_master_rvalid<=arfire;
+            if(bfire)
+                io_master_bvalid<=1'b0;
+            else
+                io_master_bvalid<=awfire&&wfire;
+            if(rfire)
+                io_master_rvalid<=1'b0;
+            else
+                io_master_rvalid<=arfire;
+            if(awfire&&wfire)
+                io_master_bid<=io_master_awid;
+            if(arfire)
+                io_master_rid<=io_master_arid;
         end
     end
-    reg[31:0] raddr,rdata;
     import "DPI-C" function void paddr_read(input int addr, output int data);
     always @(posedge clock) begin
-        if(!reset&&rfire) paddr_read(raddr,rdata);
+        if(!reset&&arfire) paddr_read(io_master_araddr,io_master_rdata);
     end
-    reg[31:0] waddr,wdata;
-    reg[3:0] wmask;
     import "DPI-C" function void paddr_write(input int addr, input int data,input int mask);
     always @(posedge clock) begin
-        if(!reset&&awfire&&wfire) paddr_write(waddr,wdata,{28'd0,wmask});
+        if(!reset&&awfire&&wfire) paddr_write(io_master_awaddr,io_master_wdata,{28'd0,io_master_wstrb});
 
     end
 
-    always @(posedge clock) begin
-        if(reset)begin
-            raddr<=32'd0;
-            waddr<=32'd0;
-            wdata<=32'd0;
-            wmask<=4'd0;
-        end else begin
-            if(awfire)begin
-                waddr<=io_master_awaddr;
-            end
-            if(wfire)begin
-                wdata<=io_master_wdata;
-                wmask<=io_master_wstrb;
-            end
-            if(arfire)begin
-                raddr<=io_master_araddr;
-            end
-        end
-    end
 
     ysyx_26040117 cpu (
     .clock                   (clock),
