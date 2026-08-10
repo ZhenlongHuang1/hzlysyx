@@ -35,6 +35,7 @@ ifeq ($(SIM_ENV),ysyxsoc)
 NXDC_FILES=constr/$(TOPNAME).nxdc
 SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(SRC_AUTO_BIND): $(NXDC_FILES)
+	@mkdir -p $(dir $@)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 CSRCS += $(SRC_AUTO_BIND)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
