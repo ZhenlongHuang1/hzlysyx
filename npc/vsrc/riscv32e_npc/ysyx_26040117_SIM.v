@@ -19,7 +19,7 @@ module ysyx_26040117_SIM(
     wire         io_master_bready;
     reg          io_master_bvalid;
     wire [1:0]   io_master_bresp;
-    wire [3:0]   io_master_bid;
+    reg [3:0]    io_master_bid;
 
     wire         io_master_arready;
     wire         io_master_arvalid;
@@ -34,35 +34,52 @@ module ysyx_26040117_SIM(
     wire [1:0]   io_master_rresp;
     reg  [31:0]  io_master_rdata;
     wire         io_master_rlast;
-    wire [3:0]   io_master_rid;
+    reg [3:0]    io_master_rid;
     
-    assign io_master_awready=1'b1;
-    assign io_master_wready=1'b1;
-    assign io_master_arready=1'b1;
+    assign io_master_awready=!io_master_bvalid;
+    assign io_master_wready=!io_master_bvalid;
+    assign io_master_arready=!io_master_rvalid;
     assign io_master_bresp=2'b0;
-    assign io_master_bid=4'b0;
     assign io_master_rresp=2'b0;
-    assign io_master_rid=4'b0;
     assign io_master_rlast=(io_master_arlen==8'd0);
+    wire awfire,wfire,arfire,rfire,bfire;
+    assign awfire=io_master_awvalid&&io_master_awready;
+    assign wfire =io_master_wvalid &&io_master_wready;
+    assign bfire =io_master_bvalid &&io_master_bready;
+    assign arfire=io_master_arvalid&&io_master_arready;
+    assign rfire =io_master_rvalid &&io_master_rready;
     always @(posedge clock) begin
         if(reset)begin
             io_master_bvalid<=1'b0;
             io_master_rvalid<=1'b0;
             io_master_rdata<=32'd0;
         end else begin
-            io_master_bvalid<=io_master_awvalid&&io_master_wvalid;
-            io_master_rvalid<=io_master_arvalid;
+            if(bfire)
+                io_master_bvalid<=1'b0;
+            else
+                io_master_bvalid<=awfire&&wfire;
+            if(rfire)
+                io_master_rvalid<=1'b0;
+            else
+                io_master_rvalid<=arfire;
+            if(awfire&&wfire)
+                io_master_bid<=io_master_awid;
+            if(arfire)
+                io_master_rid<=io_master_arid;
         end
-        
     end
+    import "DPI-C" function void paddr_read(input int addr, output int data);
     always @(posedge clock) begin
-        if(reset)begin
-        end else begin
-            
-        end
+        if(!reset&&arfire) paddr_read(io_master_araddr,io_master_rdata);
+    end
+    import "DPI-C" function void paddr_write(input int addr, input int data,input int mask);
+    always @(posedge clock) begin
+        if(!reset&&awfire&&wfire) paddr_write(io_master_awaddr,io_master_wdata,{28'd0,io_master_wstrb});
+
     end
 
-    ysyx_26040117 cpu (
+
+    ysyx_26040117 #(.RESET_VECTOR(32'h8000_0000))cpu (
     .clock                   (clock),
     .reset                   (reset),
     .io_interrupt            (1'h0),	

@@ -122,3 +122,24 @@ uint64_t get_time(){
 
     return now-bool_time;
 }
+extern "C" void paddr_read(int32_t addr,int32_t *data){
+    if(addr>=0x80000000&&addr<=0x9fffffff){
+        psram_read(addr&0x00fffffc,data);
+    }
+}
+extern "C" void paddr_write(int32_t addr, int32_t data, int32_t mask) {
+    if(addr>=0x80000000&&addr<=0x9fffffff){
+        int32_t paddr;
+        paddr=addr&0x00fffffc;
+        if((mask&0b1)==1)
+            psram_write(paddr,data&0xff,0);
+        if((mask&0b10)==0b10)
+            psram_write(paddr,(data&0xff00)>>8,1);
+        if((mask&0b100)==0b100)
+            psram_write(paddr,(data&0xff0000)>>16,2);
+        if((mask&0b1000)==0b1000)
+            psram_write(paddr,(data&0xff000000)>>24,3);
+    }else if(addr==0x10000000)
+        putc((char)data&0xff,stderr);
+}
+

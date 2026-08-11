@@ -11,8 +11,13 @@
 TOP_NAME* dut=NULL;
 VerilatedContext*contextp=NULL;
 VerilatedVcdC* tfp=NULL;
+#ifdef RISCV32E_NPC
+NPC_state npc_state={NPC_RUNNING,0,PSRAM_START};
+CPU_state cpu_dut={{0},PSRAM_START};
+#else
 NPC_state npc_state={NPC_RUNNING,0,FLASH_START};
 CPU_state cpu_dut={{0},FLASH_START};
+#endif
 uint32_t cpu_pc=0,cpu_dnpc=0;
 static char logbuf[128]={};
 static bool g_print_step=false;
@@ -51,7 +56,7 @@ int is_exit_status_bad() {
 
 void single_cycle(){
     DCC++;
-    nvboard_update();
+    IFDEF(USE_NVBOARD,nvboard_update();)
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
             if(contextp->time()<1000000){tfp->dump(contextp->time());}
@@ -128,26 +133,26 @@ void ftrace_print(){
 }
 static void execute(uint64_t n){
     for(;n>0;n--){
-        while(dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__WBU_IFU_fire==0){
+        while(DWBU_IFU_fire==0){
             single_cycle();
             if(npc_state.state!=NPC_RUNNING)return;
         }
-        cpu_pc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__pc_reg;
-        cpu_dnpc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__dnpc;
-        uint32_t inst=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__inst_reg;
+        cpu_pc=DWBU_PC;
+        cpu_dnpc=DIFU_DNPC;
+        uint32_t inst=DIDU_INST;
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
 
-        int trap_ctrl=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_ctrl_reg;
-        int csr_addr=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__imm_reg&0xfff;
+        int trap_ctrl=DWBU_TRAP_CTRL;
+        int csr_addr=DWBU_IMM&0xfff;
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
             difftest_skip_ref();
         }
          /* 完成WBU_IFU_fire */
         single_cycle();
-        DIC++;
         uint32_t old_cpu_pc=cpu_pc;
-        cpu_pc=dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_idu_pc;
+        cpu_pc=DIFU_PC;
+        DIC++;
         if(npc_state.state!=NPC_RUNNING)return;
         get_cpu_state(&cpu_dut);
         trace_and_difftest(old_cpu_pc);

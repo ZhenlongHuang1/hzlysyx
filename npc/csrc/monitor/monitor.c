@@ -26,7 +26,11 @@ static long load_img(){
     fseek(fp,0,SEEK_END);
     long fpsize=ftell(fp);
     fseek(fp,0,SEEK_SET);
+#ifdef RISCV32E_NPC
+    int ret=fread(psram,1,fpsize,fp);
+#else
     int ret=fread(flash,1,fpsize,fp);
+#endif
     printf("Opening image: %s, size: %ld\n", img_file, fpsize);
     assert(ret==fpsize);
     fclose(fp);
@@ -111,8 +115,10 @@ void init_monitor(int argc,char*argv[]){
         tfp->open("simx.vcd");
     })
     //nvboard
-    nvboard_bind_all_pins(dut);
-    nvboard_init();
+    IFDEF(USE_NVBOARD,{
+        nvboard_bind_all_pins(dut);
+        nvboard_init();    
+    })
 
     //reset
     reset(30);
