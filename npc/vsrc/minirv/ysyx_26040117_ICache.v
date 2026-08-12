@@ -99,5 +99,50 @@ module ysyx_26040117_ICache(
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr,rready,1'b0,32'd0,1'b0,32'd0,4'd0,1'b0};
     assign {arready_MEM,rvalid_MEM,rdata_MEM}=MEM_ICACHE_wrapper[40:7];
 
+`ifdef PERF_COUNTER
+    reg [63:0] icache_access_count;
+    reg [63:0] icache_hit_count;
+    reg [63:0] icache_miss_count;
+    reg [63:0] icache_total_latency;
+    reg [63:0] icache_hit_latency;
+    reg [63:0] icache_miss_latency;
+    reg icache_access,icache_ifhit;
+    always @(posedge clk) begin
+        if(rst)begin
+            icache_hit_count<=64'd0;
+            icache_miss_count<=64'd0;
+            icache_access_count<=64'd0;
+            icache_total_latency<=64'd0;
+            icache_hit_latency<=64'd0;
+            icache_miss_latency<=64'd0;
+        end else begin
+            if(arfire)begin
+                icache_access_count<=icache_access_count+64'd1;
+                if(hit) icache_hit_count<=icache_hit_count+64'd1;
+                else icache_miss_count<=icache_miss_count+64'd1;
+            end
+            if(icache_access)begin
+                icache_total_latency<=icache_total_latency+64'd1;
+                if(icache_ifhit)icache_hit_latency<=icache_hit_latency+64'd1;
+                else icache_miss_latency<=icache_miss_latency+64'd1;
+            end
+        end
+    end
+    always @(posedge clk) begin
+        if(rst)begin
+            icache_access<=1'b0;
+            icache_ifhit<=1'b0;
+        end else begin
+            if(arvalid)begin
+                icache_access<=1'b1; 
+                icache_ifhit<=hit;
+            end else if(rvalid)begin
+                icache_access<=1'b0;
+            end
+
+        end
+    end
+
+`endif
 
 endmodule

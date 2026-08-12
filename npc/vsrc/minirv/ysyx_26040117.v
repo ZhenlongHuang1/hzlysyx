@@ -200,6 +200,12 @@ module ysyx_26040117 #(
             $strobe("IFU idu wait CPI   = %.2f",IFU1.ifu_idublock_count/IFU1.ifu_fetch_inst_count);
             $strobe("");
 
+            $strobe("hit rate p         = %.6f",ICache1.icache_hit_count/ICache1.icache_access_count);
+            $strobe("access time        = %.2f",ICache1.icache_hit_latency/ICache1.icache_hit_count);
+            $strobe("miss time          = %.2f",ICache1.icache_miss_latency/ICache1.icache_miss_count);
+            $strobe("AMAT               = %.2f",ICache1.icache_total_latency/ICache1.icache_access_count);
+            $strobe("");
+
             $strobe("LSU LOAD         = %0d",LSU1.lsu_load_count);
             $strobe("LSU R wait       = %0d",LSU1.lsu_rwait_count);
             $strobe("LSU LOAD latency = %0d",LSU1.lsu_load_latency_sum);
