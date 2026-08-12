@@ -103,13 +103,18 @@ module ysyx_26040117 #(
     wire[31:0]ifu_idu_pc,ifu_idu_snpc;
     wire[31:0]inst;
     wire WBU_IFU_valid,WBU_IFU_ready;
-    wire [40:0]MEM_IFU_wrapper;
-    wire [107:0]IFU_MEM_wrapper;
+    wire [40:0]MEM_ICACHE_wrapper;
+    wire [107:0]ICACHE_MEM_wrapper;
+    wire [33:0] ICACHE_IFU_wrapper,IFU_ICACHE_wrapper;
     ysyx_26040117_IFU #(.RESET_VECTOR(RESET_VECTOR))IFU1(.clk(clock),.rst(reset),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jalr(jalr),.jump(jump),.dnpc(dnpc),.lsu_error(lsu_error),
         //.dummy_ifu_wen(dummy_ifu_wen),.dummy_ifu_wdata(dummy_ifu_wdata),.dummy_ifu_waddr(dummy_ifu_waddr),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.snpc(ifu_idu_snpc),
-        .MEM_IFU_wrapper(MEM_IFU_wrapper),.IFU_MEM_wrapper(IFU_MEM_wrapper)
+        .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper)
+    );
+    ysyx_26040117_ICache ICache1(.clk(clock),.rst(reset),
+        .IFU_ICACHE_wrapper(IFU_ICACHE_wrapper),.ICACHE_IFU_wrapper(ICACHE_IFU_wrapper),
+        .MEM_ICACHE_wrapper(MEM_ICACHE_wrapper),.ICACHE_MEM_wrapper(ICACHE_MEM_wrapper)
     );
     
     //Instruction Decode Unit
@@ -170,7 +175,7 @@ module ysyx_26040117 #(
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
     );
     ysyx_26040117_arbiter arbiter1(.clk(clock),.rst(reset),
-        .MEM_IFU_wrapper(MEM_IFU_wrapper),.IFU_MEM_wrapper(IFU_MEM_wrapper),
+        .MEM_IFU_wrapper(MEM_ICACHE_wrapper),.IFU_MEM_wrapper(ICACHE_MEM_wrapper),
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper),
         .master_wrapper_in(master_wrapper_in),.master_wrapper_out(master_wrapper_out)
     );
