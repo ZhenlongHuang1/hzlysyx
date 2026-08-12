@@ -20,8 +20,8 @@ module ysyx_26040117_IFU #(
     output reg[31:0]pc;
     output[31:0] snpc;
     //IFU-MEM
-    input [40:0]MEM_IFU_wrapper;
-    output[107:0] IFU_MEM_wrapper;
+    input [33:0]MEM_IFU_wrapper;
+    output[33:0] IFU_MEM_wrapper;
 
     //state machine 
     wire WBU_IFU_fire,IFU_IDU_fire;
@@ -66,7 +66,6 @@ module ysyx_26040117_IFU #(
     assign IFU_IDU_valid=(state==WAIT_VALID&&(rvalid))||inst_valid;
     assign WBU_IFU_ready=state==IDLE;
     //pc_next计算
-    wire[1:0] ifu_rresp;
     assign snpc=pc+32'd4;
     assign pc_next=({32{~jump}}&snpc)|                    //FIFO
                     ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
@@ -74,7 +73,7 @@ module ysyx_26040117_IFU #(
         if(rst)
             pc<=RESET_VECTOR;
         else begin
-            if(ifu_rresp[1]||lsu_error)
+            if(lsu_error)
                 pc<=32'h00000000;
             if(IDLE_fire)
                 pc<=pc_next;
@@ -83,33 +82,27 @@ module ysyx_26040117_IFU #(
     //取指
     wire [31:0] rdata;
     wire [31:0] araddr;
-    wire awready,wready,bvalid;
-    wire[1:0] rresp,bresp;
 
     assign araddr=pc;
-    assign IFU_MEM_wrapper={3'b010,arvalid,araddr,rready,1'b0,32'd0,1'b0,32'd0,4'd0,1'b0};
-    assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_IFU_wrapper;
+    assign IFU_MEM_wrapper={arvalid,araddr,rready};
+    assign {arready,rvalid,rdata}=MEM_IFU_wrapper;
     //FIFO
     reg[31:0] inst_reg;
-    reg[1:0] rresp_reg;
     reg inst_valid;
     always @(posedge clk) begin
         if(rst)begin
             inst_reg<=32'd0;
             inst_valid<=1'b0;
-            rresp_reg<=2'd0;
         end else begin
             if(IFU_IDU_ready)
                 inst_valid<=1'b0;
             else if(rfire&&!IFU_IDU_ready)begin
                 inst_reg<=rdata;
-                rresp_reg<=rresp;
                 inst_valid<=1'b1;
             end
         end
     end
     assign inst=inst_valid?inst_reg:rdata; //save?
-    assign ifu_rresp=inst_valid?rresp_reg:rresp; 
 `ifdef PERF_COUNTER
     reg [63:0] ifu_fetch_inst_count;
     reg [63:0] ifu_no_fetch_count;
