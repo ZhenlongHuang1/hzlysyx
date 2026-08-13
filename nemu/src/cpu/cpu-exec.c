@@ -44,7 +44,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
     if (g_print_step) { 
         uint32_t itrace_addr;
-        IFDEF(CONFIG_ITRACE, sscanf(_this->logbuf,"%x",&itrace_addr);) 
+        IFDEF(CONFIG_ITRACE, printf("%x\n",_this->isa.inst);sscanf(_this->logbuf,"%x",&itrace_addr);) 
     }
 
 
