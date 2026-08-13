@@ -42,7 +42,11 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
-    if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+    if (g_print_step) { 
+        uint32_t itrace_addr;
+        IFDEF(CONFIG_ITRACE, sscanf(_this->logbuf,"%x",&itrace_addr);printf("%x\n",itrace_addr);) 
+    }
+
 
     IFDEF(CONFIG_ITRACE,strcpy(iringbuf[iringbuf_index],_this->logbuf);
         iringbuf_index=(iringbuf_index+1)%16);
