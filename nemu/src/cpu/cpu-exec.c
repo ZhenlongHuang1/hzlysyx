@@ -37,16 +37,20 @@ static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;
 static int depth=0;
 void device_update();
+void icache_record(uint32_t pc){
+    static FILE *fp=NULL;
+    if(fp==NULL)
+        fp=fopen("build/icache_record.txt","w"); 
+    fprintf(fp,"%x\n",pc);
 
+}
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
     if (g_print_step) { 
-        uint32_t itrace_addr;
-        IFDEF(CONFIG_ITRACE, printf("%x\n",_this->pc);sscanf(_this->logbuf,"%x",&itrace_addr);) 
+        IFDEF(CONFIG_ITRACE, icache_record(_this->pc);printf("%x\n",_this->pc);) 
     }
-
 
     IFDEF(CONFIG_ITRACE,strcpy(iringbuf[iringbuf_index],_this->logbuf);
         iringbuf_index=(iringbuf_index+1)%16);
