@@ -61,7 +61,7 @@ static void out_of_bound(paddr_t addr) {
 }
 
 void init_mem() {
-  IFDEF(CONFIG_MEM_RANDOM, memset(mrom, rand(), CONFIG_MSIZE));
+  IFDEF(CONFIG_MEM_RANDOM, memset(flash, rand(), CONFIG_MSIZE));
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
