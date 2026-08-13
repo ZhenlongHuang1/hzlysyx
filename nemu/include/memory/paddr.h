@@ -26,14 +26,20 @@ uint8_t* guest_to_host(paddr_t paddr);
 /* convert the host virtual address in NEMU to guest physical address in the guest program */
 paddr_t host_to_guest(uint8_t *haddr);
 
-static inline bool in_mrom(paddr_t addr) {
+static inline bool in_flash(paddr_t addr) {
   return addr - CONFIG_MBASE < CONFIG_MSIZE;
 }
 static inline bool in_sram(paddr_t addr) {
   return addr - CONFIG_SBASE < CONFIG_SSIZE;
 }
+static inline bool in_psram(paddr_t addr) {
+  return addr - CONFIG_PSBASE < CONFIG_PSSIZE;
+}
+static inline bool in_sdram(paddr_t addr) {
+  return addr - CONFIG_SDBASE < CONFIG_SDSIZE;
+}
 static inline bool in_pmem(paddr_t addr) {
-  return in_mrom(addr)||in_sram(addr);
+  return in_psram(addr)||in_sdram(addr)||in_sram(addr)||in_flash(addr);
 }
 
 word_t paddr_read(paddr_t addr, int len);
