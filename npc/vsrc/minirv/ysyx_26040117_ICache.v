@@ -65,7 +65,7 @@ module ysyx_26040117_ICache(
     assign req_offset=araddr[OFFSET_WIDTH-1:2];
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    assign hit=ar_in_sdram&&valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
+    assign hit=valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
     always @(posedge clk) begin
         if(rst) begin
             valid_array<=0;
@@ -84,11 +84,14 @@ module ysyx_26040117_ICache(
                         if(in_sdram_reg)begin
                             data_array[{index_reg,offset_count}]<=rdata_MEM;
                             valid_array[{index_reg,offset_count}]<=1'b1;
+                            if(!rlast)
+                                offset_count<=offset_count+1'b1;
                         end else begin
                             data_array[{index_reg,offset_reg}]<=rdata_MEM;
                             valid_array[{index_reg,offset_reg}]<=1'b1;
                         end
-                        offset_count<=offset_count+1'b1;
+                        if(rlast)
+                            tag_array[index_reg]<=tag_reg;
                     end
                 default:;
             endcase
