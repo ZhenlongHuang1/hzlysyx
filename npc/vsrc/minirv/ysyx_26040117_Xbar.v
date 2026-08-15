@@ -1,9 +1,9 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_Xbar(clk,rst,
-    master_wrapper_in,master_wrapper_out,awsize,arsize,
-    arvalid,arready,araddr,
-    rvalid,rready,rdata,rresp,
-    awvalid,awready,awaddr,
+    master_wrapper_in,master_wrapper_out,
+    arvalid,arready,araddr,arsize,arid,arlen,
+    rvalid,rready,rdata,rresp,rlast,
+    awvalid,awready,awaddr,awsize,
     wvalid,wready,wdata,wstrb,
     bvalid,bready,bresp
 );
@@ -16,11 +16,14 @@ module ysyx_26040117_Xbar(clk,rst,
     input arvalid;
     output arready;
     input[31:0]araddr;
+    input[3:0] arid;
+    input[7:0] arlen;
 
     output rvalid;
     input rready;
     output [31:0]rdata;
     output[1:0] rresp;
+    output rlast;
     //write
     input awvalid;
     output awready;
@@ -109,6 +112,7 @@ module ysyx_26040117_Xbar(clk,rst,
     assign arready=(dec_clint_r&&clint_arready)||(dec_soc_r&&io_master_arready);
     assign rvalid=io_master_rvalid||clint_rvalid;
     assign rresp=clint_rvalid?clint_rresp:io_master_rresp;
+    assign rlast=(clint_rvalid)||(io_master_rlast);
     assign rdata=({32{io_master_rvalid}}&io_master_rdata)|({32{clint_rvalid}}&clint_rdata);
 
     assign awready=(dec_clint_w&&clint_awready)||(dec_soc_w&&io_master_awready);    
@@ -173,8 +177,8 @@ module ysyx_26040117_Xbar(clk,rst,
     assign io_master_awburst=2'd01;
     assign io_master_wlast=1'b1;
 
-    assign io_master_arid=4'd0;
-    assign io_master_arlen=8'd0;
+    assign io_master_arid=arid;
+    assign io_master_arlen=arlen;
     assign io_master_arsize=arsize;
     assign io_master_arburst=2'b01;
 endmodule

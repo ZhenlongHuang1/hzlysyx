@@ -103,8 +103,8 @@ module ysyx_26040117 #(
     wire[31:0]ifu_idu_pc,ifu_idu_snpc;
     wire[31:0]inst;
     wire WBU_IFU_valid,WBU_IFU_ready;
-    wire [40:0]MEM_ICACHE_wrapper;
-    wire [107:0]ICACHE_MEM_wrapper;
+    wire [34:0]MEM_ICACHE_wrapper;
+    wire [36:0]ICACHE_MEM_wrapper;
     wire [33:0] ICACHE_IFU_wrapper,IFU_ICACHE_wrapper;
     ysyx_26040117_IFU #(.RESET_VECTOR(RESET_VECTOR))IFU1(.clk(clock),.rst(reset),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jalr(jalr),.jump(jump),.dnpc(dnpc),.lsu_error(lsu_error),
