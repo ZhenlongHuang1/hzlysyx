@@ -5,7 +5,7 @@ module ysyx_26040117_arbiter(clk,rst,
     master_wrapper_in,master_wrapper_out
 );
     input clk,rst;
-    input [36:0] IFU_MEM_wrapper;
+    input [44:0] IFU_MEM_wrapper;
     input[110:0] LSU_MEM_wrapper;
     output [40:0] MEM_LSU_wrapper;
     output [34:0] MEM_IFU_wrapper;
@@ -15,7 +15,8 @@ module ysyx_26040117_arbiter(clk,rst,
     wire ifu_arvalid,ifu_rready,lsu_arvalid,lsu_rready;
     wire [31:0] ifu_araddr,lsu_araddr;
     wire [2:0] ifu_arsize,lsu_arsize,lsu_awsize;
-    assign {ifu_arsize,ifu_arvalid,ifu_araddr,ifu_rready}=IFU_MEM_wrapper;
+    wire [7:0] ifu_arlen;
+    assign {ifu_arsize,ifu_arvalid,ifu_araddr,ifu_arlen,ifu_rready}=IFU_MEM_wrapper;
     assign {lsu_arsize,lsu_awsize,lsu_arvalid,lsu_araddr,lsu_rready}=LSU_MEM_wrapper[110:71];
     assign MEM_IFU_wrapper=ifu_fire?{arready,rvalid,rdata,rlast}:35'd0;
     assign MEM_LSU_wrapper[40:5]=lsu_fire?{arready,rvalid,rdata,rresp}:36'd0;
@@ -57,7 +58,7 @@ module ysyx_26040117_arbiter(clk,rst,
     wire [3:0]arid;
     wire [7:0]arlen;
     assign arid=lsu_fire?4'd1:4'd0;
-    assign arlen=lsu_fire?8'd0:8'd3;
+    assign arlen=lsu_fire?8'd0:ifu_arlen;
     
     //write
     wire awvalid,wvalid,bready;
