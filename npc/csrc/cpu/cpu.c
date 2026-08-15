@@ -18,7 +18,7 @@ CPU_state cpu_dut={{0},PSRAM_START};
 NPC_state npc_state={NPC_RUNNING,0,FLASH_START};
 CPU_state cpu_dut={{0},FLASH_START};
 #endif
-uint32_t cpu_pc=0,cpu_dnpc=0;
+uint32_t cpu_pc=0,cpu_dnpc=0,inst;
 static char logbuf[128]={};
 static bool g_print_step=false;
 static char ftrace_buf[1024][128]={};
@@ -32,6 +32,7 @@ void get_cpu_state(CPU_state *cpu_dut){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
     cpu_dut->pc=cpu_pc;
+    printf("pc=%08x inst=%08x\n",cpu_pc,inst);
 }
 static void trace_and_difftest(uint32_t pc){
     
@@ -139,7 +140,7 @@ static void execute(uint64_t n){
         }
         cpu_pc=DWBU_PC;
         cpu_dnpc=DIFU_DNPC;
-        uint32_t inst=DIDU_INST;
+        inst=DIDU_INST;
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
 
