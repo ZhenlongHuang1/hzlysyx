@@ -32,7 +32,7 @@ void get_cpu_state(CPU_state *cpu_dut){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
     cpu_dut->pc=cpu_pc;
-    printf("pc=%08x inst=%08x\n",cpu_pc,inst);
+//    printf("pc=%08x inst=%08x\n",cpu_pc,inst);
 }
 static void trace_and_difftest(uint32_t pc){
     
