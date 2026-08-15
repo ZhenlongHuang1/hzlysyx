@@ -40,10 +40,10 @@ module ysyx_26040117_ICache(
                 rdata_hit<=data_array[{req_index,req_offset}];
                 rvalid_hit<=1'b1;
             end else if((state==MISS)&&rfire_MEM)begin
-                if(offset_count==offset_reg||in_sdram_reg)
+                if(offset_count==offset_reg||!in_sdram_reg)begin
                     rdata_hit<=rdata_MEM;
-                if(rlast)
                     rvalid_hit<=1'b1;
+                end
             end
         end
     end
@@ -70,14 +70,14 @@ module ysyx_26040117_ICache(
             case(state)
                 IDLE:if(arfire&&!hit)begin
                         in_sdram_reg<=ar_in_sdram;
-                        if(!in_sdram_reg)begin
+                        if(ar_in_sdram)begin
                             index_reg<=req_index;
                             tag_reg<=req_tag;
                             offset_reg<=req_offset;
                             offset_count<=0;
                         end
                 end
-                MISS:if(rfire_MEM&&!in_sdram_reg)begin
+                MISS:if(rfire_MEM&&in_sdram_reg)begin
                         data_array[{index_reg,offset_count}]<=rdata_MEM;
                         if(rlast)begin
                             valid_array[index_reg]<=1'b1;
@@ -112,7 +112,7 @@ module ysyx_26040117_ICache(
     wire [31:0] rdata_MEM,araddr_MEM;
     wire [7:0]arlen;
     assign arlen=ar_in_sdram?BURST_LEN:8'd0;
-    assign araddr_MEM={araddr[31:OFFSET_WIDTH],{OFFSET_WIDTH{1'b0}}};
+    assign araddr_MEM={araddr[31:OFFSET_WIDTH],ar_in_sdram?{OFFSET_WIDTH{1'b0}}:araddr[OFFSET_WIDTH-1:0]};
     assign arvalid_MEM=(state==IDLE)&&!rvalid_hit&&arvalid&&!hit;
     assign rready_MEM=state==MISS;
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr_MEM,arlen,rready_MEM};
