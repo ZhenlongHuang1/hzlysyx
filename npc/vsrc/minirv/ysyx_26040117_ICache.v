@@ -70,14 +70,12 @@ module ysyx_26040117_ICache(
             case(state)
                 IDLE:if(arfire&&!hit)begin
                         in_sdram_reg<=ar_in_sdram;
-                        if(ar_in_sdram)begin
-                            index_reg<=req_index;
-                            tag_reg<=req_tag;
-                            offset_reg<=req_offset;
-                            offset_count<=0;
-                        end
+                        index_reg<=req_index;
+                        tag_reg<=req_tag;
+                        offset_reg<=req_offset;
+                        offset_count<=0;
                 end
-                MISS:if(rfire_MEM&&in_sdram_reg)begin
+                MISS:if(rfire_MEM)begin
                         data_array[{index_reg,offset_count}]<=rdata_MEM;
                         if(rlast)begin
                             valid_array[index_reg]<=1'b1;
