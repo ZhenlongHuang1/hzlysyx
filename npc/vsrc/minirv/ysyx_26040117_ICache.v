@@ -9,6 +9,7 @@ module ysyx_26040117_ICache(
     parameter OFFSET_WIDTH=4,INDEX_WIDTH=4;
     localparam DATA_DEPTH=2**(OFFSET_WIDTH+INDEX_WIDTH-2);
     localparam BURST_LEN=(2**(OFFSET_WIDTH-2))-1;
+    localparam WORD_NUM=2**(OFFSET_WIDTH-2);
     wire arvalid,arready,rready;
     wire [31:0] araddr;
     wire rvalid,rlast;
@@ -50,10 +51,12 @@ module ysyx_26040117_ICache(
     //ICache
     reg[31:0] data_array[0:DATA_DEPTH-1];
     reg[31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_array[0:(2**INDEX_WIDTH)-1];
-    reg[(2**INDEX_WIDTH)-1:0] valid_array;
+    reg[DATA_DEPTH-1:0] valid_array;
+
     wire [OFFSET_WIDTH-3:0] req_offset;
     reg  [OFFSET_WIDTH-3:0] offset_reg;
     reg  [OFFSET_WIDTH-3:0] offset_count;
+
     wire[INDEX_WIDTH-1:0] req_index;
     reg[INDEX_WIDTH-1:0] index_reg;
     wire[31-OFFSET_WIDTH-INDEX_WIDTH:0] req_tag;
@@ -62,7 +65,7 @@ module ysyx_26040117_ICache(
     assign req_offset=araddr[OFFSET_WIDTH-1:2];
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    assign hit=ar_in_sdram&&valid_array[req_index]&&(tag_array[req_index]==req_tag);
+    assign hit=ar_in_sdram&&valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
     always @(posedge clk) begin
         if(rst) begin
             valid_array<=0;
@@ -74,14 +77,18 @@ module ysyx_26040117_ICache(
                         tag_reg<=req_tag;
                         offset_reg<=req_offset;
                         offset_count<=0;
+                        if(tag_array[req_index]!=req_tag)
+                            valid_array[req_index*WORD_NUM +: WORD_NUM]<=0;
                 end
                 MISS:if(rfire_MEM)begin
-                        data_array[{index_reg,offset_count}]<=rdata_MEM;
-                        if(rlast)begin
-                            valid_array[index_reg]<=1'b1;
-                            tag_array[index_reg]<=tag_reg;
-                        end else
-                            offset_count<=offset_count+1'b1;
+                        if(in_sdram_reg)begin
+                            data_array[{index_reg,offset_count}]<=rdata_MEM;
+                            valid_array[{index_reg,offset_count}]<=1'b1;
+                        end else begin
+                            data_array[{index_reg,offset_reg}]<=rdata_MEM;
+                            valid_array[{index_reg,offset_reg}]<=1'b1;
+                        end
+                        offset_count<=offset_count+1'b1;
                     end
                 default:;
             endcase
