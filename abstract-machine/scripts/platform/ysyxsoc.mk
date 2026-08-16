@@ -12,7 +12,7 @@ AM_SRCS := riscv/ysyxsoc/start.S \
 CFLAGS    += -fdata-sections -ffunction-sections #函数和变量放到子段中
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
 LDFLAGS   += --gc-sections -e _start #回收无用段
-NPCFLAGS  += -b
+#NPCFLAGS  += -b
 
 MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
