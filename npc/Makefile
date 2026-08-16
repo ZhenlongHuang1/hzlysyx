@@ -42,7 +42,7 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 endif
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O2 #-flto
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O3 #-flto
 LDFLAGS += -lreadline #-flto
 
 #CXXFLAGS += -Wall -Wextra -fsanitize=address,undefined

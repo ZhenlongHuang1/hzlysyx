@@ -45,8 +45,8 @@ void uart_init(){
     outb(UART_FCR,0x07);//[0]openFIFO,[1]clearRFIFO,[2]clearTFIFO
 }
 void putch(char ch) {
-    while ((inb(UART_LSR)&0x20)==0) ;
-    outb(UART_THR, ch);
+//    while ((inb(UART_LSR)&0x20)==0) ;
+//    outb(UART_THR, ch);
 }
 void __am_uart_rx(AM_UART_RX_T* rx){
     if((inb(UART_LSR)&0x1))

@@ -18,17 +18,23 @@
 #include <device/mmio.h>
 #include <isa.h>
 
-static uint8_t mrom[CONFIG_MSIZE] PG_ALIGN = {};
+static uint8_t flash[CONFIG_MSIZE] PG_ALIGN = {};
 static uint8_t sram[CONFIG_SSIZE] PG_ALIGN = {};
+static uint8_t psram[CONFIG_PSSIZE] PG_ALIGN = {};
+static uint8_t sdram[CONFIG_SDSIZE] PG_ALIGN = {};
 
 uint8_t* guest_to_host(paddr_t paddr) { 
-    if(in_mrom(paddr)) return mrom + paddr - CONFIG_MBASE;
+    if(in_flash(paddr)) return flash + paddr - CONFIG_MBASE;
     if(in_sram(paddr)) return sram + paddr - CONFIG_SBASE;
+    if(in_psram(paddr)) return psram + paddr - CONFIG_PSBASE;
+    if(in_sdram(paddr)) return sdram + paddr - CONFIG_SDBASE;
     return NULL;
 }
 paddr_t host_to_guest(uint8_t *haddr) { 
-    if(haddr>=mrom&&haddr<=mrom+CONFIG_MSIZE) return haddr - mrom + CONFIG_MBASE;
+    if(haddr>=flash&&haddr<=flash+CONFIG_MSIZE) return haddr - flash + CONFIG_MBASE;
     if(haddr>=sram&&haddr<=sram+CONFIG_SSIZE) return haddr - sram + CONFIG_SBASE;
+    if(haddr>=psram&&haddr<=psram+CONFIG_PSSIZE) return haddr - psram + CONFIG_PSBASE;
+    if(haddr>=sdram&&haddr<=sdram+CONFIG_SDSIZE) return haddr - sdram + CONFIG_SDBASE;
     return 0;
 }
 
@@ -55,7 +61,7 @@ static void out_of_bound(paddr_t addr) {
 }
 
 void init_mem() {
-  IFDEF(CONFIG_MEM_RANDOM, memset(mrom, rand(), CONFIG_MSIZE));
+  IFDEF(CONFIG_MEM_RANDOM, memset(flash, rand(), CONFIG_MSIZE));
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 

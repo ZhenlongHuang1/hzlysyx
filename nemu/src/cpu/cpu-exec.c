@@ -37,12 +37,20 @@ static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;
 static int depth=0;
 void device_update();
+void icache_record(uint32_t pc){
+    static FILE *fp=NULL;
+    if(fp==NULL)
+        fp=fopen("build/icache_record.txt","w"); 
+    fprintf(fp,"%x\n",pc);
 
+}
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
-    if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+    if (g_print_step) { 
+        IFDEF(CONFIG_ITRACE, icache_record(_this->pc);) 
+    }
 
     IFDEF(CONFIG_ITRACE,strcpy(iringbuf[iringbuf_index],_this->logbuf);
         iringbuf_index=(iringbuf_index+1)%16);
@@ -156,7 +164,8 @@ void ftrace_print(){
 }
 /* Simulate how the CPU works. */
 void cpu_exec(uint64_t n) {
-  g_print_step = (n < MAX_INST_TO_PRINT);
+  //g_print_step = (n < MAX_INST_TO_PRINT);
+  g_print_step = true;
   switch (nemu_state.state) {
     case NEMU_END: case NEMU_ABORT: case NEMU_QUIT:
       printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");

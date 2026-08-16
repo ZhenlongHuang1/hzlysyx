@@ -1,21 +1,33 @@
 menu "Memory Configuration"
 
 config MBASE
-  hex "MROM base address"
+  hex "FLASH base address"
   default 0x0        if ISA_x86
-  default 0x20000000
-
+  default 0x30000000
 config MSIZE
-  hex "MROM size"
-  default 0x1000
+  hex "FLASH size"
+  default 0x1000000
 
 config SBASE
   hex "SRAM base address"
   default 0x0f000000
-
 config SSIZE
   hex "SRAM size"
   default 0x2000
+
+config PSBASE
+  hex "PSRAM base address"
+  default 0x80000000
+config PSSIZE
+  hex "PSRAM size"
+  default 0x400000
+
+config SDBASE
+  hex "SDRAM base address"
+  default 0xa0000000
+config SDSIZE
+  hex "SDRAM size"
+  default 0x2000000
 
 config PC_RESET_OFFSET
   hex "Offset of reset vector from the base of memory"
