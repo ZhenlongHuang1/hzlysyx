@@ -125,18 +125,6 @@ module ysyx_26040117_ICache(
     assign rready_MEM=state==MISS;
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr_MEM,arlen,rready_MEM};
     assign {arready_MEM,rvalid_MEM,rdata_MEM,rlast}=MEM_ICACHE_wrapper;
-    always @(posedge clk) begin
-    if(!rst&&arvalid_MEM&&arready_MEM)
-        $display("ICACHE AR req=%08x addr=%08x len=%0d hit=%d index=%0d offset=%0d",
-            araddr,araddr_MEM,arlen,hit,req_index,req_offset);
-
-    if(!rst&&rfire_MEM)
-        $display("ICACHE R count=%0d data=%08x last=%d req_offset=%0d sdram=%d",
-            offset_count,rdata_MEM,rlast,offset_reg,in_sdram_reg);
-
-    if(!rst&&rvalid&&rready)
-        $display("ICACHE RESP data=%08x",rdata);
-end
 
 `ifdef PERF_COUNTER
     reg [63:0] icache_access_count;
