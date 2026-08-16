@@ -134,6 +134,8 @@ module ysyx_26040117_ICache(
     reg [63:0] icache_hit_latency;
     reg [63:0] icache_miss_latency;
     reg icache_access,icache_ifhit;
+    wire icache_done;
+    assign icache_done=icache_ifhit?rvalid:(rfire_MEM&&rlast);
     always @(posedge clk) begin
         if(rst)begin
             icache_hit_count<=64'd0;
@@ -163,7 +165,7 @@ module ysyx_26040117_ICache(
             if(arvalid)begin
                 icache_access<=1'b1; 
                 icache_ifhit<=hit;
-            end else if(rvalid)begin
+            end else if(icache_done)begin
                 icache_access<=1'b0;
             end
 
