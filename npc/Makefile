@@ -88,12 +88,12 @@ gdb: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
-SYN_TOP = ysyx_26040117
+SYN_TOP = ysyx_26040117_RegisterFile
 STA_FREQ_MHZ ?= 728
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
 YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 SYN_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
-CLK_PORT_NAME=clock
+CLK_PORT_NAME=clk
 sta:
 	@mkdir -p $(SYN_DIR)
 	$(MAKE) -C $(YOSYS_HOME) sta DESIGN=$(SYN_TOP) \

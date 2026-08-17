@@ -1,4 +1,4 @@
-module ysyx_26040117_RegisterFile #(ADDR_WIDTH = 5, DATA_WIDTH = 32) (clk,rst,
+module ysyx_26040117_RegisterFile #(ADDR_WIDTH = 4, DATA_WIDTH = 32) (clk,rst,
     raddr1,raddr2,rdata1,rdata2,
     wdata,waddr,wen
 );

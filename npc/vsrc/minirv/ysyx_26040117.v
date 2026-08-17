@@ -137,8 +137,8 @@ module ysyx_26040117 #(
     wire [4:0] wbu_register_rd;
     wire wbu_register_wen;
     ysyx_26040117_RegisterFile Register1(.clk(clock),.rst(reset),
-        .raddr1(rs1),.raddr2(rs2),.rdata1(src1),.rdata2(src2),
-        .wdata(srcd),.waddr(wbu_register_rd),.wen(wbu_register_wen)
+        .raddr1(rs1[3:0]),.raddr2(rs2[3:0]),.rdata1(src1),.rdata2(src2),
+        .wdata(srcd),.waddr(wbu_register_rd[3:0]),.wen(wbu_register_wen)
     );
     //Execution Unit
     wire EXU_WBU_ready,EXU_WBU_valid;
