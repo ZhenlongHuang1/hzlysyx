@@ -1,8 +1,8 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_WBU(clk,rst,
-    EXU_WBU_ready,EXU_WBU_valid,result,EXU_wrapper,imm,src1,src2,mytype,op,
-    WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,jalr,rd_out,register_wen,lsu_error,
-    reqValid,respReady,respValid,lsu_wen,result_out,src2_out,wmask_out,ifsigned_out,ramdata,lsu_rresp,lsu_bresp
+    EXU_WBU_ready,EXU_WBU_valid,result,EXU_wrapper,imm,src1,src2,mytype,funct,
+    WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,jalr,rd_out,register_wen,
+    reqValid,respReady,respValid,lsu_wen,result_out,src2_out,wmask_out,ifsigned_out,ramdata
 );
     input clk,rst;
     //EXU-WBU
@@ -10,8 +10,8 @@ module ysyx_26040117_WBU(clk,rst,
     output EXU_WBU_ready;
     input [31:0] result,imm,src1,src2;
     input [8:0] mytype;
-    input [4:0] op;
-    input [77:0]EXU_wrapper;
+    input [3:0] funct;
+    input [40:0]EXU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
@@ -20,22 +20,21 @@ module ysyx_26040117_WBU(clk,rst,
     output jump,jalr;
     output [4:0]rd_out;
     output register_wen;
-    output lsu_error;
     //WBU-LSU
     input respValid;
     input [31:0]ramdata;
-    input [1:0] lsu_rresp,lsu_bresp;
     output reqValid,respReady,lsu_wen;
     output ifsigned_out;
     output [31:0] result_out,src2_out;
-    output[3:0] wmask_out;
+    output[2:0] wmask_out;
     //decompression
     wire [2:0]trap_ctrl;//0:csrr,1:ecall,2:mret,
-    wire [3:0]wmask;
     wire [4:0]rd;
-    wire ifsigned,ebreak;
-    wire [31:0] pc,snpc;
-    assign {trap_ctrl,wmask,ifsigned,ebreak,rd,pc,snpc}=EXU_wrapper;
+    wire ebreak;
+    wire [31:0] pc;
+    assign {trap_ctrl,ebreak,rd,pc}=EXU_wrapper;
+    assign ifsigned_out=~funct_out[2];
+    assign wmask_out={1'b0,funct_out[1:0]};
     //WBU-LSU
     assign lsu_wen=mytype_out[6]&&(state==WAIT);
     assign reqValid=lsu_wen||(mytype_out[5]&&(state==WAIT));
@@ -66,29 +65,28 @@ module ysyx_26040117_WBU(clk,rst,
     //FIFO
     reg [31:0] result_reg,imm_reg,src1_reg,src2_reg;
     reg [8:0] mytype_reg;
-    reg [4:0] op_reg;
+    reg [2:0] funct_reg;
     reg [2:0]trap_ctrl_reg;//0:csrr,1:ecall,2:mret,
-    reg [3:0]wmask_reg;
     reg [4:0]rd_reg;
-    reg ifsigned_reg,ebreak_reg;
-    reg [31:0] pc_reg,snpc_reg;
+    reg ebreak_reg;
+    reg [31:0] pc_reg;
     
     wire [31:0] imm_out,src1_out;
     wire [8:0] mytype_out;
-    wire [4:0] op_out;
+    wire [2:0] funct_out;
     wire [2:0]trap_ctrl_out;//0:csrr,1:ecall,2:mret,
     wire ebreak_out;
-    wire [31:0] pc_out,snpc_out;
+    wire [31:0] pc_out;
     always @(posedge clk) begin
         if(rst)begin
-            {result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,op_reg,trap_ctrl_reg,wmask_reg,rd_reg,ifsigned_reg,ebreak_reg,pc_reg,snpc_reg}<=220'h0;
+            {result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,funct_reg,trap_ctrl_reg,rd_reg,ebreak_reg,pc_reg}<=181'h0;
         end else if(EXU_WBU_fire)begin
-            {result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,op_reg,trap_ctrl_reg,wmask_reg,rd_reg,ifsigned_reg,ebreak_reg,pc_reg,snpc_reg}<={
-                result,imm,src1,src2,mytype,op,trap_ctrl,wmask,rd,ifsigned,ebreak,pc,snpc};
+            {result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,funct_reg,trap_ctrl_reg,rd_reg,ebreak_reg,pc_reg}<={
+                result,imm,src1,src2,mytype,funct[2:0],trap_ctrl,rd,ebreak,pc};
         end
     end
-    assign {result_out,imm_out,src1_out,src2_out,mytype_out,op_out,trap_ctrl_out,wmask_out,rd_out,ifsigned_out,ebreak_out,pc_out,snpc_out}={
-        result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,op_reg,trap_ctrl_reg,wmask_reg,rd_reg,ifsigned_reg,ebreak_reg,pc_reg,snpc_reg};
+    assign {result_out,imm_out,src1_out,src2_out,mytype_out,funct_out,trap_ctrl_out,rd_out,ebreak_out,pc_out}={
+        result_reg,imm_reg,src1_reg,src2_reg,mytype_reg,funct_reg,trap_ctrl_reg,rd_reg,ebreak_reg,pc_reg};
 
     //function
     wire [31:0] csr_rdata;
@@ -102,12 +100,11 @@ module ysyx_26040117_WBU(clk,rst,
     assign dnpc=privil?csr_rdata:dnpc_unprivil;
     assign srcd=({32{mytype_out[5]}}&ramdata)|
                 ({32{(|mytype_out[8:7])}}&result_out)|
-                ({32{|mytype_out[3:2]}}&snpc_out)|
+                ({32{|mytype_out[3:2]}}&result_out)|
                 ({32{mytype_out[0]}}&imm_out)|
                 ({32{mytype_out[1]}}&dnpc)|
                 ({32{trap_ctrl_out[0]}}&csr_rdata);
     assign jump=(mytype_out[3]||mytype_out[2]||privil||(mytype_out[4]&&br_token));
-    assign lsu_error=reqValid&&respValid&&(mytype_out[5]?lsu_rresp[1]:lsu_bresp[1]);
 `ifndef STA_MODE
     import "DPI-C" function void npc_trap();
     always@(posedge clk)begin
@@ -119,7 +116,7 @@ module ysyx_26040117_WBU(clk,rst,
     //Control Status Register
 
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
-        .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl_out),.funct3(op_out[2:0]),.csr_addr(imm_out[11:0]),.src1(src1_out),.pc(pc_out),
+        .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl_out),.funct3(funct_out[2:0]),.csr_addr(imm_out[11:0]),.src1(src1_out),.pc(pc_out),
         .rdata(csr_rdata)
     );
 endmodule

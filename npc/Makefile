@@ -88,7 +88,7 @@ gdb: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
-SYN_TOP = ysyx_26040117_RegisterFile
+SYN_TOP = ysyx_26040117_IFU
 STA_FREQ_MHZ ?= 728
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
 YOSYS_HOME=$(HOME)/Desktop/yosys-sta
