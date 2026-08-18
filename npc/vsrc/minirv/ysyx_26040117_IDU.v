@@ -1,6 +1,6 @@
 module ysyx_26040117_IDU(clk,rst,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,snpc,
-    IDU_EXU_ready,IDU_EXU_valid,imm,op,mytype,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,
+    IDU_EXU_ready,IDU_EXU_valid,imm,funct,mytype,
     IDU_wrapper,
     rs1,rs2
 );
@@ -9,56 +9,47 @@ module ysyx_26040117_IDU(clk,rst,
     input IFU_IDU_valid;
     output IFU_IDU_ready;
     input [31:0] inst;
-    input [31:0] pc,snpc;
+    input [31:0] pc;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
-    output [4:0] op;
+    output [3:0] funct;
     output[31:0] imm;
     output [8:0] mytype;
-    output[77:0]IDU_wrapper;
-    assign IDU_wrapper={trap_ctrl,wmask,ifsigned,ebreak,rd,pc_out,snpc_out};
+    output[40:0]IDU_wrapper;
+    assign IDU_wrapper={trap_ctrl,ebreak,rd,pc_out};
+    assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
     output [4:0] rs1,rs2;
 
     wire [2:0]trap_ctrl;
-    wire [3:0]wmask;
-    wire ifsigned;
     wire ebreak;
     wire [4:0] rd;
     //state machine
     wire IFU_IDU_fire,IDU_EXU_fire;
-    reg state,next_state;
+    reg state;
     localparam IDLE=1'b0,WAIT=1'b1;
     assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;//IDU is empty,IFU pop->IDU push
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;//EXU is empty,IDU pop->EXU push
     always @(posedge clk) begin
         if(rst)
             state<=IDLE;
-        else
-            state<=next_state;
+        else if(IFU_IDU_fire)
+            state<=WAIT;
+        else if(IDU_EXU_fire)
+            state<=IDLE;
     end
-    always @(*) begin
-        next_state=state;
-        case(state)
-            IDLE:if(IFU_IDU_fire)next_state=WAIT;//valid?
-            WAIT:if(IDU_EXU_fire)next_state=IDLE;//ready?
-        endcase
-    end 
     assign IFU_IDU_ready=state==IDLE;
     assign IDU_EXU_valid=state==WAIT; 
     //FIFO
-    reg[31:0] inst_reg,pc_reg,snpc_reg;//FIFO
-    wire [31:0] inst_out,pc_out,snpc_out;
+    reg[31:0] inst_reg,pc_reg;//FIFO
+    wire [31:0] inst_out,pc_out;
     always @(posedge clk) begin
-        if(rst)begin
-            {inst_reg,pc_reg,snpc_reg}<=96'h0;
-        end
-        else if(IFU_IDU_fire)begin
-            {inst_reg,pc_reg,snpc_reg}<={inst,pc,snpc};
+        if(IFU_IDU_fire)begin
+            {inst_reg,pc_reg}<={inst,pc};
         end
     end
-    assign {inst_out,pc_out,snpc_out}={inst_reg,pc_reg,snpc_reg};
+    assign {inst_out,pc_out}={inst_reg,pc_reg};
     //function logic
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil;
     wire [6:0]opcode;
@@ -66,7 +57,7 @@ module ysyx_26040117_IDU(clk,rst,
     wire funct3_zero;
     wire [31:0]immI,immS,immB,immU,immJ;
     assign funct3_zero=~(|funct3);
-    assign ebreak=inst_out==32'b00000000000100000000000001110011;
+    assign ebreak=type_I_privil&&funct3_zero&&(immI[11:0]==12'b1);
     assign opcode=inst_out[6:0];
     assign rd=inst_out[11:7];
     assign rs1=inst_out[19:15];
@@ -99,11 +90,7 @@ module ysyx_26040117_IDU(clk,rst,
                 (immU&{32{type_U}})|
                 (immJ&{32{type_J}});
     assign funct3=inst_out[14:12];
-    assign op = {1'b1,inst_out[30],funct3}&{type_B,type_R||(type_I_compute&&(funct3==3'b101)),{3{type_R||type_I_compute||type_B||trap_ctrl[0]}}};//srai,srli?
-    
-    //assign wmask={{3{funct3[1]}}|{2'b0,funct3[0]} ,1'b1};//存储器掩码
-    assign wmask={2'b0,funct3[1:0]};
-    assign ifsigned=~funct3[2];
+
 `ifdef PERF_COUNTER
 
     reg [63:0] idu_decode_count;

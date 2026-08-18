@@ -8,7 +8,7 @@ const char *regs[] = {
 };
 void isa_reg_display(CPU_state* dut_r) {
     int i;
-    for(i=0;i<32;i++){
+    for(i=0;i<15;i++){
         printf("%-4s 0x%08X\n",regs[i],dut_r->gpr[i]);
     }
     printf("pc   0x%08X\n",dut_r->pc);
@@ -16,7 +16,7 @@ void isa_reg_display(CPU_state* dut_r) {
 bool isa_difftest_checkregs(CPU_state *ref_r,CPU_state * dut_r){
     int i;
     bool flag=true;
-    for(i=0;i<32;i++){
+    for(i=0;i<16;i++){
         if(ref_r->gpr[i]!=dut_r->gpr[i]){
             printf("difftest error at %s gpr_ref=%x,gpr_dut=%x\n",regs[i],ref_r->gpr[i],dut_r->gpr[i]);        
             flag=false;

@@ -1,6 +1,6 @@
 module ysyx_26040117_LSU (clk,rst,
     reqValid,respReady,wen,addr,wdata_in,size,ifsigned,
-    respValid,rdata_out2,rresp_out,bresp_out,
+    respValid,rdata_out2,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
@@ -11,12 +11,9 @@ module ysyx_26040117_LSU (clk,rst,
 
     output respValid;
     output [31:0]rdata_out2;
-    output [1:0]rresp_out,bresp_out;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
     output[110:0] LSU_MEM_wrapper;
-
-
     //read
     wire[31:0] rdata;
     wire[1:0] rresp;
@@ -156,22 +153,19 @@ module ysyx_26040117_LSU (clk,rst,
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
     reg[31:0] rdata_reg;
-    reg[1:0] rresp_reg,bresp_reg;
     reg lsu_buf_valid,is_read;
     wire[31:0] rdata_out;
     always @(posedge clk) begin
         if(rst)begin
-            {rdata_reg,rresp_reg,bresp_reg,lsu_buf_valid,is_read}<=38'd0;
+            {rdata_reg,lsu_buf_valid,is_read}<=34'd0;
         end else begin
             if(respValid&&respReady)
                lsu_buf_valid<=1'b0;
             else if(rfire)begin
                 rdata_reg<=rdata;
-                rresp_reg<=rresp;
                 lsu_buf_valid<=1'b1;
                 is_read<=1'b1;
             end else if(bfire)begin
-                bresp_reg<=bresp;
                 lsu_buf_valid<=1'b1;
                 is_read<=1'b0;
             end
@@ -179,8 +173,6 @@ module ysyx_26040117_LSU (clk,rst,
     end
     assign respValid=lsu_buf_valid||rfire||bfire;
     assign rdata_out=lsu_buf_valid&&is_read?rdata_reg:rdata;
-    assign rresp_out=lsu_buf_valid&&is_read?rresp_reg:rresp;
-    assign bresp_out=lsu_buf_valid&&!is_read?bresp_reg:bresp;
     //read function
     reg[31:0] rdata2;
     wire[31:0] bitmask,bitnmask;

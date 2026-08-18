@@ -19,14 +19,14 @@
 #include <memory/paddr.h>
 static void diff_set_regs(void * diff_context){
     CPU_state* ctx=(CPU_state*)diff_context;
-    for(int i=0;i<32;i++){
+    for(int i=0;i<16;i++){
         cpu.gpr[i]=ctx->gpr[i];
     } 
     cpu.pc=ctx->pc;
 }
 static void diff_get_regs(void* diff_context){
     CPU_state* ctx=(CPU_state*)diff_context;
-    for(int i=0;i<32;i++){
+    for(int i=0;i<16;i++){
         ctx->gpr[i]=cpu.gpr[i];
     }
     ctx->pc=cpu.pc;
