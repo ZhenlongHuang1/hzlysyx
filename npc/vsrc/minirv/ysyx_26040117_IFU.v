@@ -48,7 +48,7 @@ module ysyx_26040117_IFU #(
     end
     wire IDLE_fire;
     assign IDLE_fire=state==IDLE&&WBU_IFU_fire;
-    assign arvalid=state==WAIT_READY;
+    assign arvalid=state==WAIT_READY&&!rst;
     assign rready=state==WAIT_VALID&&IFU_IDU_ready;
     assign IFU_IDU_valid=(state==WAIT_VALID)&&rvalid;
     assign WBU_IFU_ready=state==IDLE;

@@ -113,7 +113,7 @@ module ysyx_26040117_ICache(
     wire [7:0]arlen;
     assign arlen=cacheable?BURST_LEN:8'd0;
     assign araddr_MEM={araddr[31:OFFSET_WIDTH],cacheable?{OFFSET_WIDTH{1'b0}}:araddr[OFFSET_WIDTH-1:0]};
-    assign arvalid_MEM=(state==IDLE)&&!rvalid_hit&&arvalid&&!hit;
+    assign arvalid_MEM=!rst&&(state==IDLE)&&!rvalid_hit&&arvalid&&!hit;
     assign rready_MEM=state==MISS;
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr_MEM,arlen,rready_MEM};
     assign {arready_MEM,rvalid_MEM,rdata_MEM,rlast}=MEM_ICACHE_wrapper;
