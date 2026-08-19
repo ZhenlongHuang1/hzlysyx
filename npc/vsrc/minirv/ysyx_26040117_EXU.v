@@ -1,7 +1,7 @@
 module ysyx_26040117_EXU(clk,rst,
     IDU_EXU_ready,IDU_EXU_valid,src1,src2,imm,mytype,funct,
     IDU_wrapper,
-    EXU_WBU_ready,EXU_WBU_valid,result,IDU_wrapper_out,src1_out,src2_out,imm_out,mytype_out,funct_out
+    EXU_WBU_ready,EXU_WBU_valid,result,aux,IDU_wrapper_out,mytype_out,funct_out
 );
     input clk,rst;
     //IDU-EXU
@@ -16,8 +16,8 @@ module ysyx_26040117_EXU(clk,rst,
     input EXU_WBU_ready;
     output EXU_WBU_valid;
     output reg [31:0]result;
-    output[40:0] IDU_wrapper_out;
-    output[31:0]src1_out,src2_out,imm_out;
+    output [31:0] aux;
+    output [8:0] IDU_wrapper_out;
     output [8:0]mytype_out;
     output [3:0]funct_out;
 
@@ -43,27 +43,30 @@ module ysyx_26040117_EXU(clk,rst,
     reg [8:0] mytype_reg;
     reg [3:0] funct_reg;
     wire [31:0] pc_out;
+    wire[2:0] trap_ctrl_out;
+    wire [31:0]src1_out,src2_out,imm_out;
     always @(posedge clk) begin
         if(IDU_EXU_fire)begin
             {IDU_wrapper_reg,src1_reg,src2_reg,imm_reg,mytype_reg,funct_reg}<={IDU_wrapper,src1,src2,imm,mytype,funct};
         end
     end
-    assign {IDU_wrapper_out,src1_out,src2_out,imm_out,mytype_out,funct_out}={IDU_wrapper_reg,src1_reg,src2_reg,imm_reg,mytype_reg,funct_reg};
+    assign {IDU_wrapper_out,src1_out,src2_out,imm_out,mytype_out,funct_out}={IDU_wrapper_reg[40:32],src1_reg,src2_reg,imm_reg,mytype_reg,funct_reg};
     assign pc_out=IDU_wrapper_reg[31:0];
+    assign trap_ctrl_out=IDU_wrapper_reg[40:38];
     //function 
-    wire [31:0] num1,num2,normal_num2;
-    wire is_link = mytype_out[3]||mytype_out[2];//jal,jalr
+    wire [31:0] num1,num2;
     wire is_slt  =(~funct_out[2])&&funct_out[1];
-    assign num1=is_link?pc_out:src1_out;
-    assign num2=is_link?32'd4:normal_num2;
-    assign normal_num2= ({32{mytype_out[8]||mytype_out[4]}}&src2_out)|
-                 ({32{|mytype_out[7:5]}}&imm_out);
+    assign num1=({32{(|mytype_out[8:4]) || trap_ctrl_out[0]}} & src1_out)|//alu,alui,load,store,branch,csrr
+                 ({32{(|mytype_out[3:1]) || trap_ctrl_out[1]}} & pc_out);//jalr,jal,auipc,ecall
+    assign num2= ({32{mytype_out[8]||mytype_out[4]}}&src2_out)|//alu,branch
+                 ({32{(|mytype_out[7:5])||(|mytype_out[1:0])}}&imm_out)|//alui,load,store,lui,auipc
+                 {29'd0,|mytype_out[3:2],2'd0};//jal,jalr,4
 
     wire sub,carry,overflow,zero,sless,less;
     wire[31:0] t_no_cin,result0;
     assign sub =mytype_out[4]||(mytype_out[8]&&funct_out[3])||((mytype_out[8]||mytype_out[7])&&is_slt);
     assign t_no_cin={32{sub}}^num2;
-    assign {carry,result0}=num1+t_no_cin+sub;//adder
+    assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+sub;//adder
     assign overflow=(num1[31]==t_no_cin[31])&&(result0[31]!=num1[31]);
     assign zero=~(|result0);
     assign sless=overflow^result0[31];
@@ -99,4 +102,11 @@ module ysyx_26040117_EXU(clk,rst,
             endcase
         end
     end
+    wire[31:0] aux_num1,aux_num2,aux0;
+    assign aux_num1=({32{mytype_out[2]||mytype_out[4]}}&pc_out)|
+                     ({32{mytype_out[3]}}&src1_out);
+    assign aux_num2=({32{mytype_out[6]}}&src2_out)|
+                     ({32{(|mytype_out[4:2])||trap_ctrl_out[0]}}&imm_out);
+    assign aux0=aux_num1+aux_num2;
+    assign aux={aux0[31:1],aux0[0]&&~mytype_out[3]};
 endmodule

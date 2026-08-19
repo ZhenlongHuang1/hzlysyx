@@ -142,16 +142,15 @@ module ysyx_26040117 #(
     );
     //Execution Unit
     wire EXU_WBU_ready,EXU_WBU_valid;
-    wire [31:0]result;
-    wire [31:0] exu_wbu_src1,exu_wbu_src2,exu_wbu_imm;
+    wire [31:0]result,aux;
     wire [8:0] exu_wbu_mytype;
     wire [3:0] exu_wbu_funct;
-    wire[40:0]EXU_wrapper; 
+    wire [8:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.src1(src1),.src2(src2),.imm(imm),.funct(funct),.mytype(mytype),
         .IDU_wrapper(IDU_wrapper),
-        .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.result(result),
-        .IDU_wrapper_out(EXU_wrapper),.src1_out(exu_wbu_src1),.src2_out(exu_wbu_src2),.imm_out(exu_wbu_imm),.funct_out(exu_wbu_funct),.mytype_out(exu_wbu_mytype)
+        .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.result(result),.aux(aux),
+        .IDU_wrapper_out(EXU_wrapper),.funct_out(exu_wbu_funct),.mytype_out(exu_wbu_mytype)
     );
 
     //WriteBack Unit
@@ -160,9 +159,9 @@ module ysyx_26040117 #(
     wire [2:0]lsu_size;
     wire ifsigned_out;
     ysyx_26040117_WBU WBU1(.clk(clock),.rst(reset),
-        .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.EXU_wrapper(EXU_wrapper),.src1(exu_wbu_src1),.src2(exu_wbu_src2),.imm(exu_wbu_imm),.funct(exu_wbu_funct),.mytype(exu_wbu_mytype),.result(result),
+        .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.EXU_wrapper(EXU_wrapper),.funct(exu_wbu_funct),.mytype(exu_wbu_mytype),.result(result),.aux(aux),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen),
-        .reqValid(lsu_reqValid),.respReady(lsu_respReady),.respValid(lsu_respValid),.lsu_wen(lsu_wen),.result_out(lsu_addr),.src2_out(lsu_wdata),.wmask_out(lsu_size),.ifsigned_out(ifsigned_out),.ramdata(lsu_rdata)
+        .reqValid(lsu_reqValid),.respReady(lsu_respReady),.respValid(lsu_respValid),.lsu_wen(lsu_wen),.result_out(lsu_addr),.aux_out(lsu_wdata),.wmask_out(lsu_size),.ifsigned_out(ifsigned_out),.ramdata(lsu_rdata)
     );
     //Load-Store Unit
     wire [40:0]MEM_LSU_wrapper;

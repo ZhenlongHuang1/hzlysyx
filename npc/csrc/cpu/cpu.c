@@ -138,14 +138,14 @@ static void execute(uint64_t n){
             single_cycle();
             if(npc_state.state!=NPC_RUNNING)return;
         }
-        cpu_pc=DWBU_PC;
+        cpu_pc=DIFU_PC;
         cpu_dnpc=DIFU_DNPC;
         inst=DIDU_INST;
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
 
         int trap_ctrl=DWBU_TRAP_CTRL;
-        int csr_addr=DWBU_IMM&0xfff;
+        int csr_addr=DWBU_AUX&0xfff;
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
             difftest_skip_ref();
         }

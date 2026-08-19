@@ -45,10 +45,7 @@ module ysyx_26040117_IDU(clk,rst,
     reg[31:0] inst_reg,pc_reg;//FIFO
     wire [31:0] inst_out,pc_out;
     always @(posedge clk) begin
-        if(rst)begin
-            {inst_reg,pc_reg}<=64'h0;
-        end
-        else if(IFU_IDU_fire)begin
+        if(IFU_IDU_fire)begin
             {inst_reg,pc_reg}<={inst,pc};
         end
     end
