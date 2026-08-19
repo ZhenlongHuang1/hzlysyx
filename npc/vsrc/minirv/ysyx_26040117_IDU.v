@@ -90,6 +90,14 @@ module ysyx_26040117_IDU(clk,rst,
                 (immU&{32{type_U}})|
                 (immJ&{32{type_J}});
     assign funct3=inst_out[14:12];
+`ifndef STA_MODE
+    import "DPI-C" function void npc_trap();
+    always@(posedge clk)begin
+        if(ebreak&&!rst&&IDU_EXU_fire)begin
+            npc_trap();
+        end
+    end
+`endif
 
 `ifdef PERF_COUNTER
 

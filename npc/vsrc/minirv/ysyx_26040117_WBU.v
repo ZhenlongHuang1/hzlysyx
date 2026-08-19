@@ -87,14 +87,6 @@ module ysyx_26040117_WBU(clk,rst,
                 ({32{(|mytype_out[8:7]) || (|mytype_out[3:0])}}&result_out)|
                 ({32{trap_ctrl_out[0]}}&csr_rdata);
     assign jump=(mytype_out[3]||mytype_out[2]||privil||(mytype_out[4]&&br_token));
-`ifndef STA_MODE
-    import "DPI-C" function void npc_trap();
-    always@(posedge clk)begin
-        if(ebreak_out&&!rst&&WBU_IFU_fire)begin
-            npc_trap();
-        end
-    end
-`endif
     //Control Status Register
 
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
