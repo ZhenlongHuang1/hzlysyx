@@ -194,6 +194,7 @@ module ysyx_26040117_LSU (clk,rst,
             default:rdata2=rdata_out;
         endcase
     end
+`ifndef STA_MODE
     //difftest
     import "DPI-C" function void difftest_skip_ref();
     wire is_mimo,is_mrom,is_sram,is_flash,is_psram,is_sdram;
@@ -203,7 +204,6 @@ module ysyx_26040117_LSU (clk,rst,
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
     assign is_mimo =reqValid&&!is_mrom&&!is_sram&&!is_flash&&!is_psram&&!is_sdram;
-`ifndef STA_MODE
     always @(posedge clk) begin
        if(is_mimo&&respReady&&respValid)
            difftest_skip_ref();
