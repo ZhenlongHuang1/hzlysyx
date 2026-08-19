@@ -123,7 +123,7 @@ module ysyx_26040117 #(
     wire[3:0]funct;
     wire[8:0]mytype;//0:lui;    1:auipc;    2:jal;  3:jalr;  4:跳转;  5:load;  6:store;  7:立即数计算;  8:寄存器计算
 
-    wire[40:0]IDU_wrapper;
+    wire[39:0]IDU_wrapper;
     wire[4:0] rs1,rs2;
     ysyx_26040117_IDU IDU1(.clk(clock),.rst(reset),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),
@@ -145,7 +145,7 @@ module ysyx_26040117 #(
     wire [31:0]result,aux;
     wire [8:0] exu_wbu_mytype;
     wire [3:0] exu_wbu_funct;
-    wire [8:0]EXU_wrapper; 
+    wire [7:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.src1(src1),.src2(src2),.imm(imm),.funct(funct),.mytype(mytype),
         .IDU_wrapper(IDU_wrapper),
@@ -178,7 +178,7 @@ module ysyx_26040117 #(
     );
 `ifdef PERF_COUNTER
     wire perf_done;
-    assign perf_done=WBU1.ebreak_out&&WBU1.WBU_IFU_fire;
+    assign perf_done=IDU1.ebreak&&IDU1.IDU_EXU_fire;
     always @(posedge clock) begin
         if(!reset&&perf_done)begin
             $strobe("Performance Counters");

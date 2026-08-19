@@ -16,8 +16,8 @@ module ysyx_26040117_IDU(clk,rst,
     output [3:0] funct;
     output[31:0] imm;
     output [8:0] mytype;
-    output[40:0]IDU_wrapper;
-    assign IDU_wrapper={trap_ctrl,ebreak,rd,pc_out};
+    output[39:0]IDU_wrapper;
+    assign IDU_wrapper={trap_ctrl,rd,pc_out};
     assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
     output [4:0] rs1,rs2;

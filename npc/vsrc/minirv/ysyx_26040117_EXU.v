@@ -10,14 +10,14 @@ module ysyx_26040117_EXU(clk,rst,
     input[31:0]src1,src2,imm;
     input [8:0]mytype;
     input [3:0]funct;
-    input[40:0]IDU_wrapper;
+    input[39:0]IDU_wrapper;
     
     //EXU-WBU
     input EXU_WBU_ready;
     output EXU_WBU_valid;
     output reg [31:0]result;
     output [31:0] aux;
-    output [8:0] IDU_wrapper_out;
+    output [7:0] IDU_wrapper_out;
     output [8:0]mytype_out;
     output [3:0]funct_out;
 
@@ -38,7 +38,7 @@ module ysyx_26040117_EXU(clk,rst,
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_WBU_fire=EXU_WBU_ready&&EXU_WBU_valid;
     //FIFO
-    reg[40:0] IDU_wrapper_reg;
+    reg[39:0] IDU_wrapper_reg;
     reg [31:0] src1_reg,src2_reg,imm_reg;
     reg [8:0] mytype_reg;
     reg [3:0] funct_reg;
@@ -50,9 +50,9 @@ module ysyx_26040117_EXU(clk,rst,
             {IDU_wrapper_reg,src1_reg,src2_reg,imm_reg,mytype_reg,funct_reg}<={IDU_wrapper,src1,src2,imm,mytype,funct};
         end
     end
-    assign {IDU_wrapper_out,src1_out,src2_out,imm_out,mytype_out,funct_out}={IDU_wrapper_reg[40:32],src1_reg,src2_reg,imm_reg,mytype_reg,funct_reg};
+    assign {IDU_wrapper_out,src1_out,src2_out,imm_out,mytype_out,funct_out}={IDU_wrapper_reg[39:32],src1_reg,src2_reg,imm_reg,mytype_reg,funct_reg};
     assign pc_out=IDU_wrapper_reg[31:0];
-    assign trap_ctrl_out=IDU_wrapper_reg[40:38];
+    assign trap_ctrl_out=IDU_wrapper_reg[39:37];
     //function 
     wire [31:0] num1,num2;
     wire is_slt  =(~funct_out[2])&&funct_out[1];

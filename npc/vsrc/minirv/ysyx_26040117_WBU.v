@@ -11,7 +11,7 @@ module ysyx_26040117_WBU(clk,rst,
     input [31:0] result,aux;
     input [8:0] mytype;
     input [3:0] funct;
-    input [8:0]EXU_wrapper;
+    input [7:0]EXU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
@@ -30,8 +30,7 @@ module ysyx_26040117_WBU(clk,rst,
     //decompression
     wire [2:0]trap_ctrl;//0:csrr,1:ecall,2:mret,
     wire [4:0]rd;
-    wire ebreak;
-    assign {trap_ctrl,ebreak,rd}=EXU_wrapper;
+    assign {trap_ctrl,rd}=EXU_wrapper;
     assign ifsigned_out=~funct_out[2];
     assign wmask_out={1'b0,funct_out[1:0]};
     //WBU-LSU
@@ -61,19 +60,17 @@ module ysyx_26040117_WBU(clk,rst,
     reg [2:0] funct_reg;
     reg [2:0]trap_ctrl_reg;//0:csrr,1:ecall,2:mret,
     reg [4:0]rd_reg;
-    reg ebreak_reg;
     wire [8:0] mytype_out;
     wire [2:0] funct_out;
     wire [2:0]trap_ctrl_out;//0:csrr,1:ecall,2:mret,
-    wire ebreak_out;
     always @(posedge clk) begin
         if(EXU_WBU_fire)begin
-            {result_reg,aux_reg,mytype_reg,funct_reg,trap_ctrl_reg,rd_reg,ebreak_reg}<={
-                result,aux,mytype,funct[2:0],trap_ctrl,rd,ebreak};
+            {result_reg,aux_reg,mytype_reg,funct_reg,trap_ctrl_reg,rd_reg}<={
+                result,aux,mytype,funct[2:0],trap_ctrl,rd};
         end
     end
-    assign {result_out,aux_out,mytype_out,funct_out,trap_ctrl_out,rd_out,ebreak_out}={
-        result_reg,aux_reg,mytype_reg,funct_reg,trap_ctrl_reg,rd_reg,ebreak_reg};
+    assign {result_out,aux_out,mytype_out,funct_out,trap_ctrl_out,rd_out}={
+        result_reg,aux_reg,mytype_reg,funct_reg,trap_ctrl_reg,rd_reg};
 
     //function
     wire [31:0] csr_rdata;
