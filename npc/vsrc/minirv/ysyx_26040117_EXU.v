@@ -1,7 +1,7 @@
 module ysyx_26040117_EXU(clk,rst,
     IDU_EXU_ready,IDU_EXU_valid,src1,src2,imm,mytype,funct,
     IDU_wrapper,
-    EXU_LSU_ready,EXU_LSU_valid,result,aux,IDU_wrapper_out,mytype_out,funct_out
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,IDU_wrapper_out,mytype_out,funct3
 );
     input clk,rst;
     //IDU-EXU
@@ -19,7 +19,8 @@ module ysyx_26040117_EXU(clk,rst,
     output [31:0] aux;
     output [7:0] IDU_wrapper_out;
     output [8:0]mytype_out;
-    output [3:0]funct_out;
+    output [2:0]funct3;
+    assign funct3=funct_out[2:0];
 
     //state machine
     wire IDU_EXU_fire,EXU_LSU_fire;
@@ -45,6 +46,7 @@ module ysyx_26040117_EXU(clk,rst,
     wire [31:0] pc_out;
     wire[2:0] trap_ctrl_out;
     wire [31:0]src1_out,src2_out,imm_out;
+    wire [3:0]funct_out;
     always @(posedge clk) begin
         if(IDU_EXU_fire)begin
             {IDU_wrapper_reg,src1_reg,src2_reg,imm_reg,mytype_reg,funct_reg}<={IDU_wrapper,src1,src2,imm,mytype,funct};

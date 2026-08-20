@@ -144,26 +144,25 @@ module ysyx_26040117 #(
     wire EXU_LSU_ready,EXU_LSU_valid;
     wire [31:0]result,aux;
     wire [8:0] exu_lsu_mytype;
-    wire [3:0] exu_lsu_funct;
+    wire [2:0] exu_lsu_funct3;
     wire [7:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.src1(src1),.src2(src2),.imm(imm),.funct(funct),.mytype(mytype),
         .IDU_wrapper(IDU_wrapper),
         .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),
-        .IDU_wrapper_out(EXU_wrapper),.funct_out(exu_lsu_funct),.mytype_out(exu_lsu_mytype)
+        .IDU_wrapper_out(EXU_wrapper),.funct3(exu_lsu_funct3),.mytype_out(exu_lsu_mytype)
     );
     //Load-Store Unit
     wire LSU_WBU_ready,LSU_WBU_valid;
     wire [8:0] lsu_wbu_mytype;
-    wire[3:0] lsu_wbu_funct;
+    wire[2:0] lsu_wbu_funct3;
     wire[7:0] LSU_wrapper;
     wire[31:0] lsu_wbu_result,lsu_wbu_aux;
     wire [40:0]MEM_LSU_wrapper;
     wire [110:0]LSU_MEM_wrapper;
-    wire [31:0]lsu_rdata;
     ysyx_26040117_LSU LSU1(.clk(clock),.rst(reset),
-        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),.EXU_wrapper(EXU_wrapper),.funct(exu_lsu_funct),.mytype(exu_lsu_mytype),
-        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.result_out(lsu_wbu_result),.aux_out(lsu_wbu_aux),.LSU_wrapper(LSU_wrapper),.funct_out(lsu_wbu_funct),.mytype_out(lsu_wbu_mytype),.rdata_out2(lsu_rdata),
+        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),.EXU_wrapper(EXU_wrapper),.funct3(exu_lsu_funct3),.mytype(exu_lsu_mytype),
+        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.result_out(lsu_wbu_result),.aux_out(lsu_wbu_aux),.LSU_wrapper(LSU_wrapper),.funct3_out(lsu_wbu_funct3),.mytype_out(lsu_wbu_mytype),
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
     );
     ysyx_26040117_arbiter arbiter1(.clk(clock),.rst(reset),
@@ -174,7 +173,7 @@ module ysyx_26040117 #(
 
     //WriteBack Unit
     ysyx_26040117_WBU WBU1(.clk(clock),.rst(reset),
-        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.LSU_wrapper(LSU_wrapper),.funct(lsu_wbu_funct),.mytype(lsu_wbu_mytype),.result(lsu_wbu_result),.aux(lsu_wbu_aux),.ramdata(lsu_rdata),
+        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.LSU_wrapper(LSU_wrapper),.funct3(lsu_wbu_funct3),.mytype(lsu_wbu_mytype),.result(lsu_wbu_result),.aux(lsu_wbu_aux),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen)
     );
 `ifdef PERF_COUNTER

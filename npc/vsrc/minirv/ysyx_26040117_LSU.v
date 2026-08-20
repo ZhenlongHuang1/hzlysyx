@@ -1,6 +1,6 @@
 module ysyx_26040117_LSU (clk,rst,
-    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct,
-    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,mytype_out,funct_out,rdata_out2,
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,
+    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,mytype_out,funct3_out,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
@@ -10,15 +10,14 @@ module ysyx_26040117_LSU (clk,rst,
     input [31:0]result,aux;
     input [7:0]EXU_wrapper;
     input [8:0]mytype;
-    input [3:0]funct;
+    input [2:0]funct3;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
     output [31:0]result_out,aux_out;
     output [7:0]LSU_wrapper;
     output [8:0]mytype_out;
-    output [3:0]funct_out;
-    output [31:0]rdata_out2;
+    output [2:0]funct3_out;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
     output[110:0] LSU_MEM_wrapper;
@@ -61,7 +60,7 @@ module ysyx_26040117_LSU (clk,rst,
     end
     wire arifsigned;
     assign rready=lsu_valid&&mytype_out[5]&&!arvalid&&LSU_WBU_ready;
-    assign {araddr,arsize,arifsigned}={result_out,{1'b0,funct_out[1:0]},~funct_out[2]};
+    assign {araddr,arsize,arifsigned}={result_reg,{1'b0,funct3_out[1:0]},~funct3_out[2]};
     //write
     wire awready,wready,bvalid,bready;
     reg awvalid,wvalid;
@@ -92,21 +91,19 @@ module ysyx_26040117_LSU (clk,rst,
     assign bready=lsu_valid&&mytype_out[6]&&!wvalid&&!awvalid&&LSU_WBU_ready;
     //write function
     wire[3:0] aw_mask;
-    assign wdata=(funct_out[1:0] == 2'b00) ? {4{aux_out[7:0]}} :   // sb
-                        (funct_out[1:0] == 2'b01) ? {2{aux_out[15:0]}} :  // sh
+    assign wdata=(funct3_out[1:0] == 2'b00) ? {4{aux_out[7:0]}} :   // sb
+                        (funct3_out[1:0] == 2'b01) ? {2{aux_out[15:0]}} :  // sh
                         aux_out;//sw
-    assign {awaddr,awsize}={result_out,{1'b0,funct_out[1:0]}};
+    assign {awaddr,awsize}={result_reg,{1'b0,funct3_out[1:0]}};
     assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
     assign wstrb=aw_mask<<awaddr[1:0];
     //interface
     assign LSU_MEM_wrapper={arsize,awsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
-    wire [31:0] rdata_out;
-    assign rdata_out=rdata;
     //read function
     reg[31:0] rdata2;
-    wire[31:0] bitmask,bitnmask;
+    wire[31:0] bitmask,bitnmask,rdata_out;
     wire[1:0] raddr_shift;
     wire [3:0] ar_mask;
     wire signbit;
@@ -114,32 +111,33 @@ module ysyx_26040117_LSU (clk,rst,
     assign bitmask={{8{ar_mask[3]}},{8{ar_mask[2]}},{8{ar_mask[1]}},{8{ar_mask[0]}}};
     assign bitnmask={{8{~ar_mask[3]&&arifsigned}},{8{~ar_mask[2]&&arifsigned}},{8{~ar_mask[1]&&arifsigned}},{8{~ar_mask[0]&&arifsigned}}};
     assign raddr_shift=araddr[1:0];
-    assign rdata_out2=(rdata2&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
+    assign rdata_out=(rdata2&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
     assign signbit=(~ar_mask[3]&&ar_mask[1]&&rdata2[15])||(~(|ar_mask[3:1])&&rdata2[7]);
     always @(*) begin
         case (raddr_shift)
-            2'b00: rdata2=rdata_out;
-            2'b01: rdata2={8'h0,rdata_out[31:8]}; 
-            2'b10: rdata2={16'h0,rdata_out[31:16]};
-            2'b11: rdata2={24'h0,rdata_out[31:24]};
-            default:rdata2=rdata_out;
+            2'b00: rdata2=rdata;
+            2'b01: rdata2={8'h0,rdata[31:8]}; 
+            2'b10: rdata2={16'h0,rdata[31:16]};
+            2'b11: rdata2={24'h0,rdata[31:24]};
+            default:rdata2=rdata;
         endcase
     end
     //FIFO
     reg [31:0]result_reg,aux_reg;
     reg [7:0]wrapper_reg;
     reg [8:0]mytype_reg;
-    reg [3:0]funct_reg;
+    reg [2:0]funct3_reg;
     always @(posedge clk) begin
         if(EXU_LSU_fire)begin
-            {result_reg,aux_reg,wrapper_reg,mytype_reg,funct_reg}<={result,aux,EXU_wrapper,mytype,funct};
+            {result_reg,aux_reg,wrapper_reg,mytype_reg,funct3_reg}<={result,aux,EXU_wrapper,mytype,funct3};
         end
     end
-    assign {result_out,aux_out,LSU_wrapper,mytype_out,funct_out}={result_reg,aux_reg,wrapper_reg,mytype_reg,funct_reg};
+    assign {aux_out,LSU_wrapper,mytype_out,funct3_out}={aux_reg,wrapper_reg,mytype_reg,funct3_reg};
+    assign result_out=mytype_out[5]?rdata_out:result_reg;
 `ifndef STA_MODE
     //difftest
     import "DPI-C" function void difftest_skip_ref();
-    wire[31:0] addr=result_out;
+    wire[31:0] addr=result_reg;
     wire is_mimo,is_mrom,is_sram,is_flash,is_psram,is_sdram;
     assign is_sdram=addr >= 32'ha0000000 && addr <= 32'hbfffffff;
     assign is_psram=addr >= 32'h80000000 && addr <= 32'h9fffffff;
