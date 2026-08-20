@@ -52,14 +52,19 @@ module ysyx_26040117_Xbar(clk,rst,
     assign aw_in_uart  =awaddr>=32'h10000000&&awaddr<=32'h10000fff;//UART16550
     assign aw_in_sram  =awaddr>=32'h0f000000&&awaddr<=32'h0f001fff;//SRAM
     assign aw_in_clint =awaddr>=32'h02000000&&awaddr<=32'h0200bfff;//CLINT
-    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi||aw_in_psram||aw_in_sdram||aw_in_gpio||aw_in_ps2||aw_in_vga||aw_in_chip); 
+    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi||aw_in_psram||aw_in_sdram||aw_in_gpio||aw_in_ps2||aw_in_vga||aw_in_chip);
     assign dec_clint_w=awvalid&&aw_in_clint;
-    
-    wire awfire,wfire;
+
+    wire awfire,wfire,bfire;
     assign awfire=awvalid&&awready;
     assign wfire=wvalid&&wready;
+    assign bfire=bvalid&&bready;
     always @(posedge clk) begin
         if(rst)begin
+            reg_soc_w<=1'b0;
+            reg_clint_w<=1'b0;
+            w_routed<=1'b0;
+        end else if(bfire)begin 
             reg_soc_w<=1'b0;
             reg_clint_w<=1'b0;
             w_routed<=1'b0;
@@ -95,8 +100,8 @@ module ysyx_26040117_Xbar(clk,rst,
 
     //clint
     wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;
-    wire[1:0] clint_bresp,clint_rresp; 
-    wire clint_arvalid,clint_arready,clint_rvalid; 
+    wire[1:0] clint_bresp,clint_rresp;
+    wire clint_arvalid,clint_arready,clint_rvalid;
     wire [31:0] clint_rdata;
     assign clint_arvalid=dec_clint_r;
     assign clint_awvalid=dec_clint_w;
@@ -115,12 +120,12 @@ module ysyx_26040117_Xbar(clk,rst,
     assign rlast=(clint_rvalid)||(io_master_rlast);
     assign rdata=({32{io_master_rvalid}}&io_master_rdata)|({32{clint_rvalid}}&clint_rdata);
 
-    assign awready=(dec_clint_w&&clint_awready)||(dec_soc_w&&io_master_awready);    
-    assign wready=(sel_clint_w&&clint_wready)||(sel_soc_w&&io_master_wready); 
+    assign awready=(dec_clint_w&&clint_awready)||(dec_soc_w&&io_master_awready);
+    assign wready=(sel_clint_w&&clint_wready)||(sel_soc_w&&io_master_wready);
     assign bvalid=clint_bvalid||io_master_bvalid;
     assign bresp=clint_bvalid?clint_bresp:io_master_bresp;
-    
-    //AXI-lite 
+
+    //AXI-lite
     wire         io_master_awready;
     wire         io_master_awvalid;
     wire [31:0]  io_master_awaddr;

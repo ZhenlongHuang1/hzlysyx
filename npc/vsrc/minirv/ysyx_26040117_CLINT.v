@@ -30,19 +30,9 @@ module ysyx_26040117_CLINT(clk,rst,
     input bready;
     output[1:0] bresp;
     //read
-    reg ar_done;
-    wire ar_ok;
     wire arfire,rfire;
     assign arfire=arvalid&&arready;
     assign rfire=rvalid&&rready;
-    always @(posedge clk) begin
-        if(rst) ar_done<=1'd0;
-        else begin
-            if(rfire) ar_done<=1'd0;
-            else if(arfire) ar_done<=1'b1;
-        end
-    end
-    assign ar_ok=arfire?1'b1:ar_done;
     assign arready=!rvalid;
     assign rresp=2'b00;
     //write
@@ -50,33 +40,24 @@ module ysyx_26040117_CLINT(clk,rst,
     assign wready=1'b0;
     assign bvalid=1'b0;
     assign bresp=2'b0;
-    //read FIFO
-    reg [31:0] araddr_reg;
-    wire [31:0] araddr_out;
-    always @(posedge clk) begin
-        if(rst) araddr_reg<=32'd0;
-        else if(arfire) araddr_reg<=araddr;
-    end
-    assign araddr_out=arfire?araddr:araddr_reg;
     always @(posedge clk) begin
         if(rst) rvalid<=1'b0;
-        else begin
-            if(rfire) rvalid<=1'b0;
-            else if(ar_ok&&!rvalid) rvalid<=1'b1;
+        else if(rfire) 
+            rvalid<=1'b0;
+        else if(arfire) begin
+            rvalid<=1'b1;
+            if(araddr==32'h0200bff8)
+                rdata<=mtime[31:0];
+            else if(araddr==32'h0200bffc)
+                rdata<=mtime[63:32];
         end
     end
     //function
     reg [63:0]mtime;
     always @(posedge clk) begin
         if(rst)mtime<=64'd0;
-        else mtime<=mtime+64'd1;
-    end
-    always @(posedge clk) begin
-        if(rst)begin
-        end else if(ar_ok&&!rvalid)begin
-            if(araddr_out==32'h0200bff8)rdata<=mtime[31:0];
-            else if(araddr_out==32'h0200bffc) rdata<=mtime[63:32];
-            else rdata<=32'd0;
+        else begin
+            mtime<=mtime+64'd1;
         end
     end
 endmodule

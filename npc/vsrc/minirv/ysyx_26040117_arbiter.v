@@ -18,8 +18,8 @@ module ysyx_26040117_arbiter(clk,rst,
     wire [7:0] ifu_arlen;
     assign {ifu_arsize,ifu_arvalid,ifu_araddr,ifu_arlen,ifu_rready}=IFU_MEM_wrapper;
     assign {lsu_arsize,lsu_awsize,lsu_arvalid,lsu_araddr,lsu_rready}=LSU_MEM_wrapper[110:71];
-    assign MEM_IFU_wrapper=ifu_fire?{arready,rvalid,rdata,rlast}:35'd0;
-    assign MEM_LSU_wrapper[40:5]=lsu_fire?{arready,rvalid,rdata,rresp}:36'd0;
+    assign MEM_IFU_wrapper={ifu_fire&&arready,ifu_fire&&rvalid,rdata,rlast};
+    assign MEM_LSU_wrapper[40:5]={lsu_fire&&arready,lsu_fire&&rvalid,rdata,rresp};
     //state machine
     reg [1:0] state,next_state;
     localparam IDLE=2'd0,WAIT_LSU=2'd1,WAIT_IFU=2'd2;

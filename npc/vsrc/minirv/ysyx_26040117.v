@@ -123,7 +123,7 @@ module ysyx_26040117 #(
     wire[3:0]funct;
     wire[8:0]mytype;//0:lui;    1:auipc;    2:jal;  3:jalr;  4:跳转;  5:load;  6:store;  7:立即数计算;  8:寄存器计算
 
-    wire[40:0]IDU_wrapper;
+    wire[39:0]IDU_wrapper;
     wire[4:0] rs1,rs2;
     ysyx_26040117_IDU IDU1(.clk(clock),.rst(reset),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),
@@ -141,35 +141,28 @@ module ysyx_26040117 #(
         .wdata(srcd),.waddr(wbu_register_rd[3:0]),.wen(wbu_register_wen)
     );
     //Execution Unit
-    wire EXU_WBU_ready,EXU_WBU_valid;
-    wire [31:0]result;
-    wire [31:0] exu_wbu_src1,exu_wbu_src2,exu_wbu_imm;
-    wire [8:0] exu_wbu_mytype;
-    wire [3:0] exu_wbu_funct;
-    wire[40:0]EXU_wrapper; 
+    wire EXU_LSU_ready,EXU_LSU_valid;
+    wire [31:0]result,aux;
+    wire [8:0] exu_lsu_mytype;
+    wire [2:0] exu_lsu_funct3;
+    wire [7:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.src1(src1),.src2(src2),.imm(imm),.funct(funct),.mytype(mytype),
         .IDU_wrapper(IDU_wrapper),
-        .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.result(result),
-        .IDU_wrapper_out(EXU_wrapper),.src1_out(exu_wbu_src1),.src2_out(exu_wbu_src2),.imm_out(exu_wbu_imm),.funct_out(exu_wbu_funct),.mytype_out(exu_wbu_mytype)
-    );
-
-    //WriteBack Unit
-    wire lsu_reqValid,lsu_respValid,lsu_respReady,lsu_wen;
-    wire [31:0]lsu_addr,lsu_wdata,lsu_rdata;
-    wire [2:0]lsu_size;
-    wire ifsigned_out;
-    ysyx_26040117_WBU WBU1(.clk(clock),.rst(reset),
-        .EXU_WBU_ready(EXU_WBU_ready),.EXU_WBU_valid(EXU_WBU_valid),.EXU_wrapper(EXU_wrapper),.src1(exu_wbu_src1),.src2(exu_wbu_src2),.imm(exu_wbu_imm),.funct(exu_wbu_funct),.mytype(exu_wbu_mytype),.result(result),
-        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen),
-        .reqValid(lsu_reqValid),.respReady(lsu_respReady),.respValid(lsu_respValid),.lsu_wen(lsu_wen),.result_out(lsu_addr),.src2_out(lsu_wdata),.wmask_out(lsu_size),.ifsigned_out(ifsigned_out),.ramdata(lsu_rdata)
+        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),
+        .IDU_wrapper_out(EXU_wrapper),.funct3(exu_lsu_funct3),.mytype_out(exu_lsu_mytype)
     );
     //Load-Store Unit
+    wire LSU_WBU_ready,LSU_WBU_valid;
+    wire [8:0] lsu_wbu_mytype;
+    wire[2:0] lsu_wbu_funct3;
+    wire[7:0] LSU_wrapper;
+    wire[31:0] lsu_wbu_result,lsu_wbu_aux;
     wire [40:0]MEM_LSU_wrapper;
     wire [110:0]LSU_MEM_wrapper;
     ysyx_26040117_LSU LSU1(.clk(clock),.rst(reset),
-        .reqValid(lsu_reqValid),.respValid(lsu_respValid),.respReady(lsu_respReady),.wen(lsu_wen),.addr(lsu_addr),.wdata_in(lsu_wdata),.size(lsu_size[2:0]),.ifsigned(ifsigned_out),
-        .rdata_out2(lsu_rdata),
+        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),.EXU_wrapper(EXU_wrapper),.funct3(exu_lsu_funct3),.mytype(exu_lsu_mytype),
+        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.result_out(lsu_wbu_result),.aux_out(lsu_wbu_aux),.LSU_wrapper(LSU_wrapper),.funct3_out(lsu_wbu_funct3),.mytype_out(lsu_wbu_mytype),
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
     );
     ysyx_26040117_arbiter arbiter1(.clk(clock),.rst(reset),
@@ -177,9 +170,15 @@ module ysyx_26040117 #(
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper),
         .master_wrapper_in(master_wrapper_in),.master_wrapper_out(master_wrapper_out)
     );
+
+    //WriteBack Unit
+    ysyx_26040117_WBU WBU1(.clk(clock),.rst(reset),
+        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.LSU_wrapper(LSU_wrapper),.funct3(lsu_wbu_funct3),.mytype(lsu_wbu_mytype),.result(lsu_wbu_result),.aux(lsu_wbu_aux),
+        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.jalr(jalr),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen)
+    );
 `ifdef PERF_COUNTER
     wire perf_done;
-    assign perf_done=WBU1.ebreak_out&&WBU1.WBU_IFU_fire;
+    assign perf_done=IDU1.ebreak&&IDU1.IDU_EXU_fire;
     always @(posedge clock) begin
         if(!reset&&perf_done)begin
             $strobe("Performance Counters");
