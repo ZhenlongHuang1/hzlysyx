@@ -1,19 +1,48 @@
 module ysyx_26040117_LSU (clk,rst,
-    reqValid,respReady,wen,addr,wdata_in,size,ifsigned,
-    respValid,rdata_out2,
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct,
+    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,mytype_out,funct_out,rdata_out2,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
-    input reqValid,respReady,wen;
-    input[31:0] addr,wdata_in;
-    input[2:0]size;
-    input ifsigned;
-
-    output respValid;
+    //EXU-LSU
+    input EXU_LSU_valid;
+    output EXU_LSU_ready;
+    input [31:0]result,aux;
+    input [7:0]EXU_wrapper;
+    input [8:0]mytype;
+    input [3:0]funct;
+    //LSU-WBU
+    input LSU_WBU_ready;
+    output LSU_WBU_valid;
+    output [31:0]result_out,aux_out;
+    output [7:0]LSU_wrapper;
+    output [8:0]mytype_out;
+    output [3:0]funct_out;
     output [31:0]rdata_out2;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
     output[110:0] LSU_MEM_wrapper;
+
+    reg lsu_valid;
+    wire wen,ren;
+    wire EXU_LSU_fire,LSU_WBU_fire;
+    assign wen=mytype[6]&&EXU_LSU_fire;
+    assign ren=mytype[5]&&EXU_LSU_fire;
+    assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
+    assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
+    assign EXU_LSU_ready=!lsu_valid;
+    assign LSU_WBU_valid=lsu_valid&&(!(|mytype_out[6:5])|| 
+            (mytype_out[5]&&!arvalid&&rvalid)||
+            (mytype_out[6]&&!awvalid&&!wvalid&&bvalid)
+    );
+    always @(posedge clk) begin
+        if(rst)
+            lsu_valid<=1'b0;
+        else if(EXU_LSU_fire)
+            lsu_valid<=1'b1;
+        else if(LSU_WBU_fire)
+            lsu_valid<=1'b0;
+    end
     //read
     wire[31:0] rdata;
     wire[1:0] rresp;
@@ -21,158 +50,60 @@ module ysyx_26040117_LSU (clk,rst,
     reg arvalid;
     wire [31:0] araddr;
     wire [2:0] arsize;
-    wire rIDLE_reqvalid,rfire,arfire;
-    reg[1:0] rstate,rnext_state;
-    localparam IDLE=2'd0,WAIT_READY=2'd1,WAIT_VALID=2'd2;
-    always @(posedge clk) begin
-        if(rst) rstate<=IDLE;
-        else rstate<=rnext_state;
-    end
-    always @(*) begin
-        rnext_state=rstate;
-        case(rstate)
-            IDLE:begin
-                if(arfire)rnext_state=WAIT_VALID;
-                else if(arvalid)rnext_state=WAIT_READY;
-            end
-            WAIT_READY:if(arfire)rnext_state=WAIT_VALID;
-            WAIT_VALID:if(rfire)rnext_state=IDLE;
-            default:rnext_state=rstate;
-        endcase
-    end
-    assign rfire=rvalid&&rready;
+    wire arfire;
     assign arfire=arvalid&&arready;
-    assign rIDLE_reqvalid=rstate==IDLE&&reqValid&&!wen;
     always @(posedge clk) begin
         if(rst) arvalid<=1'b0;
-        else begin
-            if(arfire)arvalid<=1'b0;
-            else if(rstate==WAIT_READY||rIDLE_reqvalid)arvalid<=1'b1;
-        end
+        else if(arfire)
+            arvalid<=1'b0;
+        else if(ren)
+            arvalid<=1'b1;
     end
-    assign rready=rstate==WAIT_VALID&&!lsu_buf_valid;
-    reg[31:0] araddr_reg;
-    reg[2:0] arsize_reg;
-    reg arifsigned_reg;
     wire arifsigned;
-    always@(posedge clk)begin
-        if(rst)begin
-            {araddr_reg,arsize_reg,arifsigned_reg}<=36'h0;
-        end else if(rIDLE_reqvalid)begin
-            {araddr_reg,arsize_reg,arifsigned_reg}<={addr,size[2:0],ifsigned};
-        end
-    end
-    assign {araddr,arsize,arifsigned}=rIDLE_reqvalid?{addr,size[2:0],ifsigned}:{araddr_reg,arsize_reg,arifsigned_reg};
+    assign rready=lsu_valid&&mytype_out[5]&&!arvalid&&LSU_WBU_ready;
+    assign {araddr,arsize,arifsigned}={result_out,{1'b0,funct_out[1:0]},~funct_out[2]};
     //write
     wire awready,wready,bvalid,bready;
     reg awvalid,wvalid;
     wire[1:0] bresp;
     wire [2:0] awsize;
-    wire aw_w_valid;
     wire [31:0] awaddr,wdata;
     wire [3:0] wstrb;
-    wire awIDLE_reqvalid,wIDLE_reqvalid,wfire,awfire,bfire;
-    reg[1:0] awstate,awnext_state,wstate,wnext_state;
-    always @(posedge clk) begin
-        if(rst) {awstate,wstate}<={IDLE,IDLE};
-        else {awstate,wstate}<={awnext_state,wnext_state};
-    end
+    wire wfire,awfire;
     //aw
-    always @(*) begin
-        awnext_state=awstate;
-        case(awstate)
-            IDLE:begin
-                if(awfire)awnext_state=WAIT_VALID;
-                else if(awvalid)awnext_state=WAIT_READY;
-            end
-            WAIT_READY:if(awfire)awnext_state=WAIT_VALID;
-            WAIT_VALID:if(bfire)awnext_state=IDLE;
-            default:awnext_state=awstate;
-        endcase
-    end
     assign awfire=awvalid&&awready;
-    assign awIDLE_reqvalid=awstate==IDLE&&reqValid&&wen;//modify?
     always @(posedge clk) begin
         if(rst) awvalid<=1'b0;
-        else begin
-            if(awfire)awvalid<=1'b0;
-            else if(awstate==WAIT_READY||awIDLE_reqvalid)awvalid<=1'b1;
-        end
+        else if(awfire)
+            awvalid<=1'b0;
+        else if(wen)
+            awvalid<=1'b1;
     end
     //w
-    always @(*) begin
-        wnext_state=wstate;
-        case(wstate)
-            IDLE:begin
-                if(wfire)wnext_state=WAIT_VALID;
-                else if(wvalid)wnext_state=WAIT_READY;
-            end
-            WAIT_READY:if(wfire)wnext_state=WAIT_VALID;
-            WAIT_VALID:if(bfire)wnext_state=IDLE;
-            default:wnext_state=wstate;
-        endcase
-    end
     assign wfire=wvalid&&wready;
-    assign wIDLE_reqvalid=wstate==IDLE&&reqValid&&wen;//modify?
     always @(posedge clk) begin
         if(rst) wvalid<=1'b0;
-        else begin
-            if(wfire)wvalid<=1'b0;
-            else if(wstate==WAIT_READY||wIDLE_reqvalid)wvalid<=1'b1;
-        end
+        else if(wfire)
+            wvalid<=1'b0;
+        else if(wen)
+            wvalid<=1'b1;
     end
     //b
-    assign aw_w_valid=awstate==WAIT_VALID&&wstate==WAIT_VALID;
-    assign bfire=bready&&bvalid;
-    assign bready=aw_w_valid&&!lsu_buf_valid;//modify?
+    assign bready=lsu_valid&&mytype_out[6]&&!wvalid&&!awvalid&&LSU_WBU_ready;
     //write function
-    wire[31:0] wdata_fomatted;
-    reg[31:0] awaddr_reg,wdata_reg;
-    reg[2:0] awsize_reg;
     wire[3:0] aw_mask;
-    wire[1:0] awaddr_shift;
-
-    always @(posedge clk) begin
-        if(rst) {awaddr_reg,awsize_reg}<=35'h0;
-        else if(awIDLE_reqvalid) {awaddr_reg,awsize_reg}<={addr,size[2:0]};
-    end
-    assign wdata_fomatted=(size[1:0] == 2'b00) ? {4{wdata_in[7:0]}} :   // sb
-                        (size[1:0] == 2'b01) ? {2{wdata_in[15:0]}} :  // sh
-                        wdata_in;//sw
-    always@(posedge clk)begin
-        if(rst) {wdata_reg}<=32'h0;
-        else if(wIDLE_reqvalid) {wdata_reg}<={wdata_fomatted};
-    end
-    assign {wdata}=wIDLE_reqvalid?{wdata_fomatted}:{wdata_reg};
-    assign {awaddr,awsize}=awIDLE_reqvalid?{addr,size[2:0]}:{awaddr_reg,awsize_reg};
-    assign awaddr_shift=awaddr[1:0];
+    assign wdata=(funct_out[1:0] == 2'b00) ? {4{aux_out[7:0]}} :   // sb
+                        (funct_out[1:0] == 2'b01) ? {2{aux_out[15:0]}} :  // sh
+                        aux_out;//sw
+    assign {awaddr,awsize}={result_out,{1'b0,funct_out[1:0]}};
     assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
-    assign wstrb=aw_mask<<awaddr_shift;
-    //FIFO
+    assign wstrb=aw_mask<<awaddr[1:0];
+    //interface
     assign LSU_MEM_wrapper={arsize,awsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
-    reg[31:0] rdata_reg;
-    reg lsu_buf_valid,is_read;
-    wire[31:0] rdata_out;
-    always @(posedge clk) begin
-        if(rst)begin
-            {rdata_reg,lsu_buf_valid,is_read}<=34'd0;
-        end else begin
-            if(respValid&&respReady)
-               lsu_buf_valid<=1'b0;
-            else if(rfire)begin
-                rdata_reg<=rdata;
-                lsu_buf_valid<=1'b1;
-                is_read<=1'b1;
-            end else if(bfire)begin
-                lsu_buf_valid<=1'b1;
-                is_read<=1'b0;
-            end
-        end
-    end
-    assign respValid=lsu_buf_valid||rfire||bfire;
-    assign rdata_out=lsu_buf_valid&&is_read?rdata_reg:rdata;
+    wire [31:0] rdata_out;
+    assign rdata_out=rdata;
     //read function
     reg[31:0] rdata2;
     wire[31:0] bitmask,bitnmask;
@@ -194,23 +125,38 @@ module ysyx_26040117_LSU (clk,rst,
             default:rdata2=rdata_out;
         endcase
     end
+    //FIFO
+    reg [31:0]result_reg,aux_reg;
+    reg [7:0]wrapper_reg;
+    reg [8:0]mytype_reg;
+    reg [3:0]funct_reg;
+    always @(posedge clk) begin
+        if(EXU_LSU_fire)begin
+            {result_reg,aux_reg,wrapper_reg,mytype_reg,funct_reg}<={result,aux,EXU_wrapper,mytype,funct};
+        end
+    end
+    assign {result_out,aux_out,LSU_wrapper,mytype_out,funct_out}={result_reg,aux_reg,wrapper_reg,mytype_reg,funct_reg};
 `ifndef STA_MODE
     //difftest
     import "DPI-C" function void difftest_skip_ref();
+    wire[31:0] addr=result_out;
     wire is_mimo,is_mrom,is_sram,is_flash,is_psram,is_sdram;
     assign is_sdram=addr >= 32'ha0000000 && addr <= 32'hbfffffff;
     assign is_psram=addr >= 32'h80000000 && addr <= 32'h9fffffff;
     assign is_flash=addr >= 32'h30000000 && addr <= 32'h3fffffff;
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
-    assign is_mimo =reqValid&&!is_mrom&&!is_sram&&!is_flash&&!is_psram&&!is_sdram;
+    assign is_mimo =(|mytype_out[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
     always @(posedge clk) begin
-       if(is_mimo&&respReady&&respValid)
+       if(is_mimo&&LSU_WBU_fire)
            difftest_skip_ref();
     end
 `endif
 `ifdef PERF_COUNTER
     reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;
+    wire rfire,bfire;
+    assign rfire=rvalid&&rready;
+    assign bfire=bvalid&&bready;
     always @(posedge clk) begin
         if(rst)begin
             lsu_load_count<=64'd0;
@@ -220,11 +166,11 @@ module ysyx_26040117_LSU (clk,rst,
         end else begin
             if(rfire)
                 lsu_load_count<=lsu_load_count+64'd1;
-            if((rstate==WAIT_VALID)&&!rvalid)
+            if(lsu_valid&&mytype_out[5]&&!arvalid&&!rvalid)
                 lsu_rwait_count<=lsu_rwait_count+64'd1;
             if(bfire)
                 lsu_store_count<=lsu_store_count+64'd1;
-            if(aw_w_valid&&!bvalid)
+            if(lsu_valid&&mytype_out[6]&&!awvalid&&!wvalid&&!bvalid)
                 lsu_bwait_count<=lsu_bwait_count+64'd1;
         end
     end
@@ -245,7 +191,7 @@ module ysyx_26040117_LSU (clk,rst,
             lsu_pending_wen       <= 1'b0;
         end else begin
             lsu_cycle <= lsu_cycle + 64'd1;
-            if (!lsu_pending&&(rIDLE_reqvalid||(awIDLE_reqvalid&&wIDLE_reqvalid)))begin
+            if (!lsu_pending&&(ren||wen))begin
                 lsu_start_cycle <= lsu_cycle;
                 lsu_pending     <= 1'b1;
                 lsu_pending_wen <= wen;

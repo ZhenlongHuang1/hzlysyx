@@ -1,7 +1,7 @@
 module ysyx_26040117_EXU(clk,rst,
     IDU_EXU_ready,IDU_EXU_valid,src1,src2,imm,mytype,funct,
     IDU_wrapper,
-    EXU_WBU_ready,EXU_WBU_valid,result,aux,IDU_wrapper_out,mytype_out,funct_out
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,IDU_wrapper_out,mytype_out,funct_out
 );
     input clk,rst;
     //IDU-EXU
@@ -12,9 +12,9 @@ module ysyx_26040117_EXU(clk,rst,
     input [3:0]funct;
     input[39:0]IDU_wrapper;
     
-    //EXU-WBU
-    input EXU_WBU_ready;
-    output EXU_WBU_valid;
+    //EXU-LSU
+    input EXU_LSU_ready;
+    output EXU_LSU_valid;
     output reg [31:0]result;
     output [31:0] aux;
     output [7:0] IDU_wrapper_out;
@@ -22,7 +22,7 @@ module ysyx_26040117_EXU(clk,rst,
     output [3:0]funct_out;
 
     //state machine
-    wire IDU_EXU_fire,EXU_WBU_fire;
+    wire IDU_EXU_fire,EXU_LSU_fire;
     reg state;
     localparam IDLE=0,WAIT=1;
     always @(posedge clk) begin
@@ -30,13 +30,13 @@ module ysyx_26040117_EXU(clk,rst,
             state<=IDLE;
         else if(IDU_EXU_fire)
             state<=WAIT;
-        else if(EXU_WBU_fire)
+        else if(EXU_LSU_fire)
             state<=IDLE;
     end
     assign IDU_EXU_ready=state==IDLE;
-    assign EXU_WBU_valid=state==WAIT;
+    assign EXU_LSU_valid=state==WAIT;
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
-    assign EXU_WBU_fire=EXU_WBU_ready&&EXU_WBU_valid;
+    assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     //FIFO
     reg[39:0] IDU_wrapper_reg;
     reg [31:0] src1_reg,src2_reg,imm_reg;
