@@ -18,9 +18,9 @@ module ysyx_26040117_ICache(
     assign arfire=arvalid&&arready;
     assign rfire=rvalid&&rready;
     assign rfire_MEM=rvalid_MEM&&rready_MEM;
-    wire cacheable;
-    reg cacheable_reg;
-    assign cacheable =araddr[31:29]==3'b101;//SDRAM
+    wire is_sdram;
+    reg is_sdram_reg;
+    assign is_sdram =araddr[31:29]==3'b101;//SDRAM
     //IFU-ICache
     assign arready=(state==IDLE)&&!rvalid_hit&&(hit||arready_MEM);
     assign rvalid=rvalid_hit;
@@ -40,7 +40,7 @@ module ysyx_26040117_ICache(
                 rdata_hit<=data_array[{req_index,req_offset}];
                 rvalid_hit<=1'b1;
             end else if((state==MISS)&&rfire_MEM)begin
-                if(offset_count==offset_reg||!cacheable_reg)begin
+                if(offset_count==offset_reg||!is_sdram_reg)begin
                     rdata_hit<=rdata_MEM;
                     rvalid_hit<=1'b1;
                 end
@@ -50,7 +50,7 @@ module ysyx_26040117_ICache(
     //ICache
     reg[31:0] data_array[0:DATA_DEPTH-1];
     reg[31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_array[0:(2**INDEX_WIDTH)-1];
-    reg[(2**INDEX_WIDTH)-1:0] valid_array;
+    reg[DATA_DEPTH-1:0] valid_array;
 
     wire [OFFSET_WIDTH-3:0] req_offset;
     reg  [OFFSET_WIDTH-3:0] offset_reg;
@@ -63,27 +63,32 @@ module ysyx_26040117_ICache(
     assign req_offset=araddr[OFFSET_WIDTH-1:2];
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    assign hit=cacheable&&valid_array[req_index]&&(tag_array[req_index]==req_tag);
+    assign hit=valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
     always @(posedge clk) begin
         if(rst) begin
             valid_array<=0;
         end else begin
             case(state)
                 IDLE:if(arfire&&!hit)begin
-                        cacheable_reg<=cacheable;
-                        if(cacheable)begin
-                            index_reg<=req_index;
-                            offset_reg<=req_offset;
-                            offset_count<=0;
-                            tag_array[req_index]<=req_tag;
-                        end
+                        is_sdram_reg<=is_sdram;
+                        index_reg<=req_index;
+                        offset_reg<=req_offset;
+                        offset_count<=0;
+                        tag_array[req_index]<=req_tag;
+                        if(tag_array[req_index]!=req_tag)
+                            valid_array[req_index*WORD_NUM +: WORD_NUM]<=0;
                 end
-                MISS:if(rfire_MEM&&cacheable_reg)begin
-                        data_array[{index_reg,offset_count}]<=rdata_MEM;
-                        if(!rlast)
-                            offset_count<=offset_count+1'b1;
-                        else 
-                            valid_array[index_reg]<=1'b1;
+                MISS:if(rfire_MEM)begin
+                        if(is_sdram_reg)begin
+                            data_array[{index_reg,offset_count}]<=rdata_MEM;
+                            valid_array[{index_reg,offset_count}]<=1'b1;
+                            if(!rlast)
+                                offset_count<=offset_count+1'b1;
+                        end else begin
+                            data_array[{index_reg,offset_reg}]<=rdata_MEM;
+                            valid_array[{index_reg,offset_reg}]<=1'b1;
+
+                        end
                     end
                 default:;
             endcase
@@ -111,8 +116,8 @@ module ysyx_26040117_ICache(
     wire rvalid_MEM,rready_MEM;
     wire [31:0] rdata_MEM,araddr_MEM;
     wire [7:0]arlen;
-    assign arlen=cacheable?BURST_LEN:8'd0;
-    assign araddr_MEM={araddr[31:OFFSET_WIDTH],cacheable?{OFFSET_WIDTH{1'b0}}:araddr[OFFSET_WIDTH-1:0]};
+    assign arlen=is_sdram?BURST_LEN:8'd0;
+    assign araddr_MEM={araddr[31:OFFSET_WIDTH],is_sdram?{OFFSET_WIDTH{1'b0}}:araddr[OFFSET_WIDTH-1:0]};
     assign arvalid_MEM=!rst&&(state==IDLE)&&!rvalid_hit&&arvalid&&!hit;
     assign rready_MEM=state==MISS;
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr_MEM,arlen,rready_MEM};
