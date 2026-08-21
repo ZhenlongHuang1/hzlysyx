@@ -6,7 +6,7 @@ module ysyx_26040117_ICache(
     input [34:0]MEM_ICACHE_wrapper,
     output[44:0]ICACHE_MEM_wrapper
 );
-    parameter OFFSET_WIDTH=4,INDEX_WIDTH=2;
+    parameter OFFSET_WIDTH=3,INDEX_WIDTH=2;
     localparam DATA_DEPTH=2**(OFFSET_WIDTH+INDEX_WIDTH-2);
     localparam BURST_LEN=(2**(OFFSET_WIDTH-2))-1;
     localparam WORD_NUM=2**(OFFSET_WIDTH-2);
