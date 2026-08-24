@@ -1,6 +1,6 @@
 module ysyx_26040117_LSU (clk,rst,
-    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,
-    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,mytype_out,funct3_out,
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,branch_decision,
+    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,mytype_out,funct3_out,branch_decision_out,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
@@ -11,6 +11,7 @@ module ysyx_26040117_LSU (clk,rst,
     input [7:0]EXU_wrapper;
     input [8:0]mytype;
     input [2:0]funct3;
+    input branch_decision;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
@@ -18,6 +19,7 @@ module ysyx_26040117_LSU (clk,rst,
     output [7:0]LSU_wrapper;
     output [8:0]mytype_out;
     output [2:0]funct3_out;
+    output branch_decision_out;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
     output[110:0] LSU_MEM_wrapper;
@@ -127,13 +129,16 @@ module ysyx_26040117_LSU (clk,rst,
     reg [7:0]wrapper_reg;
     reg [8:0]mytype_reg;
     reg [2:0]funct3_reg;
+    reg branch_decision_reg;
     always @(posedge clk) begin
         if(EXU_LSU_fire)begin
             {result_reg,aux_reg,wrapper_reg,mytype_reg,funct3_reg}<={result,aux,EXU_wrapper,mytype,funct3};
+            branch_decision_reg<=branch_decision;
         end
     end
     assign {aux_out,LSU_wrapper,mytype_out,funct3_out}={aux_reg,wrapper_reg,mytype_reg,funct3_reg};
     assign result_out=mytype_out[5]?rdata_out:result_reg;
+    assign branch_decision_out=branch_decision_reg;
 `ifndef STA_MODE
     //difftest
     import "DPI-C" function void difftest_skip_ref();

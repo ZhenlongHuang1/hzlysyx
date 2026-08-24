@@ -89,7 +89,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
 SYN_TOP = ysyx_26040117
-STA_FREQ_MHZ ?= 728
+STA_FREQ_MHZ ?= 1000
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
 YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 SYN_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
