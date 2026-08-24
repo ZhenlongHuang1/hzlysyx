@@ -8,7 +8,7 @@ module ysyx_26040117_CSR(clk,rst,
     input [11:0]csr_addr;
     input [31:0]src1,pc;
     output reg[31:0]rdata;
-    reg[63:0]mcycle;
+    reg[31:0]mcycle_lo,mcycle_hi;
     reg[31:0]wdata,mepc,mstatus,mcause,mtvec;
     always @(*)begin
         if(trap_ctrl[1])begin
@@ -17,8 +17,8 @@ module ysyx_26040117_CSR(clk,rst,
             rdata=mepc;
         end else begin
             case(csr_addr)
-                12'hb00:rdata=mcycle[31:0];
-                12'hb80:rdata=mcycle[63:32];
+                12'hb00:rdata=mcycle_lo;
+                12'hb80:rdata=mcycle_hi;
                 12'h341:rdata=mepc;
                 12'h300:rdata=mstatus;
                 12'h342:rdata=mcause;
@@ -36,20 +36,25 @@ module ysyx_26040117_CSR(clk,rst,
             default:wdata=0;
         endcase
     end
+    wire [31:0] lo_inc=mcycle_lo+32'd1;
+    wire [31:0] hi_inc=mcycle_hi+32'd1;
+    wire lo_wrap=&mcycle_lo;
     always @(posedge clk) begin
         if(rst)begin
             mstatus<=32'h1800;
             mcause<=32'h0;
         end else begin
-            mcycle<=mcycle+64'h1;
+            mcycle_lo<=lo_inc;
+            if(lo_wrap)
+                mcycle_hi<=hi_inc;
             if(wen)begin
                 if(trap_ctrl[1])begin
                     mepc<=pc;
                     mcause<=32'd11;
                 end else if(trap_ctrl[0])begin
                     case(csr_addr)
-                        12'hb00:mcycle[31:0]<=wdata;
-                        12'hb80:mcycle[63:32]<=wdata;
+                        12'hb00:mcycle_lo<=wdata;
+                        12'hb80:mcycle_hi<=wdata;
                         12'h341:mepc<=wdata;
                         12'h300:mstatus<=wdata;
                         12'h342:mcause<=wdata;
