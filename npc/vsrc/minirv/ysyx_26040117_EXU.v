@@ -72,30 +72,20 @@ module ysyx_26040117_EXU(clk,rst,
         end
     end
     assign {IDU_wrapper_out,mytype_out,funct_out}={IDU_wrapper_reg,mytype_reg,funct_reg};
-    //function 
+    //result function
     wire [31:0] num1,num2;
     assign num1=num1_reg;
     assign num2=num2_reg;
-    wire sub,carry,zero,sless,less;
+    wire sub,carry,sless,less;
     wire[31:0] t_no_cin,result0;
     assign sub =sub_reg;
     assign t_no_cin={32{sub}}^num2;
     assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+sub;//adder
-    assign zero=~(|result0);
     assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
     assign less=~carry;
-    always@(*)begin
-        branch_decision=1'b0;
-        case(funct_out[2:0])
-            3'b000:branch_decision=zero;//BEQ
-            3'b001:branch_decision=~zero;//BNE
-            3'b100:branch_decision=sless;//BLT
-            3'b101:branch_decision=~sless;//BGE
-            3'b110:branch_decision=less;//BLTU
-            3'b111:branch_decision=~less;//BGEU 
-            default:branch_decision=1'd0;
-        endcase
-    end
+    
+    wire signed [32:0] shift_src={funct_out[3]&num1[31],num1};
+    wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
     always @(*) begin
         result=result0;//load,store,jal,jalr
         if(mytype_out[8]||mytype_out[7])begin
@@ -107,17 +97,27 @@ module ysyx_26040117_EXU(clk,rst,
                 3'b110:result=num1|num2;//ORI,OR
                 3'b111:result=num1&num2;//ANDI,AND
                 3'b001:result=num1<<(num2[4:0]);//SLLI,SLL
-                3'b101:begin 
-                    if(funct_out[3])
-                        result=$signed(num1)>>>(num2[4:0]);//SRAI,SRA
-                    else
-                        result=num1>>(num2[4:0]);//SRLI,SRL
-                end
+                3'b101:result=shift_tmp[31:0];//1:SRAI,SRA;0:SRLI,SRL
                 default:result=32'd0;
             endcase
         end
     end
-
+    //branch function
+    wire cmp_eq=num1==num2;
+    wire cmp_lts=$signed(num1)<$signed(num2);
+    wire cmp_ltu=num1<num2;
+    reg branch_decision0;
+    always@(*)begin
+        branch_decision0=1'b0;
+        case(funct_out[2:1])
+            2'b00:branch_decision0=cmp_eq;//BEQ,BNE
+            2'b10:branch_decision0=cmp_lts;//BLT,BGE
+            2'b11:branch_decision0=cmp_ltu;//BLTU,BGEU
+            default:branch_decision0=1'd0;
+        endcase
+    end
+    assign branch_decision=funct_out[0]^branch_decision0;
+    //aux function
     wire[31:0] aux_num1,aux_num2,aux0;
     assign aux_num1=aux_num1_reg;
     assign aux_num2=aux_num2_reg;
