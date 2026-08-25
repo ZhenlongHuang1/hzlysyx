@@ -53,8 +53,7 @@ module ysyx_26040117_IFU #(
     assign IFU_IDU_valid=(state==WAIT_VALID)&&rvalid;
     assign WBU_IFU_ready=state==IDLE;
     //pc_next计算
-    wire[31:0]pc_next;
-    wire [31:0]snpc; 
+    wire[31:0]pc_next,snpc;
     assign snpc=pc+32'd4;
     assign pc_next=jump?dnpc:snpc_reg;//jump:JAL||JALR||跳转
     always@(posedge clk)begin
