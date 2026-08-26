@@ -9,8 +9,8 @@ AM_SRCS := riscv/ysyxsoc/start.S \
            platform/dummy/vme.c \
            platform/dummy/mpe.c \
 
+CFLAGS    += -Os -falign-loops=16:8
 CFLAGS    += -fdata-sections -ffunction-sections #函数和变量放到子段中
-CFLAGS    += -falign-loops=16:8
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
 LDFLAGS   += --gc-sections -e _start #回收无用段
 NPCFLAGS  += -b
