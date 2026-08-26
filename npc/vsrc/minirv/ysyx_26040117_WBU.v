@@ -64,7 +64,7 @@ module ysyx_26040117_WBU(clk,rst,
     //Control Status Register
     wire[31:0] trap_dnpc;
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
-        .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl_out),.funct3(funct3_out[2:0]),.csr_addr(aux_out[11:0]),.result(result_out),
+        .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl_out),.funct3(funct3_out[2:0]),.csr_addr(aux_out[3:0]),.result(result_out),
         .rdata(csr_rdata),.trap_dnpc(trap_dnpc)
     );
 endmodule

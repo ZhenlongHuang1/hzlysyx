@@ -1,17 +1,16 @@
 module ysyx_26040117_EXU(clk,rst,
-    IDU_EXU_ready,IDU_EXU_valid,src1,src2,imm,mytype,funct,
-    IDU_wrapper,
+    IDU_EXU_ready,IDU_EXU_valid,mytype,funct,num1,num2,aux_num1,aux_num2,IDU_wrapper,sub,
     EXU_LSU_ready,EXU_LSU_valid,result,aux,IDU_wrapper_out,mytype_out,funct3,branch_decision
 );
     input clk,rst;
     //IDU-EXU
     input IDU_EXU_valid;
     output IDU_EXU_ready;
-    input[31:0]src1,src2,imm;
     input [8:0]mytype;
     input [3:0]funct;
-    input[39:0]IDU_wrapper;
-    
+    input [7:0]IDU_wrapper;
+    input[31:0] num1,num2,aux_num1,aux_num2;
+    input sub;
     //EXU-LSU
     input EXU_LSU_ready;
     output EXU_LSU_valid;
@@ -46,46 +45,32 @@ module ysyx_26040117_EXU(clk,rst,
     wire [3:0]funct_out;
     
     reg[31:0] num1_reg,num2_reg;
-    wire[31:0] pc_in=IDU_wrapper[31:0];
-    wire[2:0]trap_ctrl_in=IDU_wrapper[39:37];
-    wire [31:0] num1_in,num2_in;
-    assign num1_in=({32{(|mytype[8:4]) || trap_ctrl_in[0]}} & src1)|//alu,alui,load,store,branch,csrr
-                 ({32{(|mytype[3:1]) || trap_ctrl_in[1]}} & pc_in);//jalr,jal,auipc,ecall
-    assign num2_in= ({32{mytype[8]||mytype[4]}}&src2)|//alu,branch
-                 ({32{(|mytype[7:5])||(|mytype[1:0])}}&imm)|//alui,load,store,lui,auipc
-                 {29'd0,|mytype[3:2],2'd0};//jal,jalr,4
     reg [31:0] aux_num1_reg,aux_num2_reg;
-    wire[31:0] aux_num1_in,aux_num2_in;
-    assign aux_num1_in=({32{mytype[2]||mytype[4]}}&pc_in)|
-                     ({32{mytype[3]}}&src1);
-    assign aux_num2_in=({32{mytype[6]}}&src2)|
-                     ({32{(|mytype[4:2])||trap_ctrl_in[0]}}&imm);
     reg sub_reg;
-    wire is_slt =(~funct[2])&&funct[1];
-    wire sub_in =mytype[4]||(mytype[8]&&funct[3])||((mytype[8]||mytype[7])&&is_slt);
     always @(posedge clk) begin
         if(IDU_EXU_fire)begin
-            {IDU_wrapper_reg,mytype_reg,funct_reg}<={IDU_wrapper[39:32],mytype,funct};
-            {num1_reg,num2_reg}<={num1_in,num2_in};
-            {aux_num1_reg,aux_num2_reg}<={aux_num1_in,aux_num2_in};
-            sub_reg<=sub_in;
+            {IDU_wrapper_reg,mytype_reg,funct_reg}<={IDU_wrapper,mytype,funct};
+            {num1_reg,num2_reg}<={num1,num2};
+            {aux_num1_reg,aux_num2_reg}<={aux_num1,aux_num2};
+            sub_reg<=sub;
         end
     end
     assign {IDU_wrapper_out,mytype_out,funct_out}={IDU_wrapper_reg,mytype_reg,funct_reg};
+    wire sub_out;
+    assign sub_out =sub_reg;
+    wire [31:0] num1_out,num2_out;
+    assign num1_out=num1_reg;
+    assign num2_out=num2_reg;
     //result function
-    wire [31:0] num1,num2;
-    assign num1=num1_reg;
-    assign num2=num2_reg;
-    wire sub,carry,sless,less;
+    wire carry,sless,less;
     wire[31:0] t_no_cin,result0;
-    assign sub =sub_reg;
-    assign t_no_cin={32{sub}}^num2;
-    assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+sub;//adder
-    assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
+    assign t_no_cin={32{sub_out}}^num2_out;
+    assign {carry,result0}={1'b0,num1_out}+{1'b0,t_no_cin}+sub_out;//adder
+    assign sless=(num1_out[31]^num2_out[31])?num1_out[31]:result0[31];
     assign less=~carry;
     
-    wire signed [32:0] shift_src={funct_out[3]&num1[31],num1};
-    wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
+    wire signed [32:0] shift_src={funct_out[3]&num1_out[31],num1_out};
+    wire [32:0] shift_tmp=$signed(shift_src)>>>num2_out[4:0];
     always @(*) begin
         result=result0;//load,store,jal,jalr
         if(mytype_out[8]||mytype_out[7])begin
@@ -93,19 +78,19 @@ module ysyx_26040117_EXU(clk,rst,
                 3'b000:result=result0;//ADDI,ADD
                 3'b010:result={31'd0,sless};//SLTI,SLT
                 3'b011:result={31'd0,less};//SLTIU,SLTU
-                3'b100:result=num1^num2;//XORI,XOR
-                3'b110:result=num1|num2;//ORI,OR
-                3'b111:result=num1&num2;//ANDI,AND
-                3'b001:result=num1<<(num2[4:0]);//SLLI,SLL
+                3'b100:result=num1_out^num2_out;//XORI,XOR
+                3'b110:result=num1_out|num2_out;//ORI,OR
+                3'b111:result=num1_out&num2_out;//ANDI,AND
+                3'b001:result=num1_out<<(num2_out[4:0]);//SLLI,SLL
                 3'b101:result=shift_tmp[31:0];//1:SRAI,SRA;0:SRLI,SRL
                 default:result=32'd0;
             endcase
         end
     end
     //branch function
-    wire cmp_eq=num1==num2;
-    wire cmp_lts=$signed(num1)<$signed(num2);
-    wire cmp_ltu=num1<num2;
+    wire cmp_eq=num1_out==num2_out;
+    wire cmp_lts=$signed(num1_out)<$signed(num2_out);
+    wire cmp_ltu=num1_out<num2_out;
     reg branch_decision0;
     always@(*)begin
         branch_decision0=1'b0;
@@ -118,9 +103,9 @@ module ysyx_26040117_EXU(clk,rst,
     end
     assign branch_decision=funct_out[0]^branch_decision0;
     //aux function
-    wire[31:0] aux_num1,aux_num2,aux0;
-    assign aux_num1=aux_num1_reg;
-    assign aux_num2=aux_num2_reg;
-    assign aux0=aux_num1+aux_num2;
+    wire[31:0] aux_num1_out,aux_num2_out,aux0;
+    assign aux_num1_out=aux_num1_reg;
+    assign aux_num2_out=aux_num2_reg;
+    assign aux0=aux_num1_out+aux_num2_out;
     assign aux={aux0[31:1],aux0[0]&&~mytype_out[3]};
 endmodule

@@ -1,8 +1,7 @@
 module ysyx_26040117_IDU(clk,rst,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,
-    IDU_EXU_ready,IDU_EXU_valid,imm,funct,mytype,
-    IDU_wrapper,
-    rs1,rs2
+    IDU_EXU_ready,IDU_EXU_valid,funct,mytype,IDU_wrapper,num1,num2,aux_num1,aux_num2,sub,
+    rs1,rs2,src1,src2
 );
     input clk,rst;
     //IFU_IDU
@@ -14,12 +13,15 @@ module ysyx_26040117_IDU(clk,rst,
     input IDU_EXU_ready;
     output IDU_EXU_valid;
     output [3:0] funct;
-    output[31:0] imm;
     output [8:0] mytype;
-    output[39:0]IDU_wrapper;
-    assign IDU_wrapper={trap_ctrl,rd,pc_out};
+    output[7:0]IDU_wrapper;
+    output [31:0] num1,num2;
+    output[31:0] aux_num1,aux_num2;
+    output sub;
+    assign IDU_wrapper={trap_ctrl,rd};
     assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
+    input [31:0] src1,src2;
     output [4:0] rs1,rs2;
 
     wire [2:0]trap_ctrl;
@@ -55,7 +57,7 @@ module ysyx_26040117_IDU(clk,rst,
     wire [6:0]opcode;
     wire [2:0]funct3;
     wire funct3_zero;
-    wire [31:0]immI,immS,immB,immU,immJ;
+    wire [31:0]immI,immS,immB,immU,immJ,imm;
     assign funct3_zero=~(|funct3);
     assign ebreak=type_I_privil&&funct3_zero&&(immI[11:0]==12'b1);
     assign opcode=inst_out[6:0];
@@ -90,6 +92,18 @@ module ysyx_26040117_IDU(clk,rst,
                 (immU&{32{type_U}})|
                 (immJ&{32{type_J}});
     assign funct3=inst_out[14:12];
+
+    assign num1=({32{(|mytype[8:4]) || trap_ctrl[0]}} & src1)|//alu,alui,load,store,branch,csrr
+                 ({32{(|mytype[3:1]) || trap_ctrl[1]}} & pc_out);//jalr,jal,auipc,ecall
+    assign num2= ({32{mytype[8]||mytype[4]}}&src2)|//alu,branch
+                 ({32{(|mytype[7:5])||(|mytype[1:0])}}&imm)|//alui,load,store,lui,auipc
+                 {29'd0,|mytype[3:2],2'd0};//jal,jalr,4
+    assign aux_num1=({32{mytype[2]||mytype[4]}}&pc_out)|
+                     ({32{mytype[3]}}&src1);
+    assign aux_num2=({32{mytype[6]}}&src2)|
+                     ({32{(|mytype[4:2])||trap_ctrl[0]}}&imm);
+    wire is_slt =(~funct[2])&&funct[1];
+    assign sub =mytype[4]||(mytype[8]&&funct[3])||((mytype[8]||mytype[7])&&is_slt);
 `ifndef STA_MODE
     import "DPI-C" function void npc_trap();
     always@(posedge clk)begin

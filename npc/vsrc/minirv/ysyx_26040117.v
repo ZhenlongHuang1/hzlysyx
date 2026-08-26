@@ -122,18 +122,17 @@ module ysyx_26040117 #(
     wire[31:0]imm;
     wire[3:0]funct;
     wire[8:0]mytype;//0:lui;    1:auipc;    2:jal;  3:jalr;  4:跳转;  5:load;  6:store;  7:立即数计算;  8:寄存器计算
-
-    wire[39:0]IDU_wrapper;
+    wire[7:0]IDU_wrapper;
+    wire[31:0]num1,num2,aux_num1,aux_num2;
+    wire sub;
     wire[4:0] rs1,rs2;
+    wire[31:0]src1,src2;
     ysyx_26040117_IDU IDU1(.clk(clock),.rst(reset),
-        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),
-        .pc(ifu_idu_pc),
-        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.imm(imm),.funct(funct),.mytype(mytype),
-        .IDU_wrapper(IDU_wrapper),
-        .rs1(rs1),.rs2(rs2)
+        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),
+        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.funct(funct),.mytype(mytype),.IDU_wrapper(IDU_wrapper),.num1(num1),.num2(num2),.aux_num1(aux_num1),.aux_num2(aux_num2),.sub(sub),
+        .rs1(rs1),.rs2(rs2),.src1(src1),.src2(src2)
     );
     //Register block
-    wire[31:0]src1,src2;
     wire [4:0] wbu_register_rd;
     wire wbu_register_wen;
     ysyx_26040117_RegisterFile Register1(.clk(clock),.rst(reset),
@@ -148,8 +147,7 @@ module ysyx_26040117 #(
     wire [2:0] exu_lsu_funct3;
     wire [7:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
-        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.src1(src1),.src2(src2),.imm(imm),.funct(funct),.mytype(mytype),
-        .IDU_wrapper(IDU_wrapper),
+        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.funct(funct),.mytype(mytype),.IDU_wrapper(IDU_wrapper),.num1(num1),.num2(num2),      .aux_num1(aux_num1),.aux_num2(aux_num2),.sub(sub),
         .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),.branch_decision(branch_decision),
         .IDU_wrapper_out(EXU_wrapper),.funct3(exu_lsu_funct3),.mytype_out(exu_lsu_mytype)
     );

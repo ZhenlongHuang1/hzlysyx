@@ -15,7 +15,8 @@ module ysyx_26040117_LSU (clk,rst,
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [31:0]result_out,aux_out;
+    output [31:0]result_out;
+    output reg [31:0] aux_out;
     output [9:0]LSU_wrapper;
     output [2:0]funct3_out;
     //LSU-MEM
@@ -114,9 +115,9 @@ module ysyx_26040117_LSU (clk,rst,
     assign bready=lsu_valid&&mytype_out[6]&&!wvalid&&!awvalid&&LSU_WBU_ready;
     //write function
     wire[3:0] aw_mask;
-    assign wdata=(funct3_out[1:0] == 2'b00) ? {4{aux_out[7:0]}} :   // sb
-                        (funct3_out[1:0] == 2'b01) ? {2{aux_out[15:0]}} :  // sh
-                        aux_out;//sw
+    assign wdata=(funct3_out[1:0] == 2'b00) ? {4{aux_reg[7:0]}} :   // sb
+                        (funct3_out[1:0] == 2'b01) ? {2{aux_reg[15:0]}} :  // sh
+                        aux_reg;//sw
     assign {awaddr,awsize}={result_reg,{1'b0,funct3_out[1:0]}};
     assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
     assign wstrb=aw_mask<<awaddr[1:0];
@@ -140,13 +141,37 @@ module ysyx_26040117_LSU (clk,rst,
             branch_decision_reg<=branch_decision;
         end
     end
-    assign {aux_out,mytype_out,funct3_out}={aux_reg,mytype_reg,funct3_reg};
+    assign {mytype_out,funct3_out}={mytype_reg,funct3_reg};
     assign LSU_wrapper={register_wen,jump,wrapper_reg};
     assign trap_ctrl_out=wrapper_reg[7:5];
     wire privil=|trap_ctrl_out[2:1];
     assign jump=(mytype_out[3]||mytype_out[2]||privil||(mytype_out[4]&&branch_decision_reg));
     assign register_wen=((|mytype_out[3:0])||mytype_out[5]||(|mytype_out[8:7])||(trap_ctrl_out[0]));
     assign result_out=mytype_out[5]?rdata_out:result_reg;
+    localparam CSR_MCYCLE_LO = 4'd0;
+    localparam CSR_MCYCLE_HI = 4'd1;
+    localparam CSR_MEPC      = 4'd2;
+    localparam CSR_MSTATUS   = 4'd3;
+    localparam CSR_MCAUSE    = 4'd4;
+    localparam CSR_MTVEC     = 4'd5;
+    localparam CSR_MVENDORID = 4'd6;
+    localparam CSR_MARCHID   = 4'd7;
+    always @(*) begin
+        aux_out=aux_reg;
+        if(trap_ctrl_out[0])begin
+            case(aux_reg[11:0])
+                12'hb00:aux_out={28'd0,CSR_MCYCLE_LO};
+                12'hb80:aux_out={28'd0,CSR_MCYCLE_HI};
+                12'h341:aux_out={28'd0,CSR_MEPC};
+                12'h300:aux_out={28'd0,CSR_MSTATUS};
+                12'h342:aux_out={28'd0,CSR_MCAUSE};
+                12'h305:aux_out={28'd0,CSR_MTVEC};
+                12'hf11:aux_out={28'd0,CSR_MVENDORID};
+                12'hf12:aux_out={28'd0,CSR_MARCHID};
+                default:aux_out=aux_reg;
+            endcase
+        end
+    end
 `ifndef STA_MODE
     //difftest
     import "DPI-C" function void difftest_skip_ref();
