@@ -17,7 +17,7 @@ int main(int argc,char *argv[]) {
     w=total_count/(1<<index_width);
     printf("total_count=%d,offset_width=%d,index_width=%d,w=%d,algorithm=%d\n",total_count,offset_width,index_width,w,algorithm);
     uint32_t set_count = 1u << index_width;
-    FILE *fp = fopen("icache_record.txt", "r");
+    FILE *fp = fopen("../build/icache_record.txt", "r");
     if (fp == NULL) {
         perror("open icache_record.txt");
         return 1;
