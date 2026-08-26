@@ -26,7 +26,6 @@ int main(int argc,char *argv[]) {
     uint8_t valid_array[CACHE_SIZE] = {0};
     uint64_t access = 0;
     uint64_t hit = 0;
-    uint64_t miss = 0;
     uint32_t pc;
     uint64_t last_used[CACHE_SIZE] = {0};
     int i,hit_flag;
@@ -47,7 +46,6 @@ int main(int argc,char *argv[]) {
             }
         }
         if(!hit_flag){
-            miss++;
             if(algorithm==1){//FIFO
                 uint32_t addr1,addr2;
                 for(i=0;i<w-1;i++){
