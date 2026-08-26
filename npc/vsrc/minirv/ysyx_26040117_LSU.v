@@ -1,6 +1,6 @@
 module ysyx_26040117_LSU (clk,rst,
-    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,
-    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,mytype_out,funct3_out,
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,branch_decision,
+    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,funct3_out,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
@@ -11,12 +11,13 @@ module ysyx_26040117_LSU (clk,rst,
     input [7:0]EXU_wrapper;
     input [8:0]mytype;
     input [2:0]funct3;
+    input branch_decision;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [31:0]result_out,aux_out;
-    output [7:0]LSU_wrapper;
-    output [8:0]mytype_out;
+    output [31:0]result_out;
+    output reg [31:0] aux_out;
+    output [9:0]LSU_wrapper;
     output [2:0]funct3_out;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
@@ -58,9 +59,32 @@ module ysyx_26040117_LSU (clk,rst,
         else if(ren)
             arvalid<=1'b1;
     end
-    wire arifsigned;
     assign rready=lsu_valid&&mytype_out[5]&&!arvalid&&LSU_WBU_ready;
-    assign {araddr,arsize,arifsigned}={result_reg,{1'b0,funct3_out[1:0]},~funct3_out[2]};
+    assign {araddr,arsize}={result_reg,{1'b0,funct3_out[1:0]}};
+    //read function
+    reg[31:0] rdata_out;
+    wire[1:0] raddr_shift;
+    assign raddr_shift=araddr[1:0];
+    reg[7:0] load_byte;
+    wire[15:0]load_half=raddr_shift[1]?rdata[31:16]:rdata[15:0];
+    always @(*) begin
+        case(raddr_shift)
+            2'b00:load_byte=rdata[7:0];
+            2'b01:load_byte=rdata[15:8];
+            2'b10:load_byte=rdata[23:16];
+            2'b11:load_byte=rdata[31:24];
+        endcase
+    end
+    always @(*) begin
+        case(funct3_out)
+            3'b000:rdata_out={{24{load_byte[7]}},load_byte};
+            3'b001:rdata_out={{16{load_half[15]}},load_half};
+            3'b010:rdata_out=rdata;
+            3'b100:rdata_out={24'd0,load_byte};
+            3'b101:rdata_out={16'd0,load_half};
+            default:rdata_out=32'd0;
+        endcase
+    end
     //write
     wire awready,wready,bvalid,bready;
     reg awvalid,wvalid;
@@ -91,9 +115,9 @@ module ysyx_26040117_LSU (clk,rst,
     assign bready=lsu_valid&&mytype_out[6]&&!wvalid&&!awvalid&&LSU_WBU_ready;
     //write function
     wire[3:0] aw_mask;
-    assign wdata=(funct3_out[1:0] == 2'b00) ? {4{aux_out[7:0]}} :   // sb
-                        (funct3_out[1:0] == 2'b01) ? {2{aux_out[15:0]}} :  // sh
-                        aux_out;//sw
+    assign wdata=(funct3_out[1:0] == 2'b00) ? {4{aux_reg[7:0]}} :   // sb
+                        (funct3_out[1:0] == 2'b01) ? {2{aux_reg[15:0]}} :  // sh
+                        aux_reg;//sw
     assign {awaddr,awsize}={result_reg,{1'b0,funct3_out[1:0]}};
     assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
     assign wstrb=aw_mask<<awaddr[1:0];
@@ -101,39 +125,53 @@ module ysyx_26040117_LSU (clk,rst,
     assign LSU_MEM_wrapper={arsize,awsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
-    //read function
-    reg[31:0] rdata2;
-    wire[31:0] bitmask,bitnmask,rdata_out;
-    wire[1:0] raddr_shift;
-    wire [3:0] ar_mask;
-    wire signbit;
-    assign ar_mask={arsize[1],arsize[1],arsize[1]|arsize[0],1'b1};
-    assign bitmask={{8{ar_mask[3]}},{8{ar_mask[2]}},{8{ar_mask[1]}},{8{ar_mask[0]}}};
-    assign bitnmask={{8{~ar_mask[3]&&arifsigned}},{8{~ar_mask[2]&&arifsigned}},{8{~ar_mask[1]&&arifsigned}},{8{~ar_mask[0]&&arifsigned}}};
-    assign raddr_shift=araddr[1:0];
-    assign rdata_out=(rdata2&bitmask)|(bitnmask&{32{signbit}});//符号拓展or 0拓展
-    assign signbit=(~ar_mask[3]&&ar_mask[1]&&rdata2[15])||(~(|ar_mask[3:1])&&rdata2[7]);
-    always @(*) begin
-        case (raddr_shift)
-            2'b00: rdata2=rdata;
-            2'b01: rdata2={8'h0,rdata[31:8]}; 
-            2'b10: rdata2={16'h0,rdata[31:16]};
-            2'b11: rdata2={24'h0,rdata[31:24]};
-            default:rdata2=rdata;
-        endcase
-    end
     //FIFO
     reg [31:0]result_reg,aux_reg;
     reg [7:0]wrapper_reg;
     reg [8:0]mytype_reg;
     reg [2:0]funct3_reg;
+    reg branch_decision_reg;
+    wire [8:0]mytype_out;
+    wire [2:0]trap_ctrl_out;
+    wire jump;
+    wire register_wen;
     always @(posedge clk) begin
         if(EXU_LSU_fire)begin
             {result_reg,aux_reg,wrapper_reg,mytype_reg,funct3_reg}<={result,aux,EXU_wrapper,mytype,funct3};
+            branch_decision_reg<=branch_decision;
         end
     end
-    assign {aux_out,LSU_wrapper,mytype_out,funct3_out}={aux_reg,wrapper_reg,mytype_reg,funct3_reg};
+    assign {mytype_out,funct3_out}={mytype_reg,funct3_reg};
+    assign LSU_wrapper={register_wen,jump,wrapper_reg};
+    assign trap_ctrl_out=wrapper_reg[7:5];
+    wire privil=|trap_ctrl_out[2:1];
+    assign jump=(mytype_out[3]||mytype_out[2]||privil||(mytype_out[4]&&branch_decision_reg));
+    assign register_wen=((|mytype_out[3:0])||mytype_out[5]||(|mytype_out[8:7])||(trap_ctrl_out[0]));
     assign result_out=mytype_out[5]?rdata_out:result_reg;
+    localparam CSR_MCYCLE_LO = 4'd0;
+    localparam CSR_MCYCLE_HI = 4'd1;
+    localparam CSR_MEPC      = 4'd2;
+    localparam CSR_MSTATUS   = 4'd3;
+    localparam CSR_MCAUSE    = 4'd4;
+    localparam CSR_MTVEC     = 4'd5;
+    localparam CSR_MVENDORID = 4'd6;
+    localparam CSR_MARCHID   = 4'd7;
+    always @(*) begin
+        aux_out=aux_reg;
+        if(trap_ctrl_out[0])begin
+            case(aux_reg[11:0])
+                12'hb00:aux_out={28'd0,CSR_MCYCLE_LO};
+                12'hb80:aux_out={28'd0,CSR_MCYCLE_HI};
+                12'h341:aux_out={28'd0,CSR_MEPC};
+                12'h300:aux_out={28'd0,CSR_MSTATUS};
+                12'h342:aux_out={28'd0,CSR_MCAUSE};
+                12'h305:aux_out={28'd0,CSR_MTVEC};
+                12'hf11:aux_out={28'd0,CSR_MVENDORID};
+                12'hf12:aux_out={28'd0,CSR_MARCHID};
+                default:aux_out=aux_reg;
+            endcase
+        end
+    end
 `ifndef STA_MODE
     //difftest
     import "DPI-C" function void difftest_skip_ref();

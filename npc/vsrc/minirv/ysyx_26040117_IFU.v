@@ -1,7 +1,7 @@
 module ysyx_26040117_IFU #(
     parameter [31:0] RESET_VECTOR=32'h3000_0000
 )(clk,rst,
-    WBU_IFU_valid,WBU_IFU_ready,jalr,jump,dnpc,
+    WBU_IFU_valid,WBU_IFU_ready,jump,dnpc,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,
     MEM_IFU_wrapper,IFU_MEM_wrapper
 );
@@ -10,13 +10,13 @@ module ysyx_26040117_IFU #(
     //WBU-IFU
     input WBU_IFU_valid;
     output WBU_IFU_ready;
-    input jump,jalr;
+    input jump;
     input[31:0]dnpc/* verilator public_flat_rd */;
     //IFU-IDU
     input IFU_IDU_ready;
     output IFU_IDU_valid;
     output [31:0]inst;
-    output reg[31:0]pc;
+    output reg [31:0]pc;
     //IFU-MEM
     input [33:0]MEM_IFU_wrapper;
     output[33:0] IFU_MEM_wrapper;
@@ -25,8 +25,7 @@ module ysyx_26040117_IFU #(
     wire WBU_IFU_fire;
     reg arvalid;
     wire arready,rvalid,rready;
-    wire rfire;
-    wire[31:0]pc_next;
+    wire rfire,arfire;
     reg[1:0] state,next_state;
     localparam IDLE=2'd0,WAIT_READY=2'd1,WAIT_VALID=2'd2;
     always@(posedge clk)begin
@@ -37,6 +36,7 @@ module ysyx_26040117_IFU #(
     end
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
     assign rfire=rvalid&&rready;
+    assign arfire=arvalid&&arready;
     always@(*)begin
         next_state=state;
         case (state)
@@ -53,17 +53,12 @@ module ysyx_26040117_IFU #(
     assign IFU_IDU_valid=(state==WAIT_VALID)&&rvalid;
     assign WBU_IFU_ready=state==IDLE;
     //pc_next计算
-    wire [31:0]snpc; 
+    wire[31:0]pc_next,snpc;
     assign snpc=pc+32'd4;
-    assign pc_next=({32{~jump}}&snpc)|                    //FIFO
-                    ({{31{jump}},jump&(~jalr)}&dnpc);//jump:JAL||JALR||跳转
+    assign pc_next=jump?dnpc:snpc_reg;//jump:JAL||JALR||跳转
     always@(posedge clk)begin
-        if(rst)
-            pc<=RESET_VECTOR;
-        else begin
-            if(IDLE_fire)
-                pc<=pc_next;
-        end
+        if(rst)pc<=RESET_VECTOR;
+        else if(IDLE_fire)pc<=pc_next;
     end
     //取指
     wire [31:0] rdata;
@@ -73,6 +68,12 @@ module ysyx_26040117_IFU #(
     assign IFU_MEM_wrapper={arvalid,araddr,rready};
     assign {arready,rvalid,rdata}=MEM_IFU_wrapper;
     assign inst=rdata;
+    //FIFO
+    reg[31:0] snpc_reg;
+    always @(posedge clk) begin
+        if(arfire)
+            snpc_reg<=snpc;
+    end
 `ifdef PERF_COUNTER
     reg [63:0] ifu_fetch_inst_count;
     reg [63:0] ifu_no_fetch_count;

@@ -1,59 +1,69 @@
 module ysyx_26040117_CSR(clk,rst,
-    wen,trap_ctrl,funct3,csr_addr,src1,pc,
-    rdata
+    wen,trap_ctrl,funct3,csr_addr,result,
+    rdata,trap_dnpc
 );
+    localparam CSR_MCYCLE_LO = 4'd0;
+    localparam CSR_MCYCLE_HI = 4'd1;
+    localparam CSR_MEPC      = 4'd2;
+    localparam CSR_MSTATUS   = 4'd3;
+    localparam CSR_MCAUSE    = 4'd4;
+    localparam CSR_MTVEC     = 4'd5;
+    localparam CSR_MVENDORID = 4'd6;
+    localparam CSR_MARCHID   = 4'd7;
     input clk,rst;
     input wen;
     input [2:0] trap_ctrl,funct3;//0:csrr,1:ecall,2:mret
-    input [11:0]csr_addr;
-    input [31:0]src1,pc;
+    input [3:0]csr_addr;
+    input [31:0]result;
     output reg[31:0]rdata;
-    reg[63:0]mcycle;
+    output [31:0] trap_dnpc;
+    reg[31:0]mcycle_lo,mcycle_hi;
     reg[31:0]wdata,mepc,mstatus,mcause,mtvec;
+    //read
+    assign trap_dnpc=trap_ctrl[1]?mtvec:mepc;
     always @(*)begin
-        if(trap_ctrl[1])begin
-            rdata=mtvec;
-        end else if(trap_ctrl[2])begin
-            rdata=mepc;
-        end else begin
-            case(csr_addr)
-                12'hb00:rdata=mcycle[31:0];
-                12'hb80:rdata=mcycle[63:32];
-                12'h341:rdata=mepc;
-                12'h300:rdata=mstatus;
-                12'h342:rdata=mcause;
-                12'h305:rdata=mtvec;
-                12'hf11:rdata=32'h79737978;
-                12'hf12:rdata=32'h18d5735;
-                default:rdata=32'h0;
-            endcase
-        end
+        case(csr_addr)
+            CSR_MCYCLE_LO:rdata=mcycle_lo;
+            CSR_MCYCLE_HI:rdata=mcycle_hi;
+            CSR_MEPC:     rdata=mepc;
+            CSR_MSTATUS:  rdata=mstatus;
+            CSR_MCAUSE:   rdata=mcause;
+            CSR_MTVEC:    rdata=mtvec;
+            CSR_MVENDORID:rdata=32'h79737978;
+            CSR_MARCHID:  rdata=32'h18d5735;
+            default:rdata=32'h0;
+        endcase
     end
     always @(*)begin
-        case(funct3)
-            3'b001:wdata=src1;
-            3'b010:wdata=src1|rdata;
+        case(funct3)//src1
+            3'b001:wdata=result;
+            3'b010:wdata=result|rdata;
             default:wdata=0;
         endcase
     end
+    wire [31:0] lo_inc=mcycle_lo+32'd1;
+    wire [31:0] hi_inc=mcycle_hi+32'd1;
+    wire lo_wrap=&mcycle_lo;
     always @(posedge clk) begin
         if(rst)begin
             mstatus<=32'h1800;
             mcause<=32'h0;
         end else begin
-            mcycle<=mcycle+64'h1;
+            mcycle_lo<=lo_inc;
+            if(lo_wrap)
+                mcycle_hi<=hi_inc;
             if(wen)begin
                 if(trap_ctrl[1])begin
-                    mepc<=pc;
+                    mepc<=result;//pc
                     mcause<=32'd11;
                 end else if(trap_ctrl[0])begin
                     case(csr_addr)
-                        12'hb00:mcycle[31:0]<=wdata;
-                        12'hb80:mcycle[63:32]<=wdata;
-                        12'h341:mepc<=wdata;
-                        12'h300:mstatus<=wdata;
-                        12'h342:mcause<=wdata;
-                        12'h305:mtvec<=wdata;
+                        CSR_MCYCLE_LO:mcycle_lo<=wdata;
+                        CSR_MCYCLE_HI:mcycle_hi<=wdata;
+                        CSR_MEPC:     mepc<=wdata;
+                        CSR_MSTATUS:  mstatus<=wdata;
+                        CSR_MCAUSE:   mcause<=wdata;
+                        CSR_MTVEC:    mtvec<=wdata;
                         default:;
                     endcase
                 end

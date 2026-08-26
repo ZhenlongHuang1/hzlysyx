@@ -47,17 +47,24 @@ module ysyx_26040117_CLINT(clk,rst,
         else if(arfire) begin
             rvalid<=1'b1;
             if(araddr==32'h0200bff8)
-                rdata<=mtime[31:0];
+                rdata<=mtime_lo;
             else if(araddr==32'h0200bffc)
-                rdata<=mtime[63:32];
+                rdata<=mtime_hi;
         end
     end
     //function
-    reg [63:0]mtime;
+    reg [31:0]mtime_lo,mtime_hi;
+    wire [31:0] lo_inc=mtime_lo+32'd1;
+    wire [31:0] hi_inc=mtime_hi+32'd1;
+    wire lo_wrap=&mtime_lo;
     always @(posedge clk) begin
-        if(rst)mtime<=64'd0;
-        else begin
-            mtime<=mtime+64'd1;
+        if(rst)begin
+            mtime_lo<=32'd0;
+            mtime_hi<=32'd0;
+        end else begin
+            mtime_lo<=lo_inc;
+            if(lo_wrap)
+                mtime_hi<=hi_inc;
         end
     end
 endmodule
