@@ -8,7 +8,7 @@ module ysyx_26040117_LSU (clk,rst,
     input EXU_LSU_valid;
     output EXU_LSU_ready;
     input [31:0]result,aux;
-    input [7:0]EXU_wrapper;
+    input [8:0]EXU_wrapper;
     input [8:0]mytype;
     input [2:0]funct3;
     input branch_decision;
@@ -17,7 +17,7 @@ module ysyx_26040117_LSU (clk,rst,
     output LSU_WBU_valid;
     output [31:0]result_out;
     output reg [31:0] aux_out;
-    output [9:0]LSU_wrapper;
+    output [10:0]LSU_wrapper;
     output [2:0]funct3_out;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
@@ -127,7 +127,7 @@ module ysyx_26040117_LSU (clk,rst,
 
     //FIFO
     reg [31:0]result_reg,aux_reg;
-    reg [7:0]wrapper_reg;
+    reg [8:0]wrapper_reg;
     reg [8:0]mytype_reg;
     reg [2:0]funct3_reg;
     reg branch_decision_reg;

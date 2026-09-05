@@ -1,8 +1,8 @@
 module ysyx_26040117_IFU #(
     parameter [31:0] RESET_VECTOR=32'h3000_0000
 )(clk,rst,
-    WBU_IFU_valid,WBU_IFU_ready,jump,dnpc,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,
+    WBU_IFU_valid,WBU_IFU_ready,jump,dnpc,fence_i,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
     MEM_IFU_wrapper,IFU_MEM_wrapper
 );
     input clk,rst;
@@ -12,18 +12,20 @@ module ysyx_26040117_IFU #(
     output WBU_IFU_ready;
     input jump;
     input[31:0]dnpc/* verilator public_flat_rd */;
+    input fence_i;
     //IFU-IDU
     input IFU_IDU_ready;
     output IFU_IDU_valid;
     output [31:0]inst;
     output reg [31:0]pc;
+    output fence_done;
     //IFU-MEM
-    input [33:0]MEM_IFU_wrapper;
-    output[33:0] IFU_MEM_wrapper;
+    input [34:0] MEM_IFU_wrapper;
+    output[34:0] IFU_MEM_wrapper;
 
     //state machine 
     wire WBU_IFU_fire;
-    reg arvalid;
+    wire arvalid;
     wire arready,rvalid,rready;
     wire rfire,arfire;
     reg[1:0] state,next_state;
@@ -41,7 +43,7 @@ module ysyx_26040117_IFU #(
         next_state=state;
         case (state)
             IDLE:if(WBU_IFU_fire)next_state=WAIT_READY;
-            WAIT_READY:if(arready)next_state=WAIT_VALID;
+            WAIT_READY:if(arfire)next_state=WAIT_VALID;
             WAIT_VALID:if(rfire)next_state=IDLE;
             default:next_state=state;
         endcase
@@ -65,8 +67,8 @@ module ysyx_26040117_IFU #(
     wire [31:0] araddr;
 
     assign araddr=pc;
-    assign IFU_MEM_wrapper={arvalid,araddr,rready};
-    assign {arready,rvalid,rdata}=MEM_IFU_wrapper;
+    assign IFU_MEM_wrapper={fence_i,arvalid,araddr,rready};
+    assign {fence_done,arready,rvalid,rdata}=MEM_IFU_wrapper;
     assign inst=rdata;
     //FIFO
     reg[31:0] snpc_reg;

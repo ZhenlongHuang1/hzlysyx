@@ -1,7 +1,7 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_WBU(clk,rst,
     LSU_WBU_ready,LSU_WBU_valid,result,aux,LSU_wrapper,funct3,
-    WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,rd_out,register_wen
+    WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,fence_i,rd_out,register_wen
 );
     input clk,rst;
     //LSU-WBU
@@ -9,13 +9,14 @@ module ysyx_26040117_WBU(clk,rst,
     output LSU_WBU_ready;
     input [31:0] result,aux;
     input [2:0] funct3;
-    input [9:0]LSU_wrapper;
+    input [10:0]LSU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
     output[31:0] srcd;
     output[31:0] dnpc ;
     output jump;
+    output fence_i;
     output [4:0]rd_out;
     output register_wen;
 
@@ -39,6 +40,7 @@ module ysyx_26040117_WBU(clk,rst,
     reg [31:0] result_reg,aux_reg;
     reg [2:0] funct3_reg;
     reg register_wen_reg,jump_reg;
+    reg fence_i_reg;
     reg [2:0]trap_ctrl_reg;//0:csrr,1:ecall,2:mret,
     reg [4:0]rd_reg;
     wire [31:0] result_out,aux_out;
@@ -47,11 +49,12 @@ module ysyx_26040117_WBU(clk,rst,
     wire [2:0]trap_ctrl_out;//0:csrr,1:ecall,2:mret,
     always @(posedge clk) begin
         if(LSU_WBU_fire)begin
-            {result_reg,aux_reg,funct3_reg,register_wen_reg,jump_reg,trap_ctrl_reg,rd_reg}<={result,aux,funct3[2:0],LSU_wrapper};
+            {result_reg,aux_reg,funct3_reg,register_wen_reg,jump_reg,fence_i_reg,trap_ctrl_reg,rd_reg}<={result,aux,funct3[2:0],LSU_wrapper};
         end
     end
     assign {result_out,aux_out,funct3_out,trap_ctrl_out,rd_out}={result_reg,aux_reg,funct3_reg,trap_ctrl_reg,rd_reg};
     assign {register_wen_out,jump_out}={register_wen_reg,jump_reg};
+    assign fence_i=fence_i_reg&&(WBU_IFU_fire);
 
     //function
     wire [31:0] csr_rdata;

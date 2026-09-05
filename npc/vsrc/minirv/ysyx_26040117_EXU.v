@@ -8,7 +8,7 @@ module ysyx_26040117_EXU(clk,rst,
     output IDU_EXU_ready;
     input [8:0]mytype;
     input [3:0]funct;
-    input [7:0]IDU_wrapper;
+    input [8:0]IDU_wrapper;
     input[31:0] num1,num2,aux_num1,aux_num2;
     input sub;
     //EXU-LSU
@@ -16,7 +16,7 @@ module ysyx_26040117_EXU(clk,rst,
     output EXU_LSU_valid;
     output reg [31:0]result;
     output [31:0] aux;
-    output [7:0] IDU_wrapper_out;
+    output [8:0] IDU_wrapper_out;
     output [8:0]mytype_out;
     output [2:0]funct3;
     output reg branch_decision;
@@ -39,7 +39,7 @@ module ysyx_26040117_EXU(clk,rst,
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     //FIFO
-    reg[7:0] IDU_wrapper_reg;
+    reg[8:0] IDU_wrapper_reg;
     reg [8:0] mytype_reg;
     reg [3:0] funct_reg;
     wire [3:0]funct_out;

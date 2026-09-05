@@ -1,5 +1,5 @@
 module ysyx_26040117_IDU(clk,rst,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
     IDU_EXU_ready,IDU_EXU_valid,funct,mytype,IDU_wrapper,num1,num2,aux_num1,aux_num2,sub,
     rs1,rs2,src1,src2
 );
@@ -9,16 +9,17 @@ module ysyx_26040117_IDU(clk,rst,
     output IFU_IDU_ready;
     input [31:0] inst;
     input [31:0] pc;
+    input fence_done;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
     output [3:0] funct;
     output [8:0] mytype;
-    output[7:0]IDU_wrapper;
+    output[8:0]IDU_wrapper;
     output [31:0] num1,num2;
     output[31:0] aux_num1,aux_num2;
     output sub;
-    assign IDU_wrapper={trap_ctrl,rd};
+    assign IDU_wrapper={type_fence_i,trap_ctrl,rd};
     assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
     input [31:0] src1,src2;
@@ -29,17 +30,29 @@ module ysyx_26040117_IDU(clk,rst,
     wire [4:0] rd;
     //state machine
     wire IFU_IDU_fire,IDU_EXU_fire;
-    reg state;
-    localparam IDLE=1'b0,WAIT=1'b1;
+    reg [1:0] state,next_state;
+    localparam IDLE=2'b0,WAIT=2'b1,FENCE_PAUSE=2'd2;
     assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;//IDU is empty,IFU pop->IDU push
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;//EXU is empty,IDU pop->EXU push
     always @(posedge clk) begin
         if(rst)
             state<=IDLE;
-        else if(IFU_IDU_fire)
-            state<=WAIT;
-        else if(IDU_EXU_fire)
-            state<=IDLE;
+        else 
+            state<=next_state;
+    end
+    always @(*) begin
+        next_state=state;
+        case(state)
+            IDLE:if(IFU_IDU_fire) next_state=WAIT;
+            WAIT:if(IDU_EXU_fire) begin
+                    if(type_fence_i)
+                        next_state=FENCE_PAUSE;
+                    else
+                        next_state=IDLE;
+                end
+            FENCE_PAUSE:if(fence_done) next_state=IDLE;
+            default:next_state=IDLE;
+        endcase
     end
     assign IFU_IDU_ready=state==IDLE;
     assign IDU_EXU_valid=state==WAIT; 
@@ -53,7 +66,7 @@ module ysyx_26040117_IDU(clk,rst,
     end
     assign {inst_out,pc_out}={inst_reg,pc_reg};
     //function logic
-    wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil;
+    wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil,type_fence_i;
     wire [6:0]opcode;
     wire [2:0]funct3;
     wire funct3_zero;
@@ -80,6 +93,7 @@ module ysyx_26040117_IDU(clk,rst,
     assign type_B=(opcode==7'b1100011);//BEQ~BGEU
     assign type_U=type_U_LUI||type_U_AUIPC;
     assign type_J=(opcode==7'b1101111);//JAL
+    assign type_fence_i=(opcode==7'b0001111)&&(funct3==3'b001);//fence.i
     
     assign immI={{20{inst_out[31]}},inst_out[31:20]};
     assign immS={{20{inst_out[31]}},inst_out[31:25],inst_out[11:7]};
