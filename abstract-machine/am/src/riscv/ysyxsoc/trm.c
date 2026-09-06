@@ -102,6 +102,7 @@ void ssbl(){
     }
     _trm_init();
 }
+typedef void(*myentry)(void);
 __attribute__((section(".text.fsbl"),noinline))
 void fsbl(){
     volatile uint32_t *src;
@@ -110,6 +111,14 @@ void fsbl(){
     src = (volatile uint32_t *)&_ssbl_lma_start;
     dst = (volatile uint32_t *)&_ssbl_vma_start;
     end = (volatile uint32_t *)&_ssbl_vma_end;
+    while((uintptr_t)dst+sizeof(*dst)<(uintptr_t)end){
+        *dst++ = 0x00000013;//nop addi x0 x0 0
+    }
+    *dst= 0x00008067;//ret jalr x0 0(ra)
+    myentry myfunct=(myentry)((volatile uint32_t *)&_ssbl_vma_start);
+    myfunct();
+
+    dst = (volatile uint32_t *)&_ssbl_vma_start;
     while (dst < end) {
         *dst++ = *src++;
     }
