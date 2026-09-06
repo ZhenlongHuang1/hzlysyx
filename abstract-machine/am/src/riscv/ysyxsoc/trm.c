@@ -100,6 +100,7 @@ void ssbl(){
     while (dst < end) {
         *dst++ = *src++;
     }
+    asm volatile("fence.i");
     _trm_init();
 }
 typedef void(*myentry)(void);
@@ -122,6 +123,7 @@ void fsbl(){
     while (dst < end) {
         *dst++ = *src++;
     }
+    asm volatile("fence.i");
     
     ssbl();
 }
