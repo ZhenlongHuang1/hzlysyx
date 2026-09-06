@@ -22,6 +22,16 @@ static uint8_t flash[CONFIG_MSIZE] PG_ALIGN = {};
 static uint8_t sram[CONFIG_SSIZE] PG_ALIGN = {};
 static uint8_t psram[CONFIG_PSSIZE] PG_ALIGN = {};
 static uint8_t sdram[CONFIG_SDSIZE] PG_ALIGN = {};
+void dcache_record(uint32_t addr,int read_flag){
+    static FILE *fp=NULL;
+    if(fp==NULL)
+        fp=fopen("build/dcache_record.txt","w"); 
+    if(read_flag)
+        fprintf(fp,"read ");
+    else 
+        fprintf(fp,"write ");
+    fprintf(fp,"%x\n",addr);
+}
 
 uint8_t* guest_to_host(paddr_t paddr) { 
     if(in_flash(paddr)) return flash + paddr - CONFIG_MBASE;
@@ -43,6 +53,7 @@ static word_t pmem_read(paddr_t addr, int len) {
     #ifdef CONFIG_MTRACE
        if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
            Log("Read memory at addr=" FMT_PADDR ",data="FMT_WORD,addr,ret);
+       dcache_record(addr,1);
     #endif
     return ret;
 }
@@ -52,6 +63,7 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
     #ifdef CONFIG_MTRACE
         if(addr>=CONFIG_MTRACE_START&&addr<=CONFIG_MTRACE_END)
             Log("Write memory at addr=" FMT_PADDR ",data="FMT_WORD,addr,data);
+        dcache_record(addr,0);
     #endif
 }
 
