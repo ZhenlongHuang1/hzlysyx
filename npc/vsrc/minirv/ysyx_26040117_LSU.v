@@ -25,8 +25,9 @@ module ysyx_26040117_LSU (clk,rst,
     reg lsu_valid;
     wire wen,ren;
     wire EXU_LSU_fire,LSU_WBU_fire;
-    assign wen=mytype[6]&&EXU_LSU_fire;
-    assign ren=mytype[5]&&EXU_LSU_fire;
+    wire [8:0]mytype_in=EXU_wrapper[11:3];
+    assign wen=mytype_in[6]&&EXU_LSU_fire;//right now
+    assign ren=mytype_in[5]&&EXU_LSU_fire;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
     assign EXU_LSU_ready=!lsu_valid;

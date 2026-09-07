@@ -55,7 +55,7 @@ module ysyx_26040117_WBU(clk,rst,
     wire [31:0] csr_rdata;
     assign register_wen_out=register_wen&&(WBU_IFU_fire);
     assign srcd=trap_ctrl[0]?csr_rdata:result;
-    assign trap_redirect_valid=|trap_ctrl[2:1];
+    assign trap_redirect_valid=(|trap_ctrl[2:1])&&WBU_IFU_fire;
     assign fence_i=type_fence_i&&(WBU_IFU_fire);
     //Control Status Register
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
