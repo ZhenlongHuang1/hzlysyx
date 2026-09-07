@@ -1,7 +1,7 @@
 module ysyx_26040117_IDU(clk,rst,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
-    redirect_valid,
-    IDU_EXU_ready,IDU_EXU_valid,funct,mytype,IDU_wrapper,num1,num2,aux_num1,aux_num2,sub,
+    redirect_valid,EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper,
+    IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
     rs1,rs2,src1,src2
 );
     input clk,rst;
@@ -11,18 +11,20 @@ module ysyx_26040117_IDU(clk,rst,
     input [31:0] inst;
     input [31:0] pc;
     input fence_done;
-    //EXU-IDU
+    //EXU/LSU/WBU-IDU
     input redirect_valid;
+    input[5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
-    output [3:0] funct;
-    output [8:0] mytype;
-    output[8:0]IDU_wrapper;
-    output [31:0] num1,num2;
-    output[31:0] aux_num1,aux_num2;
-    output sub;
-    assign IDU_wrapper={type_fence_i,trap_ctrl,rd};
+    output[151:0]IDU_wrapper;
+
+    wire [3:0] funct;
+    wire [8:0] mytype;
+    wire [31:0] num1,num2;
+    wire [31:0] aux_num1,aux_num2;
+    wire sub;
+    assign IDU_wrapper={register_wen,type_fence_i,trap_ctrl,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
     assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
     input [31:0] src1,src2;
@@ -58,7 +60,7 @@ module ysyx_26040117_IDU(clk,rst,
         endcase
     end
     assign IFU_IDU_ready=state==IDLE&&!redirect_valid;
-    assign IDU_EXU_valid=state==WAIT&&!redirect_valid; 
+    assign IDU_EXU_valid=state==WAIT&&!redirect_valid&&!raw; 
     //FIFO
     reg[31:0] inst_reg,pc_reg;//FIFO
     wire [31:0] inst_out,pc_out;
@@ -121,6 +123,21 @@ module ysyx_26040117_IDU(clk,rst,
                      ({32{(|mytype[4:2])||trap_ctrl[0]}}&imm);
     wire is_slt =(~funct[2])&&funct[1];
     assign sub  =(mytype[8]&&funct[3])||((mytype[8]||mytype[7])&&is_slt);
+    wire register_wen=(trap_ctrl[0]||(|mytype[3:0])||mytype[5]||(|mytype[8:7]))&&(rd!=5'd0);
+    //Data adventure
+    wire rs1_use,rs2_use;
+    assign rs1_use=(|mytype[8:3])||trap_ctrl[0];
+    assign rs2_use=mytype[8]||mytype[6]||mytype[4];
+    wire raw_exu,raw_lsu,raw_wbu;
+    wire exu_rd_valid,lsu_rd_valid,wbu_rd_valid;
+    wire[4:0] exu_rd,lsu_rd,wbu_rd;
+    assign {exu_rd_valid,exu_rd}=EXU_IDU_wrapper;
+    assign {lsu_rd_valid,lsu_rd}=LSU_IDU_wrapper;
+    assign {wbu_rd_valid,wbu_rd}=WBU_IDU_wrapper;
+    assign raw_exu=exu_rd_valid&&((rs1_use&&(rs1==exu_rd))|(rs2_use&&(rs2==exu_rd)));
+    assign raw_lsu=lsu_rd_valid&&((rs1_use&&(rs1==lsu_rd))|(rs2_use&&(rs2==lsu_rd)));
+    assign raw_wbu=wbu_rd_valid&&((rs1_use&&(rs1==wbu_rd))|(rs2_use&&(rs2==wbu_rd)));
+    wire raw=(state==WAIT)&&(raw_exu||raw_lsu||raw_wbu);
 `ifndef STA_MODE
     import "DPI-C" function void npc_trap();
     always@(posedge clk)begin

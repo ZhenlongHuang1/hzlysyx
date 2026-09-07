@@ -1,23 +1,23 @@
 module ysyx_26040117_LSU (clk,rst,
-    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,
-    LSU_WBU_ready,LSU_WBU_valid,result_out,csr_addr,LSU_wrapper,funct3_out,
+    EXU_LSU_ready,EXU_LSU_valid,aux_in,EXU_wrapper,
+    LSU_WBU_ready,LSU_WBU_valid,LSU_wrapper,
+    LSU_IDU_wrapper,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
     //EXU-LSU
     input EXU_LSU_valid;
     output EXU_LSU_ready;
-    input [31:0]result,aux;
-    input [8:0]EXU_wrapper;
-    input [8:0]mytype;
-    input [2:0]funct3;
+    input [53:0]EXU_wrapper;
+    input [31:0]aux_in;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [31:0]result_out;
-    output reg [3:0] csr_addr;
-    output [9:0]LSU_wrapper;
-    output [2:0]funct3_out;
+    output [48:0]LSU_wrapper;
+    assign LSU_wrapper={register_wen,type_fence_i,trap_ctrl,rd,result_out,csr_addr,funct3};
+    //LSU-IDU
+    output [5:0] LSU_IDU_wrapper;
+    assign LSU_IDU_wrapper={lsu_valid&&register_wen,rd};
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
     output[110:0] LSU_MEM_wrapper;
@@ -30,9 +30,9 @@ module ysyx_26040117_LSU (clk,rst,
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
     assign EXU_LSU_ready=!lsu_valid;
-    assign LSU_WBU_valid=lsu_valid&&(!(|mytype_out[6:5])|| 
-            (mytype_out[5]&&!arvalid&&rvalid)||
-            (mytype_out[6]&&!awvalid&&!wvalid&&bvalid)
+    assign LSU_WBU_valid=lsu_valid&&(!(|mytype[6:5])|| 
+            (mytype[5]&&!arvalid&&rvalid)||
+            (mytype[6]&&!awvalid&&!wvalid&&bvalid)
     );
     always @(posedge clk) begin
         if(rst)
@@ -58,8 +58,8 @@ module ysyx_26040117_LSU (clk,rst,
         else if(ren)
             arvalid<=1'b1;
     end
-    assign rready=lsu_valid&&mytype_out[5]&&!arvalid&&LSU_WBU_ready;
-    assign {araddr,arsize}={result_reg,{1'b0,funct3_out[1:0]}};
+    assign rready=lsu_valid&&mytype[5]&&!arvalid&&LSU_WBU_ready;
+    assign {araddr,arsize}={result,{1'b0,funct3[1:0]}};
     //read function
     reg[31:0] rdata_out;
     wire[1:0] raddr_shift;
@@ -75,7 +75,7 @@ module ysyx_26040117_LSU (clk,rst,
         endcase
     end
     always @(*) begin
-        case(funct3_out)
+        case(funct3)
             3'b000:rdata_out={{24{load_byte[7]}},load_byte};
             3'b001:rdata_out={{16{load_half[15]}},load_half};
             3'b010:rdata_out=rdata;
@@ -111,13 +111,13 @@ module ysyx_26040117_LSU (clk,rst,
             wvalid<=1'b1;
     end
     //b
-    assign bready=lsu_valid&&mytype_out[6]&&!wvalid&&!awvalid&&LSU_WBU_ready;
+    assign bready=lsu_valid&&mytype[6]&&!wvalid&&!awvalid&&LSU_WBU_ready;
     //write function
     wire[3:0] aw_mask;
-    assign wdata=(funct3_out[1:0] == 2'b00) ? {4{aux_reg[7:0]}} :   // sb
-                        (funct3_out[1:0] == 2'b01) ? {2{aux_reg[15:0]}} :  // sh
-                        aux_reg;//sw
-    assign {awaddr,awsize}={result_reg,{1'b0,funct3_out[1:0]}};
+    assign wdata=(funct3[1:0] == 2'b00) ? {4{aux[7:0]}} :   // sb
+                        (funct3[1:0] == 2'b01) ? {2{aux[15:0]}} :  // sh
+                        aux;//sw
+    assign {awaddr,awsize}={result,{1'b0,funct3[1:0]}};
     assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
     assign wstrb=aw_mask<<awaddr[1:0];
     //interface
@@ -125,23 +125,25 @@ module ysyx_26040117_LSU (clk,rst,
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
     //FIFO
-    reg [31:0]result_reg,aux_reg;
-    reg [8:0]wrapper_reg;
-    reg [8:0]mytype_reg;
-    reg [2:0]funct3_reg;
-    wire [8:0]mytype_out;
-    wire [2:0]trap_ctrl_out;
+    reg [53:0] wrapper_reg;
+    reg [31:0]aux_reg;
+    wire [31:0]aux;
     wire register_wen;
+    wire[31:0] result;
+    wire [8:0]mytype;
+    wire [2:0]funct3,trap_ctrl;
+    wire [4:0]rd;
+    wire type_fence_i;
     always @(posedge clk) begin
         if(EXU_LSU_fire)begin
-            {result_reg,aux_reg,wrapper_reg,mytype_reg,funct3_reg}<={result,aux,EXU_wrapper,mytype,funct3};
+            wrapper_reg<=EXU_wrapper;
+            aux_reg<=aux_in;
         end
     end
-    assign {mytype_out,funct3_out}={mytype_reg,funct3_reg};
-    assign LSU_wrapper={register_wen,wrapper_reg};
-    assign trap_ctrl_out=wrapper_reg[7:5];
-    assign register_wen=((|mytype_out[3:0])||mytype_out[5]||(|mytype_out[8:7])||(trap_ctrl_out[0]));
-    assign result_out=mytype_out[5]?rdata_out:result_reg;
+    assign {register_wen,type_fence_i,trap_ctrl,rd,result,mytype,funct3}=wrapper_reg;
+    assign aux=aux_reg;
+    wire [31:0] result_out;
+    assign result_out=mytype[5]?rdata_out:result;
     localparam CSR_MCYCLE_LO = 4'd0;
     localparam CSR_MCYCLE_HI = 4'd1;
     localparam CSR_MEPC      = 4'd2;
@@ -150,10 +152,11 @@ module ysyx_26040117_LSU (clk,rst,
     localparam CSR_MTVEC     = 4'd5;
     localparam CSR_MVENDORID = 4'd6;
     localparam CSR_MARCHID   = 4'd7;
+    reg[3:0] csr_addr;
     always @(*) begin
         csr_addr=4'd0;
-        if(trap_ctrl_out[0])begin
-            case(aux_reg[11:0])
+        if(trap_ctrl[0])begin
+            case(aux[11:0])
                 12'hb00:csr_addr={CSR_MCYCLE_LO};
                 12'hb80:csr_addr={CSR_MCYCLE_HI};
                 12'h341:csr_addr={CSR_MEPC};
@@ -169,14 +172,14 @@ module ysyx_26040117_LSU (clk,rst,
 `ifndef STA_MODE
     //difftest
     import "DPI-C" function void difftest_skip_ref();
-    wire[31:0] addr=result_reg;
+    wire[31:0] addr=result;
     wire is_mimo,is_mrom,is_sram,is_flash,is_psram,is_sdram;
     assign is_sdram=addr >= 32'ha0000000 && addr <= 32'hbfffffff;
     assign is_psram=addr >= 32'h80000000 && addr <= 32'h9fffffff;
     assign is_flash=addr >= 32'h30000000 && addr <= 32'h3fffffff;
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
-    assign is_mimo =(|mytype_out[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
+    assign is_mimo =(|mytype[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
     always @(posedge clk) begin
        if(is_mimo&&LSU_WBU_fire)
            difftest_skip_ref();
@@ -196,11 +199,11 @@ module ysyx_26040117_LSU (clk,rst,
         end else begin
             if(rfire)
                 lsu_load_count<=lsu_load_count+64'd1;
-            if(lsu_valid&&mytype_out[5]&&!arvalid&&!rvalid)
+            if(lsu_valid&&mytype[5]&&!arvalid&&!rvalid)
                 lsu_rwait_count<=lsu_rwait_count+64'd1;
             if(bfire)
                 lsu_store_count<=lsu_store_count+64'd1;
-            if(lsu_valid&&mytype_out[6]&&!awvalid&&!wvalid&&!bvalid)
+            if(lsu_valid&&mytype[6]&&!awvalid&&!wvalid&&!bvalid)
                 lsu_bwait_count<=lsu_bwait_count+64'd1;
         end
     end
