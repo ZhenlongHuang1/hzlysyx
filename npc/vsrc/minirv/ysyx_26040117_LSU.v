@@ -1,6 +1,6 @@
 module ysyx_26040117_LSU (clk,rst,
-    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,branch_decision,
-    LSU_WBU_ready,LSU_WBU_valid,result_out,aux_out,LSU_wrapper,funct3_out,
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,EXU_wrapper,mytype,funct3,
+    LSU_WBU_ready,LSU_WBU_valid,result_out,csr_addr,LSU_wrapper,funct3_out,
     MEM_LSU_wrapper,LSU_MEM_wrapper
 );
     input clk,rst;
@@ -11,13 +11,12 @@ module ysyx_26040117_LSU (clk,rst,
     input [8:0]EXU_wrapper;
     input [8:0]mytype;
     input [2:0]funct3;
-    input branch_decision;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
     output [31:0]result_out;
-    output reg [31:0] aux_out;
-    output [10:0]LSU_wrapper;
+    output reg [3:0] csr_addr;
+    output [9:0]LSU_wrapper;
     output [2:0]funct3_out;
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
@@ -130,22 +129,17 @@ module ysyx_26040117_LSU (clk,rst,
     reg [8:0]wrapper_reg;
     reg [8:0]mytype_reg;
     reg [2:0]funct3_reg;
-    reg branch_decision_reg;
     wire [8:0]mytype_out;
     wire [2:0]trap_ctrl_out;
-    wire jump;
     wire register_wen;
     always @(posedge clk) begin
         if(EXU_LSU_fire)begin
             {result_reg,aux_reg,wrapper_reg,mytype_reg,funct3_reg}<={result,aux,EXU_wrapper,mytype,funct3};
-            branch_decision_reg<=branch_decision;
         end
     end
     assign {mytype_out,funct3_out}={mytype_reg,funct3_reg};
-    assign LSU_wrapper={register_wen,jump,wrapper_reg};
+    assign LSU_wrapper={register_wen,wrapper_reg};
     assign trap_ctrl_out=wrapper_reg[7:5];
-    wire privil=|trap_ctrl_out[2:1];
-    assign jump=(mytype_out[3]||mytype_out[2]||privil||(mytype_out[4]&&branch_decision_reg));
     assign register_wen=((|mytype_out[3:0])||mytype_out[5]||(|mytype_out[8:7])||(trap_ctrl_out[0]));
     assign result_out=mytype_out[5]?rdata_out:result_reg;
     localparam CSR_MCYCLE_LO = 4'd0;
@@ -157,18 +151,18 @@ module ysyx_26040117_LSU (clk,rst,
     localparam CSR_MVENDORID = 4'd6;
     localparam CSR_MARCHID   = 4'd7;
     always @(*) begin
-        aux_out=aux_reg;
+        csr_addr=4'd0;
         if(trap_ctrl_out[0])begin
             case(aux_reg[11:0])
-                12'hb00:aux_out={28'd0,CSR_MCYCLE_LO};
-                12'hb80:aux_out={28'd0,CSR_MCYCLE_HI};
-                12'h341:aux_out={28'd0,CSR_MEPC};
-                12'h300:aux_out={28'd0,CSR_MSTATUS};
-                12'h342:aux_out={28'd0,CSR_MCAUSE};
-                12'h305:aux_out={28'd0,CSR_MTVEC};
-                12'hf11:aux_out={28'd0,CSR_MVENDORID};
-                12'hf12:aux_out={28'd0,CSR_MARCHID};
-                default:aux_out=aux_reg;
+                12'hb00:csr_addr={CSR_MCYCLE_LO};
+                12'hb80:csr_addr={CSR_MCYCLE_HI};
+                12'h341:csr_addr={CSR_MEPC};
+                12'h300:csr_addr={CSR_MSTATUS};
+                12'h342:csr_addr={CSR_MCAUSE};
+                12'h305:csr_addr={CSR_MTVEC};
+                12'hf11:csr_addr={CSR_MVENDORID};
+                12'hf12:csr_addr={CSR_MARCHID};
+                default:csr_addr=4'd0;
             endcase
         end
     end

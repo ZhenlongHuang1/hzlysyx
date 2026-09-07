@@ -1,6 +1,7 @@
 module ysyx_26040117_EXU(clk,rst,
     IDU_EXU_ready,IDU_EXU_valid,mytype,funct,num1,num2,aux_num1,aux_num2,IDU_wrapper,sub,
-    EXU_LSU_ready,EXU_LSU_valid,result,aux,IDU_wrapper_out,mytype_out,funct3,branch_decision
+    EXU_LSU_ready,EXU_LSU_valid,result,aux,IDU_wrapper_out,mytype_out,funct3,
+    redirect_valid
 );
     input clk,rst;
     //IDU-EXU
@@ -19,9 +20,9 @@ module ysyx_26040117_EXU(clk,rst,
     output [8:0] IDU_wrapper_out;
     output [8:0]mytype_out;
     output [2:0]funct3;
-    output reg branch_decision;
     assign funct3=funct_out[2:0];
-
+    //EXU-IFU/IDU
+    output redirect_valid;
     //state machine
     wire IDU_EXU_fire,EXU_LSU_fire;
     reg state;
@@ -92,6 +93,7 @@ module ysyx_26040117_EXU(clk,rst,
     wire cmp_lts=$signed(num1_out)<$signed(num2_out);
     wire cmp_ltu=num1_out<num2_out;
     reg branch_decision0;
+    wire branch_decision;
     always@(*)begin
         branch_decision0=1'b0;
         case(funct_out[2:1])
@@ -102,10 +104,11 @@ module ysyx_26040117_EXU(clk,rst,
         endcase
     end
     assign branch_decision=funct_out[0]^branch_decision0;
-    //aux function
+    //aux
     wire[31:0] aux_num1_out,aux_num2_out,aux0;
     assign aux_num1_out=aux_num1_reg;
     assign aux_num2_out=aux_num2_reg;
     assign aux0=aux_num1_out+aux_num2_out;
     assign aux={aux0[31:1],aux0[0]&&~mytype_out[3]};
+    assign redirect_valid=(|mytype_out[3:2]||(mytype_out[4]&&branch_decision))&&EXU_LSU_fire;
 endmodule

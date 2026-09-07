@@ -1,5 +1,6 @@
 module ysyx_26040117_IDU(clk,rst,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
+    redirect_valid,
     IDU_EXU_ready,IDU_EXU_valid,funct,mytype,IDU_wrapper,num1,num2,aux_num1,aux_num2,sub,
     rs1,rs2,src1,src2
 );
@@ -10,6 +11,8 @@ module ysyx_26040117_IDU(clk,rst,
     input [31:0] inst;
     input [31:0] pc;
     input fence_done;
+    //EXU-IDU
+    input redirect_valid;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
@@ -35,7 +38,7 @@ module ysyx_26040117_IDU(clk,rst,
     assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;//IDU is empty,IFU pop->IDU push
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;//EXU is empty,IDU pop->EXU push
     always @(posedge clk) begin
-        if(rst)
+        if(rst||redirect_valid)
             state<=IDLE;
         else 
             state<=next_state;
@@ -54,8 +57,8 @@ module ysyx_26040117_IDU(clk,rst,
             default:next_state=IDLE;
         endcase
     end
-    assign IFU_IDU_ready=state==IDLE;
-    assign IDU_EXU_valid=state==WAIT; 
+    assign IFU_IDU_ready=state==IDLE&&!redirect_valid;
+    assign IDU_EXU_valid=state==WAIT&&!redirect_valid; 
     //FIFO
     reg[31:0] inst_reg,pc_reg;//FIFO
     wire [31:0] inst_out,pc_out;
@@ -107,17 +110,17 @@ module ysyx_26040117_IDU(clk,rst,
                 (immJ&{32{type_J}});
     assign funct3=inst_out[14:12];
 
-    assign num1=({32{(|mytype[8:4]) || trap_ctrl[0]}} & src1)|//alu,alui,load,store,branch,csrr
+    assign num1=({32{(|mytype[8:4]) ||trap_ctrl[0]}} & src1)|//alu,alui,load,store,branch,csrr
                  ({32{(|mytype[3:1]) || trap_ctrl[1]}} & pc_out);//jalr,jal,auipc,ecall
-    assign num2= ({32{mytype[8]||mytype[4]}}&src2)|//alu,branch
-                 ({32{(|mytype[7:5])||(|mytype[1:0])}}&imm)|//alui,load,store,lui,auipc
-                 {29'd0,|mytype[3:2],2'd0};//jal,jalr,4
+    assign num2= ({32{mytype[8]||mytype[4]}}&src2)|//branch,alu
+                 ({32{(|mytype[1:0])||(|mytype[7:5])}}&imm)|//lui,auipc,load,store,alui
+                 ({29'd0,|mytype[3:2],2'd0});//jal,jalr
     assign aux_num1=({32{mytype[2]||mytype[4]}}&pc_out)|
-                     ({32{mytype[3]}}&src1);
+                    ({32{mytype[3]}}&src1);
     assign aux_num2=({32{mytype[6]}}&src2)|
                      ({32{(|mytype[4:2])||trap_ctrl[0]}}&imm);
     wire is_slt =(~funct[2])&&funct[1];
-    assign sub =mytype[4]||(mytype[8]&&funct[3])||((mytype[8]||mytype[7])&&is_slt);
+    assign sub  =(mytype[8]&&funct[3])||((mytype[8]||mytype[7])&&is_slt);
 `ifndef STA_MODE
     import "DPI-C" function void npc_trap();
     always@(posedge clk)begin
