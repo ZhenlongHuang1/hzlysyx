@@ -15,10 +15,11 @@ extern VerilatedContext*contextp;
 extern VerilatedVcdC* tfp;
 #ifdef RISCV32E_NPC
 #define cpu_gpr(i)     dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__Register1__DOT__rf[i]
+#define DIDU_INST      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__inst_reg
 #define DWBU_IFU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_CTRL dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_ctrl
 #define DWBU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
-#define DIDU_INST      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__inst_reg
+#define DWBU_TRAP_DNPC dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_dnpc
 
 
 #else
@@ -46,7 +47,7 @@ typedef struct{
 extern NPC_state npc_state;
 
 typedef struct {           
-    uint32_t gpr[16];
+    uint32_t gpr[32];
     uint32_t pc;
 }CPU_state;
 extern CPU_state cpu_dut;
