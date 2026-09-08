@@ -156,7 +156,7 @@ module ysyx_26040117_LSU (clk,rst,
     reg[3:0] csr_addr;
     always @(*) begin
         csr_addr=4'd0;
-        if(trap_ctrl[0])begin
+        if(|trap_ctrl[1:0])begin
             case(aux[11:0])
                 12'hb00:csr_addr={CSR_MCYCLE_LO};
                 12'hb80:csr_addr={CSR_MCYCLE_HI};
