@@ -17,14 +17,15 @@ module ysyx_26040117_IDU(clk,rst,
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
-    output[151:0]IDU_wrapper;
+    output[152:0]IDU_wrapper;
 
+    wire ebreak;
     wire [3:0] funct;
     wire [8:0] mytype;
     wire [31:0] num1,num2;
     wire [31:0] aux_num1,aux_num2;
     wire sub;
-    assign IDU_wrapper={register_wen,type_fence_i,trap_ctrl,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
+    assign IDU_wrapper={ebreak,register_wen,type_fence_i,trap_ctrl,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
     assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
     input [31:0] src1,src2;
@@ -83,6 +84,7 @@ module ysyx_26040117_IDU(clk,rst,
     assign trap_ctrl = {funct3_zero&(immI[11:0]==12'b001100000010),
                         funct3_zero&(immI[11:0]==12'b0),
                         ~funct3_zero}&{3{type_I_privil}};
+    assign ebreak=type_I_privil&&funct3_zero&&(immI[11:0]==12'b1);
     assign mytype={type_R,type_I_compute,type_S,type_I_LOAD,type_B,type_I_JALR,type_J,type_U_AUIPC,type_U_LUI};
     assign type_I_compute=(opcode==7'b0010011);//ADDI~SRAI
     assign type_I_JALR=(opcode==7'b1100111);//JALR

@@ -123,7 +123,7 @@ module ysyx_26040117 #(
     //Instruction Decode Unit
     wire IDU_EXU_ready,IDU_EXU_valid;
     //mytype      0:lui;    1:auipc;    2:jal;  3:jalr;  4:跳转;  5:load;  6:store;  7:立即数计算;  8:寄存器计算
-    wire[151:0]IDU_wrapper;
+    wire[152:0]IDU_wrapper;
     wire[4:0] rs1,rs2;
     wire[31:0]src1,src2;
     wire [5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;
@@ -143,7 +143,7 @@ module ysyx_26040117 #(
     //Execution Unit
     wire EXU_LSU_ready,EXU_LSU_valid;
     wire [31:0]aux;
-    wire [53:0]EXU_wrapper; 
+    wire [54:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
         .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.aux(aux),.EXU_wrapper(EXU_wrapper),
@@ -151,7 +151,7 @@ module ysyx_26040117 #(
     );
     //Load-Store Unit
     wire LSU_WBU_ready,LSU_WBU_valid;
-    wire[48:0] LSU_wrapper;
+    wire[49:0] LSU_wrapper;
     wire [40:0]MEM_LSU_wrapper;
     wire [110:0]LSU_MEM_wrapper;
     ysyx_26040117_LSU LSU1(.clk(clock),.rst(reset),

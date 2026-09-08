@@ -8,7 +8,7 @@ module ysyx_26040117_WBU(clk,rst,
     //LSU-WBU
     input LSU_WBU_valid;
     output LSU_WBU_ready;
-    input [48:0]LSU_wrapper;
+    input [49:0]LSU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
@@ -38,10 +38,10 @@ module ysyx_26040117_WBU(clk,rst,
     assign LSU_WBU_ready=state==IDLE;
     assign WBU_IFU_valid=state==WAIT;
     //FIFO
-    reg [48:0] LSU_wrapper_reg;
+    reg [49:0] LSU_wrapper_reg;
     wire [31:0] result;
     wire [2:0] funct3;
-    wire register_wen,type_fence_i;
+    wire ebreak,register_wen,type_fence_i;
     wire [2:0]trap_ctrl/* verilator public_flat_rd */;//0:csrr,1:ecall,2:mret,
     wire [3:0] csr_addr/* verilator public_flat_rd */;
     always @(posedge clk) begin
@@ -49,7 +49,7 @@ module ysyx_26040117_WBU(clk,rst,
             LSU_wrapper_reg<=LSU_wrapper;
         end
     end
-    assign {register_wen,type_fence_i,trap_ctrl,rd,result,csr_addr,funct3}=LSU_wrapper_reg;
+    assign {ebreak,register_wen,type_fence_i,trap_ctrl,rd,result,csr_addr,funct3}=LSU_wrapper_reg;
 
     //function
     wire [31:0] csr_rdata;
@@ -64,7 +64,6 @@ module ysyx_26040117_WBU(clk,rst,
     );
     //ebreak
 `ifndef STA_MODE
-    wire ebreak=trap_ctrl[1]&&(funct3==3'b0)&&(csr_addr==4'd8);
     import "DPI-C" function void npc_trap();
     always@(posedge clk)begin
         if(ebreak&&!rst&&WBU_IFU_fire)begin

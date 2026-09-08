@@ -8,13 +8,13 @@ module ysyx_26040117_LSU (clk,rst,
     //EXU-LSU
     input EXU_LSU_valid;
     output EXU_LSU_ready;
-    input [53:0]EXU_wrapper;
+    input [54:0]EXU_wrapper;
     input [31:0]aux_in;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [48:0]LSU_wrapper;
-    assign LSU_wrapper={register_wen,type_fence_i,trap_ctrl,rd,result_out,csr_addr,funct3};
+    output [49:0]LSU_wrapper;
+    assign LSU_wrapper={ebreak,register_wen,type_fence_i,trap_ctrl,rd,result_out,csr_addr,funct3};
     //LSU-IDU
     output [5:0] LSU_IDU_wrapper;
     assign LSU_IDU_wrapper={lsu_valid&&register_wen,rd};
@@ -126,10 +126,10 @@ module ysyx_26040117_LSU (clk,rst,
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
     //FIFO
-    reg [53:0] wrapper_reg;
+    reg [54:0] wrapper_reg;
     reg [31:0]aux_reg;
     wire [31:0]aux;
-    wire register_wen;
+    wire register_wen,ebreak;
     wire[31:0] result;
     wire [8:0]mytype;
     wire [2:0]funct3,trap_ctrl;
@@ -141,7 +141,7 @@ module ysyx_26040117_LSU (clk,rst,
             aux_reg<=aux_in;
         end
     end
-    assign {register_wen,type_fence_i,trap_ctrl,rd,result,mytype,funct3}=wrapper_reg;
+    assign {ebreak,register_wen,type_fence_i,trap_ctrl,rd,result,mytype,funct3}=wrapper_reg;
     assign aux=aux_reg;
     wire [31:0] result_out;
     assign result_out=mytype[5]?rdata_out:result;
