@@ -75,7 +75,7 @@ int is_exit_status_bad() {
 void single_cycle(){
     DCC++;
     IFDEF(USE_NVBOARD,nvboard_update();)
-    if(~dut->reset)
+    if(!dut->reset)
         debug_update();
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
@@ -93,9 +93,11 @@ void reset(int n){
     dut->reset=0;dut->eval();
     DIC = 0;
     DCC = 0;
+    exu_debug={};
+    lsu_debug={};
+    wbu_debug={};
 }
 static void itrace_record(uint32_t pc,uint32_t inst){
-    printf("pc:%08x,inst:%08x\n",pc,inst);
 #ifdef CONFIG_ITRACE
     char *p=logbuf;
     p+=snprintf(p,sizeof(logbuf),"0x%08x %08x",pc,inst);
@@ -159,25 +161,32 @@ static void execute(uint64_t n){
         }
         cpu_pc=wbu_debug.pc;
         inst=wbu_debug.inst;
-        int skip_ref=wbu_debug.skip_ref;
         int trap_ctrl=DWBU_TRAP_CTRL;
         cpu_dnpc=(trap_ctrl&0x6)?DWBU_TRAP_DNPC:wbu_debug.dnpc;
-        int csr_addr=DWBU_AUX;
+        uint32_t old_cpu_pc=cpu_pc;
+#ifdef CONFIG_DIFFTEST
+        int skip_ref=wbu_debug.skip_ref;
+        uint32_t csr_addr=BITS(inst,31,20);
+        if(trap_ctrl==1&&
+           (csr_addr==0xf11||csr_addr==0xf12||
+            csr_addr==0xb00||csr_addr==0xb80)){
+            skip_ref=1;
+        }
+#endif
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
          /* 完成WBU_IFU_fire */
         single_cycle();
-        uint32_t old_cpu_pc=cpu_pc;
         cpu_pc=cpu_dnpc;
         DIC++;
         if(npc_state.state!=NPC_RUNNING)return;
 #ifdef CONFIG_DIFFTEST
         get_cpu_state(&cpu_dut);
-        if(skip_ref||(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80))){
+        if(skip_ref)
             difftest_skip_ref();
-        }
 #endif
         trace_and_difftest(old_cpu_pc);
+        if(npc_state.state!=NPC_RUNNING)return;
     }
 }
 void cpu_exec(uint64_t n){
