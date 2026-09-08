@@ -49,6 +49,7 @@ void init_difftest(const char *ref_so_file, long img_size) {
   ref_difftest_memcpy(FLASH_START, flash, img_size, DIFFTEST_TO_REF);//error need change
 
 #endif
+    isa_reg_display(&cpu_dut);
   ref_difftest_regcpy(&cpu_dut, DIFFTEST_TO_REF);
 }
 
