@@ -77,6 +77,7 @@ lint:
 all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo "$(BIN) $(ARGS) $(IMG)"
 	@$(BIN) $(ARGS) $(IMG)
 sim_ysyxsoc: 
 	$(MAKE) sim SIM_ENV=ysyxsoc
