@@ -15,7 +15,14 @@ extern VerilatedContext*contextp;
 extern VerilatedVcdC* tfp;
 #ifdef RISCV32E_NPC
 #define cpu_gpr(i)     dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__Register1__DOT__rf[i]
+#define DIDU_EXU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__IDU_EXU_fire
 #define DIDU_INST      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__inst_reg
+#define DIDU_PC        dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__pc_reg
+#define DEXU_LSU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__EXU_LSU_fire
+#define DEXU_REDIRECT  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__redirect_valid
+#define DEXU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__aux
+#define DLSU_WBU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__LSU_WBU_fire
+#define DLSU_MMIO      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__is_mimo
 #define DWBU_IFU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_CTRL dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_ctrl
 #define DWBU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
