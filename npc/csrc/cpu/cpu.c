@@ -20,7 +20,7 @@ CPU_state cpu_dut={{0},FLASH_START};
 #endif
 uint32_t cpu_pc=0,cpu_dnpc=0,inst;
 static char logbuf[128]={};
-static bool g_print_step=1;
+static bool g_print_step=false;
 //ftrace
 static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;
