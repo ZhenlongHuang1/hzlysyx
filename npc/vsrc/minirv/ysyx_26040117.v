@@ -96,20 +96,23 @@ module ysyx_26040117 #(
     assign io_slave_rid=4'b0;
 
     //WBU-data
-    wire[31:0]dnpc,srcd;//result:ALU结果
-    wire jump;
+    wire[31:0]trap_dnpc,srcd;//result:ALU结果
+    wire fence_i;
+    wire trap_redirect_valid,redirect_valid;
     //Instruction Fetch Unit
     wire IFU_IDU_ready,IFU_IDU_valid;
     wire[31:0]ifu_idu_pc;
     wire[31:0]inst;
+    wire fence_done;
     wire WBU_IFU_valid,WBU_IFU_ready;
     wire [34:0]MEM_ICACHE_wrapper;
     wire [44:0]ICACHE_MEM_wrapper;
-    wire [33:0] ICACHE_IFU_wrapper,IFU_ICACHE_wrapper;
+    wire [34:0] ICACHE_IFU_wrapper;
+    wire [34:0] IFU_ICACHE_wrapper;
     ysyx_26040117_IFU #(.RESET_VECTOR(RESET_VECTOR))IFU1(.clk(clock),.rst(reset),
-        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.jump(jump),.dnpc(dnpc),
+        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.redirect_valid(redirect_valid),.dnpc(aux),.fence_i(fence_i),
         //.dummy_ifu_wen(dummy_ifu_wen),.dummy_ifu_wdata(dummy_ifu_wdata),.dummy_ifu_waddr(dummy_ifu_waddr),
-        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),
+        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.fence_done(fence_done),
         .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper)
     );
     ysyx_26040117_ICache ICache1(.clk(clock),.rst(reset),
@@ -119,17 +122,15 @@ module ysyx_26040117 #(
     
     //Instruction Decode Unit
     wire IDU_EXU_ready,IDU_EXU_valid;
-    wire[31:0]imm;
-    wire[3:0]funct;
-    wire[8:0]mytype;//0:lui;    1:auipc;    2:jal;  3:jalr;  4:跳转;  5:load;  6:store;  7:立即数计算;  8:寄存器计算
-    wire[7:0]IDU_wrapper;
-    wire[31:0]num1,num2,aux_num1,aux_num2;
-    wire sub;
+    //mytype      0:lui;    1:auipc;    2:jal;  3:jalr;  4:跳转;  5:load;  6:store;  7:立即数计算;  8:寄存器计算
+    wire[151:0]IDU_wrapper;
     wire[4:0] rs1,rs2;
     wire[31:0]src1,src2;
+    wire [5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;
     ysyx_26040117_IDU IDU1(.clk(clock),.rst(reset),
-        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),
-        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.funct(funct),.mytype(mytype),.IDU_wrapper(IDU_wrapper),.num1(num1),.num2(num2),.aux_num1(aux_num1),.aux_num2(aux_num2),.sub(sub),
+        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.fence_done(fence_done),
+        .redirect_valid(redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper),.LSU_IDU_wrapper(LSU_IDU_wrapper),.WBU_IDU_wrapper(WBU_IDU_wrapper),
+        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
         .rs1(rs1),.rs2(rs2),.src1(src1),.src2(src2)
     );
     //Register block
@@ -141,26 +142,22 @@ module ysyx_26040117 #(
     );
     //Execution Unit
     wire EXU_LSU_ready,EXU_LSU_valid;
-    wire [31:0]result,aux;
-    wire branch_decision;
-    wire [8:0] exu_lsu_mytype;
-    wire [2:0] exu_lsu_funct3;
-    wire [7:0]EXU_wrapper; 
+    wire [31:0]aux;
+    wire [53:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
-        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.funct(funct),.mytype(mytype),.IDU_wrapper(IDU_wrapper),.num1(num1),.num2(num2),      .aux_num1(aux_num1),.aux_num2(aux_num2),.sub(sub),
-        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),.branch_decision(branch_decision),
-        .IDU_wrapper_out(EXU_wrapper),.funct3(exu_lsu_funct3),.mytype_out(exu_lsu_mytype)
+        .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
+        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.aux(aux),.EXU_wrapper(EXU_wrapper),
+        .redirect_valid(redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper)
     );
     //Load-Store Unit
     wire LSU_WBU_ready,LSU_WBU_valid;
-    wire[2:0] lsu_wbu_funct3;
-    wire[9:0] LSU_wrapper;
-    wire[31:0] lsu_wbu_result,lsu_wbu_aux;
+    wire[48:0] LSU_wrapper;
     wire [40:0]MEM_LSU_wrapper;
     wire [110:0]LSU_MEM_wrapper;
     ysyx_26040117_LSU LSU1(.clk(clock),.rst(reset),
-        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.result(result),.aux(aux),.EXU_wrapper(EXU_wrapper),.funct3(exu_lsu_funct3),.mytype(exu_lsu_mytype),.branch_decision(branch_decision),
-        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.result_out(lsu_wbu_result),.aux_out(lsu_wbu_aux),.LSU_wrapper(LSU_wrapper),.funct3_out(lsu_wbu_funct3),
+        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.aux_in(aux),.EXU_wrapper(EXU_wrapper),
+        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.LSU_wrapper(LSU_wrapper),
+        .LSU_IDU_wrapper(LSU_IDU_wrapper),
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
     );
     ysyx_26040117_arbiter arbiter1(.clk(clock),.rst(reset),
@@ -171,8 +168,9 @@ module ysyx_26040117 #(
 
     //WriteBack Unit
     ysyx_26040117_WBU WBU1(.clk(clock),.rst(reset),
-        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.LSU_wrapper(LSU_wrapper),.funct3(lsu_wbu_funct3),.result(lsu_wbu_result),.aux(lsu_wbu_aux),
-        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.jump(jump),.dnpc(dnpc),.rd_out(wbu_register_rd),.register_wen(wbu_register_wen)
+        .LSU_WBU_ready(LSU_WBU_ready),.LSU_WBU_valid(LSU_WBU_valid),.LSU_wrapper(LSU_wrapper),
+        .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.fence_i(fence_i),.trap_dnpc(trap_dnpc),.trap_redirect_valid(trap_redirect_valid),.rd(wbu_register_rd),.register_wen_out(wbu_register_wen),
+        .WBU_IDU_wrapper(WBU_IDU_wrapper)
     );
 `ifdef PERF_COUNTER
     wire perf_done;
@@ -183,8 +181,6 @@ module ysyx_26040117 #(
             $strobe("IFU fetch cycle    = %0d",IFU1.ifu_fetch_inst_count);
             $strobe("IFU no fetch cycle = %0d",IFU1.ifu_no_fetch_count);
             $strobe("IFU no fetch CPI   = %.2f",1.0*IFU1.ifu_no_fetch_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IFU wait wbu cycle = %0d",IFU1.ifu_wait_wbu_count);
-            $strobe("IFU wait wbu CPI   = %.2f",1.0*IFU1.ifu_wait_wbu_count/IFU1.ifu_fetch_inst_count);
             $strobe("IFU AR wait        = %0d",IFU1.ifu_arwait_count);
             $strobe("IFU AR wait CPI    = %.2f",1.0*IFU1.ifu_arwait_count/IFU1.ifu_fetch_inst_count);
             $strobe("IFU protocol wait  = %0d",IFU1.ifu_protocol_count);

@@ -15,21 +15,21 @@ extern VerilatedContext*contextp;
 extern VerilatedVcdC* tfp;
 #ifdef RISCV32E_NPC
 #define cpu_gpr(i)     dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__Register1__DOT__rf[i]
-#define DWBU_IFU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IFU1__DOT__WBU_IFU_fire
+#define DWBU_IFU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DIFU_DNPC      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IFU1__DOT__dnpc
 #define DIDU_INST      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__inst_reg
-#define DWBU_TRAP_CTRL dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_ctrl_reg
-#define DWBU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__aux_reg
+#define DWBU_TRAP_CTRL dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_ctrl
+#define DWBU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
 #define DIFU_PC        dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__ifu_idu_pc
 
 
 #else
 #define cpu_gpr(i) dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Register1__DOT__rf[i]
-#define DWBU_IFU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__WBU_IFU_fire
+#define DWBU_IFU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DIFU_DNPC dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IFU1__DOT__dnpc
 #define DIDU_INST dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__inst_reg
-#define DWBU_TRAP_CTRL dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_ctrl_reg
-#define DWBU_AUX dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__aux_reg
+#define DWBU_TRAP_CTRL dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_ctrl
+#define DWBU_AUX dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__csr_addr
 #define DIFU_PC dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_idu_pc
 #endif
 extern uint32_t cpu_pc,cpu_dnpc;
@@ -47,7 +47,6 @@ typedef struct {
 }CPU_state;
 extern CPU_state cpu_dut;
 void get_cpu_state(CPU_state *cpu_dut);
-#define cpu cpu_dut
 extern "C" void difftest_skip_ref();
 void init_difftest(const char *ref_so_file, long img_size);
 void difftest_step(uint32_t pc, uint32_t npc);

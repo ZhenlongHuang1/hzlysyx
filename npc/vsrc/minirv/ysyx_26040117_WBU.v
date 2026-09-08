@@ -1,26 +1,28 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_WBU(clk,rst,
-    LSU_WBU_ready,LSU_WBU_valid,result,aux,LSU_wrapper,funct3,
-    WBU_IFU_ready,WBU_IFU_valid,srcd,dnpc,jump,rd_out,register_wen
+    LSU_WBU_ready,LSU_WBU_valid,LSU_wrapper,
+    WBU_IFU_ready,WBU_IFU_valid,trap_dnpc,trap_redirect_valid,fence_i,srcd,rd,register_wen_out,
+    WBU_IDU_wrapper
 );
     input clk,rst;
     //LSU-WBU
     input LSU_WBU_valid;
     output LSU_WBU_ready;
-    input [31:0] result,aux;
-    input [2:0] funct3;
-    input [9:0]LSU_wrapper;
+    input [48:0]LSU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
     output[31:0] srcd;
-    output[31:0] dnpc ;
-    output jump;
-    output [4:0]rd_out;
-    output register_wen;
-
+    output[31:0] trap_dnpc;
+    output trap_redirect_valid;
+    output fence_i;
+    output [4:0]rd;
+    output register_wen_out;
+    //WBU-IDU
+    output[5:0] WBU_IDU_wrapper;
+    assign WBU_IDU_wrapper={WBU_IFU_valid&&register_wen,rd};
     //state machine
-    wire LSU_WBU_fire,WBU_IFU_fire;
+    wire LSU_WBU_fire,WBU_IFU_fire/* verilator public_flat_rd */;
     reg state;
     localparam IDLE=1'd0,WAIT=1'd1;
     always @(posedge clk) begin
@@ -36,35 +38,28 @@ module ysyx_26040117_WBU(clk,rst,
     assign LSU_WBU_ready=state==IDLE;
     assign WBU_IFU_valid=state==WAIT;
     //FIFO
-    reg [31:0] result_reg,aux_reg;
-    reg [2:0] funct3_reg;
-    reg register_wen_reg,jump_reg;
-    reg [2:0]trap_ctrl_reg;//0:csrr,1:ecall,2:mret,
-    reg [4:0]rd_reg;
-    wire [31:0] result_out,aux_out;
-    wire [2:0] funct3_out;
-    wire register_wen_out,jump_out;
-    wire [2:0]trap_ctrl_out;//0:csrr,1:ecall,2:mret,
+    reg [48:0] LSU_wrapper_reg;
+    wire [31:0] result;
+    wire [2:0] funct3;
+    wire register_wen,type_fence_i;
+    wire [2:0]trap_ctrl/* verilator public_flat_rd */;//0:csrr,1:ecall,2:mret,
+    wire [3:0] csr_addr/* verilator public_flat_rd */;
     always @(posedge clk) begin
         if(LSU_WBU_fire)begin
-            {result_reg,aux_reg,funct3_reg,register_wen_reg,jump_reg,trap_ctrl_reg,rd_reg}<={result,aux,funct3[2:0],LSU_wrapper};
+            LSU_wrapper_reg<=LSU_wrapper;
         end
     end
-    assign {result_out,aux_out,funct3_out,trap_ctrl_out,rd_out}={result_reg,aux_reg,funct3_reg,trap_ctrl_reg,rd_reg};
-    assign {register_wen_out,jump_out}={register_wen_reg,jump_reg};
+    assign {register_wen,type_fence_i,trap_ctrl,rd,result,csr_addr,funct3}=LSU_wrapper_reg;
 
     //function
     wire [31:0] csr_rdata;
-    wire privil;
-    assign register_wen=register_wen_out&&(WBU_IFU_fire);
-    assign privil=|trap_ctrl_out[2:1];
-    assign dnpc=privil?trap_dnpc:aux_out;
-    assign srcd=trap_ctrl_out[0]?csr_rdata:result_out;
-    assign jump=jump_out;
+    assign register_wen_out=register_wen&&(WBU_IFU_fire);
+    assign srcd=trap_ctrl[0]?csr_rdata:result;
+    assign trap_redirect_valid=(|trap_ctrl[2:1])&&WBU_IFU_fire;
+    assign fence_i=type_fence_i&&(WBU_IFU_fire);
     //Control Status Register
-    wire[31:0] trap_dnpc;
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
-        .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl_out),.funct3(funct3_out[2:0]),.csr_addr(aux_out[3:0]),.result(result_out),
+        .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl),.funct3(funct3),.csr_addr(csr_addr),.result(result),
         .rdata(csr_rdata),.trap_dnpc(trap_dnpc)
     );
 endmodule

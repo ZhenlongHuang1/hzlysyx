@@ -1,37 +1,39 @@
 module ysyx_26040117_ICache(
     input wire clk,
     input wire rst,
-    input [33:0]IFU_ICACHE_wrapper,
-    output[33:0]ICACHE_IFU_wrapper,
+    input [34:0]IFU_ICACHE_wrapper,
+    output[34:0]ICACHE_IFU_wrapper,
     input [34:0]MEM_ICACHE_wrapper,
     output[44:0]ICACHE_MEM_wrapper
 );
     parameter OFFSET_WIDTH=4,INDEX_WIDTH=2;
     localparam DATA_DEPTH=2**(OFFSET_WIDTH+INDEX_WIDTH-2);
-    localparam BURST_LEN=(2**(OFFSET_WIDTH-2))-1;
     localparam WORD_NUM=2**(OFFSET_WIDTH-2);
+    localparam BURST_LEN=WORD_NUM-1;
     wire arvalid,arready,rready;
     wire [31:0] araddr;
     wire rvalid,rlast;
     wire [31:0] rdata;
     wire rfire,arfire,rfire_MEM;
+    wire fence_i;
     assign arfire=arvalid&&arready;
     assign rfire=rvalid&&rready;
     assign rfire_MEM=rvalid_MEM&&rready_MEM;
     wire is_sdram;
     reg is_sdram_reg;
+    reg flush_pending,fence_done;
     assign is_sdram =araddr[31:29]==3'b101;//SDRAM
     //IFU-ICache
-    assign arready=(state==IDLE)&&!rvalid_hit;
+    assign arready=(state==IDLE)&&!rvalid_hit&&!flush_pending&&!fence_i;
     assign rvalid=rvalid_hit;
     assign rdata= rdata_hit;
-    assign {arvalid,araddr,rready}=IFU_ICACHE_wrapper;
-    assign ICACHE_IFU_wrapper={arready,rvalid,rdata};
+    assign {fence_i,arvalid,araddr,rready}=IFU_ICACHE_wrapper;
+    assign ICACHE_IFU_wrapper={fence_done,arready,rvalid,rdata};
 
     reg rvalid_hit;
     reg [31:0] rdata_hit;
     always @(posedge clk) begin
-        if(rst)begin
+        if(rst||fence_i||flush_pending)begin
             rvalid_hit<=1'd0;
         end else begin
             if(rfire)begin
@@ -42,7 +44,7 @@ module ysyx_26040117_ICache(
             end else if((state==MISS_DATA)&&rfire_MEM)begin
                 if(offset_count==offset_reg||!is_sdram_reg)begin
                     rdata_hit<=rdata_MEM;
-                    rvalid_hit<=1'b1;
+                    rvalid_hit<=1'b1;//delay rfire -fence_i
                 end
             end
         end
@@ -66,7 +68,7 @@ module ysyx_26040117_ICache(
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
     assign hit=valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
     always @(posedge clk) begin
-        if(rst) begin
+        if(rst||fence_i||flush_pending) begin
             valid_array<=0;
         end else begin
             case(state)
@@ -108,13 +110,34 @@ module ysyx_26040117_ICache(
         next_state=state;
         case(state)
             IDLE:if(!hit&&arfire)next_state=MISS_AR;
-            MISS_AR:if(arready_MEM)next_state=MISS_DATA;
+            MISS_AR:if(arfire_MEM)next_state=MISS_DATA;
             MISS_DATA:if(rfire_MEM&&rlast)next_state=IDLE;
             default:next_state=IDLE;
         endcase
     end
+    wire refill_done=(state==MISS_DATA)&&rfire_MEM&&rlast;
+    always @(posedge clk) begin
+        if(rst)
+            {flush_pending,fence_done}<=2'b0;
+        else begin
+            fence_done<=1'b0;
+            if(fence_i)begin
+                if((state==IDLE)||refill_done)begin
+                    flush_pending<=1'b0;
+                    fence_done<=1'b1;
+                end else begin
+                    flush_pending<=1'b1;
+                end
+            end else if(flush_pending&&refill_done)begin
+                flush_pending<=1'b0;
+                fence_done<=1'b1;
+            end
+        end
+    end
     //ICache-arbiter
     wire arvalid_MEM,arready_MEM;
+    wire arfire_MEM;
+    assign arfire_MEM=arvalid_MEM&&arready_MEM;
     wire rvalid_MEM,rready_MEM;
     wire [31:0] rdata_MEM,araddr_MEM;
     wire [7:0]arlen;
@@ -161,7 +184,7 @@ module ysyx_26040117_ICache(
             icache_access<=1'b0;
             icache_ifhit<=1'b0;
         end else begin
-            if(arvalid)begin
+            if(arfire)begin
                 icache_access<=1'b1; 
                 icache_ifhit<=hit;
             end else if(icache_done)begin

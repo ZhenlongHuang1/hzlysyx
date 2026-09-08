@@ -32,7 +32,6 @@ void get_cpu_state(CPU_state *cpu_dut){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
     cpu_dut->pc=cpu_pc;
-//    printf("pc=%08x inst=%08x\n",cpu_pc,inst);
 }
 static void trace_and_difftest(uint32_t pc){
     
@@ -41,7 +40,7 @@ static void trace_and_difftest(uint32_t pc){
 
 }
 extern "C" void npc_trap(){
-    difftest_skip_ref(); 
+    IFDEF(CONFIG_DIFFTEST,difftest_skip_ref();) 
     npc_state.state=NPC_END;
     npc_state.halt_pc=cpu_pc;//?
     npc_state.halt_ret=cpu_gpr(10);
@@ -143,19 +142,20 @@ static void execute(uint64_t n){
         inst=DIDU_INST;
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
-
+#ifdef CONFIG_DIFFTEST
         int trap_ctrl=DWBU_TRAP_CTRL;
-        int csr_addr=DWBU_AUX&0xfff;
+        int csr_addr=DWBU_AUX;
         if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
             difftest_skip_ref();
         }
+#endif
          /* 完成WBU_IFU_fire */
         single_cycle();
         uint32_t old_cpu_pc=cpu_pc;
         cpu_pc=DIFU_PC;
         DIC++;
         if(npc_state.state!=NPC_RUNNING)return;
-        get_cpu_state(&cpu_dut);
+        IFDEF(CONFIG_DIFFTEST,get_cpu_state(&cpu_dut));
         trace_and_difftest(old_cpu_pc);
     }
 }

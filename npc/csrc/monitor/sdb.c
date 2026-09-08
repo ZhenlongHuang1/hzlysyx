@@ -45,7 +45,8 @@ static int cmd_info(char*args){
         printf("Input info r or info w\n");
     }else{
         if(strcmp(arg,"r")==0){
-            isa_reg_display(&cpu);
+            get_cpu_state(&cpu_dut);
+            isa_reg_display(&cpu_dut);
         }else if(strcmp(arg,"f")==0){
             ftrace_print();            
         }

@@ -49,14 +49,14 @@ void init_difftest(const char *ref_so_file, long img_size) {
   ref_difftest_memcpy(FLASH_START, flash, img_size, DIFFTEST_TO_REF);//error need change
 
 #endif
-  ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+  ref_difftest_regcpy(&cpu_dut, DIFFTEST_TO_REF);
 }
 
 static void checkregs(CPU_state *ref, uint32_t pc) {
-  if (!isa_difftest_checkregs(ref,&cpu)) {
+  if (!isa_difftest_checkregs(ref,&cpu_dut)) {
     npc_state.state = NPC_ABORT;
     npc_state.halt_pc = pc;
-    isa_reg_display(&cpu);
+    isa_reg_display(&cpu_dut);
   }
 }
 
@@ -64,7 +64,7 @@ void difftest_step(uint32_t pc, uint32_t npc) {
   CPU_state ref_r;
   if (is_skip_ref>0) {
     // to skip the checking of an instruction, just copy the reg state to reference design
-    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+    ref_difftest_regcpy(&cpu_dut, DIFFTEST_TO_REF);
     is_skip_ref--;
     return;
   }
