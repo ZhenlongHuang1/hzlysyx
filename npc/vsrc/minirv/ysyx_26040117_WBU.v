@@ -62,4 +62,14 @@ module ysyx_26040117_WBU(clk,rst,
         .wen(WBU_IFU_fire),.trap_ctrl(trap_ctrl),.funct3(funct3),.csr_addr(csr_addr),.result(result),
         .rdata(csr_rdata),.trap_dnpc(trap_dnpc)
     );
+    //ebreak
+`ifndef STA_MODE
+    wire ebreak=trap_ctrl[1]&&(funct3==3'b0)&&(csr_addr==4'd8);
+    import "DPI-C" function void npc_trap();
+    always@(posedge clk)begin
+        if(ebreak&&!rst&&WBU_IFU_fire)begin
+            npc_trap();
+        end
+    end
+`endif
 endmodule

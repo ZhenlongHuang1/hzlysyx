@@ -31,7 +31,6 @@ module ysyx_26040117_IDU(clk,rst,
     output [4:0] rs1,rs2;
 
     wire [2:0]trap_ctrl;
-    wire ebreak;
     wire [4:0] rd;
     //state machine
     wire IFU_IDU_fire,IDU_EXU_fire;
@@ -77,7 +76,6 @@ module ysyx_26040117_IDU(clk,rst,
     wire funct3_zero;
     wire [31:0]immI,immS,immB,immU,immJ,imm;
     assign funct3_zero=~(|funct3);
-    assign ebreak=type_I_privil&&funct3_zero&&(immI[11:0]==12'b1);
     assign opcode=inst_out[6:0];
     assign rd=inst_out[11:7];
     assign rs1=inst_out[19:15];
@@ -138,14 +136,6 @@ module ysyx_26040117_IDU(clk,rst,
     assign raw_lsu=lsu_rd_valid&&((rs1_use&&(rs1==lsu_rd))|(rs2_use&&(rs2==lsu_rd)));
     assign raw_wbu=wbu_rd_valid&&((rs1_use&&(rs1==wbu_rd))|(rs2_use&&(rs2==wbu_rd)));
     wire raw=(state==WAIT)&&(raw_exu||raw_lsu||raw_wbu);
-`ifndef STA_MODE
-    import "DPI-C" function void npc_trap();
-    always@(posedge clk)begin
-        if(ebreak&&!rst&&IDU_EXU_fire)begin
-            npc_trap();
-        end
-    end
-`endif
 
 `ifdef PERF_COUNTER
 

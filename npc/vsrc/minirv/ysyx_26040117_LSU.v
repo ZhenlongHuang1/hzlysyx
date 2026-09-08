@@ -166,6 +166,7 @@ module ysyx_26040117_LSU (clk,rst,
                 12'h305:csr_addr={CSR_MTVEC};
                 12'hf11:csr_addr={CSR_MVENDORID};
                 12'hf12:csr_addr={CSR_MARCHID};
+                12'h001:csr_addr=4'd8;
                 default:csr_addr=4'd0;
             endcase
         end

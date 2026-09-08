@@ -174,7 +174,7 @@ module ysyx_26040117 #(
     );
 `ifdef PERF_COUNTER
     wire perf_done;
-    assign perf_done=IDU1.ebreak&&IDU1.IDU_EXU_fire;
+    assign perf_done=WBU1.ebreak&&WBU1.WBU_IFU_fire;
     always @(posedge clock) begin
         if(!reset&&perf_done)begin
             $strobe("Performance Counters");
