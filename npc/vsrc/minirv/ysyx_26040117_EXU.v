@@ -11,16 +11,16 @@ module ysyx_26040117_EXU(clk,rst,
     //EXU-LSU
     input EXU_LSU_ready;
     output EXU_LSU_valid;
-    output [31:0] aux;
+    output [31:0] aux/* verilator public_flat_rd */;
     output [54:0] EXU_wrapper;
 
     assign EXU_wrapper={ebreak,register_wen,type_fence_i,trap_ctrl,rd,result,mytype,funct[2:0]};
     //EXU-IFU/IDU
-    output redirect_valid;
+    output redirect_valid/* verilator public_flat_rd */;
     output[5:0] EXU_IDU_wrapper;
     assign EXU_IDU_wrapper={EXU_LSU_valid&&register_wen,rd};
     //state machine
-    wire IDU_EXU_fire,EXU_LSU_fire;
+    wire IDU_EXU_fire,EXU_LSU_fire/* verilator public_flat_rd */;
     reg state;
     localparam IDLE=0,WAIT=1;
     always @(posedge clk) begin

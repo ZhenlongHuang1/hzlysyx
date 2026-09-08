@@ -13,7 +13,7 @@ module ysyx_26040117_WBU(clk,rst,
     input WBU_IFU_ready;
     output WBU_IFU_valid;
     output[31:0] srcd;
-    output[31:0] trap_dnpc;
+    output[31:0] trap_dnpc/* verilator public_flat_rd */;
     output trap_redirect_valid;
     output fence_i;
     output [4:0]rd;

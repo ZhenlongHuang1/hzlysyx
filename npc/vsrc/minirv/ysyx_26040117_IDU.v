@@ -34,7 +34,7 @@ module ysyx_26040117_IDU(clk,rst,
     wire [2:0]trap_ctrl;
     wire [4:0] rd;
     //state machine
-    wire IFU_IDU_fire,IDU_EXU_fire;
+    wire IFU_IDU_fire,IDU_EXU_fire/* verilator public_flat_rd */;
     reg [1:0] state,next_state;
     localparam IDLE=2'b0,WAIT=2'b1,FENCE_PAUSE=2'd2;
     assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;//IDU is empty,IFU pop->IDU push

@@ -24,7 +24,7 @@ module ysyx_26040117_LSU (clk,rst,
 
     reg lsu_valid;
     wire wen,ren;
-    wire EXU_LSU_fire,LSU_WBU_fire;
+    wire EXU_LSU_fire,LSU_WBU_fire/* verilator public_flat_rd */;
     wire [8:0]mytype_in=EXU_wrapper[11:3];
     assign wen=mytype_in[6]&&EXU_LSU_fire;//right now
     assign ren=mytype_in[5]&&EXU_LSU_fire;
@@ -175,17 +175,14 @@ module ysyx_26040117_LSU (clk,rst,
     //difftest
     import "DPI-C" function void difftest_skip_ref();
     wire[31:0] addr=result;
-    wire is_mimo,is_mrom,is_sram,is_flash,is_psram,is_sdram;
+    wire is_mimo/* verilator public_flat_rd */;
+    wire is_mrom,is_sram,is_flash,is_psram,is_sdram;
     assign is_sdram=addr >= 32'ha0000000 && addr <= 32'hbfffffff;
     assign is_psram=addr >= 32'h80000000 && addr <= 32'h9fffffff;
     assign is_flash=addr >= 32'h30000000 && addr <= 32'h3fffffff;
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
     assign is_mimo =(|mytype[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
-    always @(posedge clk) begin
-       if(is_mimo&&LSU_WBU_fire)
-           difftest_skip_ref();
-    end
 `endif
 `ifdef PERF_COUNTER
     reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;

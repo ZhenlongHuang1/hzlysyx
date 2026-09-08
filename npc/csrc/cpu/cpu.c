@@ -21,23 +21,41 @@ CPU_state cpu_dut={{0},FLASH_START};
 uint32_t cpu_pc=0,cpu_dnpc=0,inst;
 static char logbuf[128]={};
 static bool g_print_step=false;
+//ftrace
 static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;
 static int depth=0;
+//CPI
 static uint64_t DIC=0;//Dynamic instruction count
 static uint64_t DCC=0;//Dynamic cycles count
+//Debug info
+static Debug_info exu_debug,lsu_debug,wbu_debug;
+static void debug_update(){
+    if(DLSU_WBU_fire){
+        wbu_debug=lsu_debug;
+        wbu_debug.skip_ref=DLSU_MMIO;
+    }
+    if(DEXU_LSU_fire){
+        lsu_debug=exu_debug;
+        lsu_debug.dnpc=DEXU_REDIRECT?DEXU_AUX:(exu_debug.pc+4);
+    }
+    if(DIDU_EXU_fire){
+        exu_debug.pc=DIDU_PC;
+        exu_debug.inst=DIDU_INST;
+        exu_debug.dnpc=DIDU_PC+4;
+        exu_debug.skip_ref=false;
+    }
+}
 void get_cpu_state(CPU_state *cpu_dut){
     int i;
-    for(i=0;i<32;i++){
+    for(i=0;i<16;i++){
         cpu_dut->gpr[i]=cpu_gpr(i);
     }
     cpu_dut->pc=cpu_pc;
 }
 static void trace_and_difftest(uint32_t pc){
-    
     if(g_print_step){IFDEF(CONFIG_ITRACE,puts(logbuf));}
     IFDEF(CONFIG_DIFFTEST, difftest_step(pc, cpu_pc));
-
 }
 extern "C" void npc_trap(){
     IFDEF(CONFIG_DIFFTEST,difftest_skip_ref();) 
@@ -57,6 +75,8 @@ int is_exit_status_bad() {
 void single_cycle(){
     DCC++;
     IFDEF(USE_NVBOARD,nvboard_update();)
+    if(~dut->reset)
+        debug_update();
     dut->clock=1;dut->eval();
     IFDEF(CONFIG_VCD_TRACE,
             if(contextp->time()<1000000){tfp->dump(contextp->time());}
@@ -137,25 +157,26 @@ static void execute(uint64_t n){
             single_cycle();
             if(npc_state.state!=NPC_RUNNING)return;
         }
-        cpu_pc=DIFU_PC;
-        cpu_dnpc=DIFU_DNPC;
-        inst=DIDU_INST;
+        cpu_pc=wbu_debug.pc;
+        inst=wbu_debug.inst;
+        int skip_ref=wbu_debug.skip_ref;
+        int trap_ctrl=DWBU_TRAP_CTRL;
+        cpu_dnpc=(trap_ctrl&0x6)?DWBU_TRAP_DNPC:wbu_debug.dnpc;
+        int csr_addr=DWBU_AUX;
         IFDEF(CONFIG_FTRACE,ftrace_call(cpu_pc,inst,cpu_dnpc);)
         IFDEF(CONFIG_ITRACE,itrace_record(cpu_pc,inst);)
-#ifdef CONFIG_DIFFTEST
-        int trap_ctrl=DWBU_TRAP_CTRL;
-        int csr_addr=DWBU_AUX;
-        if(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80)){
-            difftest_skip_ref();
-        }
-#endif
          /* 完成WBU_IFU_fire */
         single_cycle();
         uint32_t old_cpu_pc=cpu_pc;
-        cpu_pc=DIFU_PC;
+        cpu_pc=cpu_dnpc;
         DIC++;
         if(npc_state.state!=NPC_RUNNING)return;
-        IFDEF(CONFIG_DIFFTEST,get_cpu_state(&cpu_dut));
+#ifdef CONFIG_DIFFTEST
+        get_cpu_state(&cpu_dut);
+        if(skip_ref||(trap_ctrl==1&&(csr_addr==0xf11||csr_addr==0xf12||csr_addr==0xb00||csr_addr==0xb80))){
+            difftest_skip_ref();
+        }
+#endif
         trace_and_difftest(old_cpu_pc);
     }
 }
