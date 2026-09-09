@@ -43,6 +43,7 @@ endif
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O3 -flto
+CXXFLAGS += -g3 -O0 -fno-omit-frame-pointer
 LDFLAGS += -lreadline #-flto
 
 #CXXFLAGS += -Wall -Wextra -fsanitize=address,undefined
@@ -77,7 +78,8 @@ lint:
 all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$(BIN) $(ARGS) $(IMG)
+	@echo "$(BIN) $(ARGS) $(IMG)"
+	$(BIN) $(ARGS) $(IMG)
 sim_ysyxsoc: 
 	$(MAKE) sim SIM_ENV=ysyxsoc
 sim_npc: 

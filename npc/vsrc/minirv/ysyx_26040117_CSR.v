@@ -1,5 +1,5 @@
 module ysyx_26040117_CSR(clk,rst,
-    wen,trap_ctrl,funct3,csr_addr,result,
+    wen,trap_info,funct3,csr_addr,result,
     rdata,trap_dnpc
 );
     localparam CSR_MCYCLE_LO = 4'd0;
@@ -12,7 +12,8 @@ module ysyx_26040117_CSR(clk,rst,
     localparam CSR_MARCHID   = 4'd7;
     input clk,rst;
     input wen;
-    input [2:0] trap_ctrl,funct3;//0:csrr,1:ecall,2:mret
+    input [2:0]funct3;//0:csrr,1:ecall,2:mret
+    input [6:0] trap_info;
     input [3:0]csr_addr;
     input [31:0]result;
     output reg[31:0]rdata;
@@ -20,7 +21,7 @@ module ysyx_26040117_CSR(clk,rst,
     reg[31:0]mcycle_lo,mcycle_hi;
     reg[31:0]wdata,mepc,mstatus,mcause,mtvec;
     //read
-    assign trap_dnpc=trap_ctrl[1]?mtvec:mepc;
+    assign trap_dnpc=trap_info[2]?{mtvec[31:2],2'd0}:mepc;
     always @(*)begin
         case(csr_addr)
             CSR_MCYCLE_LO:rdata=mcycle_lo;
@@ -48,19 +49,28 @@ module ysyx_26040117_CSR(clk,rst,
         if(rst)begin
             mstatus<=32'h1800;
             mcause<=32'h0;
+            mcycle_lo<=32'h0;
+            mcycle_hi<=32'h0;
         end else begin
             mcycle_lo<=lo_inc;
             if(lo_wrap)
                 mcycle_hi<=hi_inc;
             if(wen)begin
-                if(trap_ctrl[1])begin
-                    mepc<=result;//pc
-                    mcause<=32'd11;
-                end else if(trap_ctrl[0])begin
+                if(trap_info[2])begin//trap entry
+                    mstatus[7]<=mstatus[3];//mpie=mie
+                    mstatus[3]<=1'b0;
+                    mstatus[12:11]<=2'b11;//MPP=3 from M mode
+                    mepc<={result[31:2],2'd0};//pc
+                    mcause<={28'd0,trap_info[6:3]};
+                end if(trap_info[1])begin//trap return meret
+                    mstatus[3]<=mstatus[7];
+                    mstatus[7]<=1'b1;
+                    mstatus[12:11]<=2'b11;
+                end else if(trap_info[0])begin
                     case(csr_addr)
                         CSR_MCYCLE_LO:mcycle_lo<=wdata;
                         CSR_MCYCLE_HI:mcycle_hi<=wdata;
-                        CSR_MEPC:     mepc<=wdata;
+                        CSR_MEPC:     mepc<={wdata[31:2],2'd0};
                         CSR_MSTATUS:  mstatus<=wdata;
                         CSR_MCAUSE:   mcause<=wdata;
                         CSR_MTVEC:    mtvec<=wdata;

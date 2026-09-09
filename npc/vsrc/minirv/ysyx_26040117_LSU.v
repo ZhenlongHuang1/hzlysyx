@@ -8,13 +8,13 @@ module ysyx_26040117_LSU (clk,rst,
     //EXU-LSU
     input EXU_LSU_valid;
     output EXU_LSU_ready;
-    input [53:0]EXU_wrapper;
+    input [57:0]EXU_wrapper;
     input [31:0]aux_in;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [48:0]LSU_wrapper;
-    assign LSU_wrapper={register_wen,type_fence_i,trap_ctrl,rd,result_out,csr_addr,funct3};
+    output [52:0]LSU_wrapper;
+    assign LSU_wrapper={register_wen,type_fence_i,trap_info,rd,result_out,csr_addr,funct3};
     //LSU-IDU
     output [5:0] LSU_IDU_wrapper;
     assign LSU_IDU_wrapper={lsu_valid&&register_wen,rd};
@@ -24,7 +24,7 @@ module ysyx_26040117_LSU (clk,rst,
 
     reg lsu_valid;
     wire wen,ren;
-    wire EXU_LSU_fire,LSU_WBU_fire;
+    wire EXU_LSU_fire,LSU_WBU_fire/* verilator public_flat_rd */;
     wire [8:0]mytype_in=EXU_wrapper[11:3];
     assign wen=mytype_in[6]&&EXU_LSU_fire;//right now
     assign ren=mytype_in[5]&&EXU_LSU_fire;
@@ -126,13 +126,13 @@ module ysyx_26040117_LSU (clk,rst,
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
     //FIFO
-    reg [53:0] wrapper_reg;
+    reg [57:0] wrapper_reg;
     reg [31:0]aux_reg;
-    wire [31:0]aux;
     wire register_wen;
-    wire[31:0] result;
+    wire[31:0] aux,result;
     wire [8:0]mytype;
-    wire [2:0]funct3,trap_ctrl;
+    wire [2:0]funct3;
+    wire [6:0]trap_info;
     wire [4:0]rd;
     wire type_fence_i;
     always @(posedge clk) begin
@@ -141,7 +141,7 @@ module ysyx_26040117_LSU (clk,rst,
             aux_reg<=aux_in;
         end
     end
-    assign {register_wen,type_fence_i,trap_ctrl,rd,result,mytype,funct3}=wrapper_reg;
+    assign {register_wen,type_fence_i,trap_info,rd,result,mytype,funct3}=wrapper_reg;
     assign aux=aux_reg;
     wire [31:0] result_out;
     assign result_out=mytype[5]?rdata_out:result;
@@ -156,7 +156,7 @@ module ysyx_26040117_LSU (clk,rst,
     reg[3:0] csr_addr;
     always @(*) begin
         csr_addr=4'd0;
-        if(trap_ctrl[0])begin
+        if(trap_info[0])begin
             case(aux[11:0])
                 12'hb00:csr_addr={CSR_MCYCLE_LO};
                 12'hb80:csr_addr={CSR_MCYCLE_HI};
@@ -174,17 +174,14 @@ module ysyx_26040117_LSU (clk,rst,
     //difftest
     import "DPI-C" function void difftest_skip_ref();
     wire[31:0] addr=result;
-    wire is_mimo,is_mrom,is_sram,is_flash,is_psram,is_sdram;
+    wire is_mimo/* verilator public_flat_rd */;
+    wire is_mrom,is_sram,is_flash,is_psram,is_sdram;
     assign is_sdram=addr >= 32'ha0000000 && addr <= 32'hbfffffff;
     assign is_psram=addr >= 32'h80000000 && addr <= 32'h9fffffff;
     assign is_flash=addr >= 32'h30000000 && addr <= 32'h3fffffff;
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
     assign is_mimo =(|mytype[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
-    always @(posedge clk) begin
-       if(is_mimo&&LSU_WBU_fire)
-           difftest_skip_ref();
-    end
 `endif
 `ifdef PERF_COUNTER
     reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;
