@@ -174,11 +174,11 @@ module ysyx_26040117_IDU(clk,rst,
         end else if(redirect_valid)
             idu_redirect_count<=idu_redirect_count+1'b1;
         else begin
+            if(IFU_IDU_fire)
+                idu_recv_count<=idu_recv_count+1'b1;
             case(state)
                 IDLE:begin
-                    if(IFU_IDU_fire)
-                        idu_recv_count<=idu_recv_count+1'b1;
-                    else
+                    if(!IFU_IDU_fire)
                         idu_empty_count<=idu_empty_count+1'b1;
                 end
                 WAIT:begin
