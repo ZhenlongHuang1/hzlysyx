@@ -55,7 +55,7 @@ module ysyx_26040117_IDU(clk,rst,
                         next_state=IDLE;
                 end
             FENCE_PAUSE:if(fence_done) next_state=IDLE;
-            TRAP_PAUSE:if(redirect_valid) next_state=IDLE;
+            TRAP_PAUSE:if(redirect_valid) next_state=IDLE;//no need?
             default:next_state=IDLE;
         endcase
     end
@@ -156,5 +156,63 @@ module ysyx_26040117_IDU(clk,rst,
         else if(exception_ecall)
             exception_cause=4'd11;
     end
+`ifdef PERF_COUNTER
+    reg [63:0] idu_empty_count,idu_raw_count,idu_exublock_count;
+    reg [63:0] idu_fence_count,idu_trap_count,idu_redirect_count;
+    reg [63:0] idu_recv_count,idu_issue_count;
+    always @(posedge clk)begin
+        if(rst)begin
+            idu_empty_count<=0;
+            idu_raw_count<=0;
+            idu_exublock_count<=0;
+            idu_fence_count<=0;
+            idu_trap_count<=0;
+            idu_redirect_count<=0;
+            idu_recv_count<=0;
+            idu_issue_count<=0;
+        end else if(redirect_valid)
+            idu_redirect_count<=idu_redirect_count+1'b1;
+        else begin
+            case(state)
+                IDLE:begin
+                    if(IFU_IDU_fire)
+                        idu_recv_count<=idu_recv_count+1'b1;
+                    else
+                        idu_empty_count<=idu_empty_count+1'b1;
+                end
+                WAIT:begin
+                    if(raw)
+                        idu_raw_count<=idu_raw_count+1'b1;
+                    else if(!IDU_EXU_ready)
+                        idu_exublock_count<=idu_exublock_count+1'b1;
+                    else
+                        idu_issue_count<=idu_issue_count+1'b1;
+                end
+                FENCE_PAUSE:
+                    idu_fence_count<=idu_fence_count+1'b1;
+                TRAP_PAUSE:
+                    idu_trap_count<=idu_trap_count+1'b1;
+            endcase
+        end
+    end
+    reg [63:0] idu_raw_exu_count;
+    reg [63:0] idu_raw_lsu_count;
+    reg [63:0] idu_raw_wbu_count;
+    always @(posedge clk)begin
+        if(rst)begin
+            idu_raw_exu_count<=0;
+            idu_raw_lsu_count<=0;
+            idu_raw_wbu_count<=0;
+        end else if(state==WAIT&&!redirect_valid)begin
+            if(raw_exu)
+                idu_raw_exu_count<=idu_raw_exu_count+1'b1;
+            if(raw_lsu)
+                idu_raw_lsu_count<=idu_raw_lsu_count+1'b1;
+            if(raw_wbu)
+                idu_raw_wbu_count<=idu_raw_wbu_count+1'b1;
+        end
+    end
 
+
+`endif
 endmodule

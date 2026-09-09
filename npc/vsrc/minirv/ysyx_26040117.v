@@ -74,6 +74,14 @@ module ysyx_26040117 #(
     output wire         io_slave_rlast,
     output wire [3:0]   io_slave_rid
 );
+/*
+    //formal verification
+    ,output wire [38:0] formal_wb,
+    output wire [32:0] formal_inst
+);
+    assign formal_wb={WBU_IFU_valid&&WBU_IFU_ready,wbu_register_wen,wbu_register_rd,srcd};
+    assign formal_inst={IFU_IDU_valid&&IFU_IDU_ready,inst};
+    */
     //Master
     wire[139:0] master_wrapper_out;
     wire[49:0] master_wrapper_in;
@@ -199,15 +207,35 @@ module ysyx_26040117 #(
             $strobe("AMAT               = %.2f",1.0*ICache1.icache_total_latency/ICache1.icache_access_count);
             $strobe("");
 
-            $strobe("LSU LOAD         = %0d",LSU1.lsu_load_count);
-            $strobe("LSU R wait       = %0d",LSU1.lsu_rwait_count);
-            $strobe("LSU LOAD latency = %0d",LSU1.lsu_load_latency_sum);
-            $strobe("LSU LOAD CPI     = %0d",LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
-            $strobe("LSU STORE        = %0d",LSU1.lsu_store_count);
-            $strobe("LSU B wait       = %0d",LSU1.lsu_bwait_count);
-            $strobe("LSU STORE latency= %0d",LSU1.lsu_store_latency_sum);
-            $strobe("LSU STORE CPI    = %0d",LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
+            $strobe("LSU busy cycles       = %0d",LSU1.lsu_busy_count);
+            $strobe("LSU LOAD count        = %0d",LSU1.lsu_load_count);
+            $strobe("LSU LOAD AR wait      = %0d",LSU1.lsu_arwait_count);
+            $strobe("LSU LOAD R wait       = %0d",LSU1.lsu_rwait_count);
+            $strobe("LSU LOAD WBU block    = %0d",LSU1.lsu_load_wbblock_count);
+            $strobe("LSU LOAD latency sum  = %0d",LSU1.lsu_load_latency_sum);
+            $strobe("LSU LOAD avg latency  = %.2f",1.0*LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
+
+            $strobe("LSU STORE count       = %0d",LSU1.lsu_store_count);
+            $strobe("LSU STORE AW wait     = %0d",LSU1.lsu_awwait_count);
+            $strobe("LSU STORE W wait      = %0d",LSU1.lsu_wwait_count);
+            $strobe("LSU STORE B wait      = %0d",LSU1.lsu_bwait_count);
+            $strobe("LSU STORE WBU block   = %0d",LSU1.lsu_store_wbblock_count);
+            $strobe("LSU STORE latency sum = %0d",LSU1.lsu_store_latency_sum);
+            $strobe("LSU STORE avg latency = %.2f",1.0*LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
+            $strobe("LSU OTHER WBU block   = %0d",LSU1.lsu_other_wbblock_count);
             $strobe("");
+
+            $strobe("IDU recv CPI    = %.2f",IDU1.idu_recv_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU issue CPI   = %.2f",IDU1.idu_issue_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU redirect CPI= %.2f",IDU1.idu_redirect_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU exubolck CPI= %.2f",IDU1.idu_exublock_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU empty CPI   = %.2f",IDU1.idu_empty_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU fence CPI   = %.2f",IDU1.idu_fence_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU trap CPI    = %.2f",IDU1.idu_trap_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw CPI     = %.2f",IDU1.idu_raw_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw exu CPI = %.2f",IDU1.idu_raw_exu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw lsu CPI = %.2f",IDU1.idu_raw_lsu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw wbu CPI = %.2f",IDU1.idu_raw_wbu_count/IFU1.ifu_fetch_inst_count);
         end
     end
 `endif
