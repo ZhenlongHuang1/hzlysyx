@@ -225,17 +225,17 @@ module ysyx_26040117 #(
             $strobe("LSU OTHER WBU block   = %0d",LSU1.lsu_other_wbblock_count);
             $strobe("");
 
-            $strobe("IDU recv CPI    = %.2f",IDU1.idu_recv_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU issue CPI   = %.2f",IDU1.idu_issue_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU redirect CPI= %.2f",IDU1.idu_redirect_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU exubolck CPI= %.2f",IDU1.idu_exublock_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU empty CPI   = %.2f",IDU1.idu_empty_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU fence CPI   = %.2f",IDU1.idu_fence_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU trap CPI    = %.2f",IDU1.idu_trap_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU raw CPI     = %.2f",IDU1.idu_raw_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU raw exu CPI = %.2f",IDU1.idu_raw_exu_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU raw lsu CPI = %.2f",IDU1.idu_raw_lsu_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IDU raw wbu CPI = %.2f",IDU1.idu_raw_wbu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU recv CPI    = %.3f",1.0*IDU1.idu_recv_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU issue CPI   = %.3f",1.0*IDU1.idu_issue_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU redirect CPI= %.3f",1.0*IDU1.idu_redirect_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU exubolck CPI= %.3f",1.0*IDU1.idu_exublock_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU empty CPI   = %.3f",1.0*IDU1.idu_empty_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU fence CPI   = %.3f",1.0*IDU1.idu_fence_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU trap CPI    = %.3f",1.0*IDU1.idu_trap_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw CPI     = %.3f",1.0*IDU1.idu_raw_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw exu CPI = %.3f",1.0*IDU1.idu_raw_exu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw lsu CPI = %.3f",1.0*IDU1.idu_raw_lsu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw wbu CPI = %.3f",1.0*IDU1.idu_raw_wbu_count/IFU1.ifu_fetch_inst_count);
         end
     end
 `endif
