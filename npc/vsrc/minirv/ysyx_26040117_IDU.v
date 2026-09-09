@@ -52,14 +52,15 @@ module ysyx_26040117_IDU(clk,rst,
                     else if(type_mret||exception_valid)
                         next_state=TRAP_PAUSE;
                     else
-                        next_state=IDLE;
+                        next_state=IFU_IDU_fire?WAIT:IDLE;
                 end
             FENCE_PAUSE:if(fence_done) next_state=IDLE;
             TRAP_PAUSE:if(redirect_valid) next_state=IDLE;//no need?
             default:next_state=IDLE;
         endcase
     end
-    assign IFU_IDU_ready=state==IDLE&&!redirect_valid;
+    wire issue_pause=type_fence_i||type_mret||exception_valid;
+    assign IFU_IDU_ready=!redirect_valid&&((state==IDLE)||(IDU_EXU_fire&&!issue_pause));
     assign IDU_EXU_valid=state==WAIT&&!redirect_valid&&!raw; 
     //FIFO
     reg[31:0] inst_reg,pc_reg;//FIFO
