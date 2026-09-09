@@ -31,7 +31,7 @@ module ysyx_26040117_EXU(clk,rst,
         else if(EXU_LSU_fire)
             state<=IDLE;
     end
-    assign IDU_EXU_ready=state==IDLE;
+    assign IDU_EXU_ready=(state==IDLE)||(EXU_LSU_fire);
     assign EXU_LSU_valid=state==WAIT;
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;

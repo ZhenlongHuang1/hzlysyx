@@ -35,7 +35,7 @@ module ysyx_26040117_WBU(clk,rst,
     end
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
-    assign LSU_WBU_ready=state==IDLE;
+    assign LSU_WBU_ready=(state==IDLE)||WBU_IFU_fire;
     assign WBU_IFU_valid=state==WAIT;
     //FIFO
     reg [52:0] LSU_wrapper_reg;
