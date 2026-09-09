@@ -8,13 +8,13 @@ module ysyx_26040117_LSU (clk,rst,
     //EXU-LSU
     input EXU_LSU_valid;
     output EXU_LSU_ready;
-    input [54:0]EXU_wrapper;
+    input [57:0]EXU_wrapper;
     input [31:0]aux_in;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [49:0]LSU_wrapper;
-    assign LSU_wrapper={ebreak,register_wen,type_fence_i,trap_ctrl,rd,result_out,csr_addr,funct3};
+    output [52:0]LSU_wrapper;
+    assign LSU_wrapper={register_wen,type_fence_i,trap_info,rd,result_out,csr_addr,funct3};
     //LSU-IDU
     output [5:0] LSU_IDU_wrapper;
     assign LSU_IDU_wrapper={lsu_valid&&register_wen,rd};
@@ -126,13 +126,13 @@ module ysyx_26040117_LSU (clk,rst,
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
     //FIFO
-    reg [54:0] wrapper_reg;
+    reg [57:0] wrapper_reg;
     reg [31:0]aux_reg;
-    wire [31:0]aux;
-    wire register_wen,ebreak;
-    wire[31:0] result;
+    wire register_wen;
+    wire[31:0] aux,result;
     wire [8:0]mytype;
-    wire [2:0]funct3,trap_ctrl;
+    wire [2:0]funct3;
+    wire [6:0]trap_info;
     wire [4:0]rd;
     wire type_fence_i;
     always @(posedge clk) begin
@@ -141,7 +141,7 @@ module ysyx_26040117_LSU (clk,rst,
             aux_reg<=aux_in;
         end
     end
-    assign {ebreak,register_wen,type_fence_i,trap_ctrl,rd,result,mytype,funct3}=wrapper_reg;
+    assign {register_wen,type_fence_i,trap_info,rd,result,mytype,funct3}=wrapper_reg;
     assign aux=aux_reg;
     wire [31:0] result_out;
     assign result_out=mytype[5]?rdata_out:result;
@@ -156,7 +156,7 @@ module ysyx_26040117_LSU (clk,rst,
     reg[3:0] csr_addr;
     always @(*) begin
         csr_addr=4'd0;
-        if(|trap_ctrl[1:0])begin
+        if(trap_info[0])begin
             case(aux[11:0])
                 12'hb00:csr_addr={CSR_MCYCLE_LO};
                 12'hb80:csr_addr={CSR_MCYCLE_HI};
@@ -166,7 +166,6 @@ module ysyx_26040117_LSU (clk,rst,
                 12'h305:csr_addr={CSR_MTVEC};
                 12'hf11:csr_addr={CSR_MVENDORID};
                 12'hf12:csr_addr={CSR_MARCHID};
-                12'h001:csr_addr=4'd8;
                 default:csr_addr=4'd0;
             endcase
         end

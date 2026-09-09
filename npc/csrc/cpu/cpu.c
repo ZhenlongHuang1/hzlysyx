@@ -161,15 +161,15 @@ static void execute(uint64_t n){
         }
         cpu_pc=wbu_debug.pc;
         inst=wbu_debug.inst;
-        int trap_ctrl=DWBU_TRAP_CTRL;
-        cpu_dnpc=(trap_ctrl&0x6)?DWBU_TRAP_DNPC:wbu_debug.dnpc;
+        int trap_info=DWBU_TRAP_INFO;
+        cpu_dnpc=(trap_info&0x6)?DWBU_TRAP_DNPC:wbu_debug.dnpc;
         uint32_t old_cpu_pc=cpu_pc;
 #ifdef CONFIG_DIFFTEST
         int skip_ref=wbu_debug.skip_ref;
         uint32_t csr_addr=BITS(inst,31,20);
-        if(trap_ctrl==1&&
-           (csr_addr==0xf11||csr_addr==0xf12||
-            csr_addr==0xb00||csr_addr==0xb80)){
+        if((trap_info&0x1)&&
+           (csr_addr==0x0||csr_addr==0x1||
+            csr_addr==0x6||csr_addr==0x7)){
             skip_ref=1;
         }
 #endif

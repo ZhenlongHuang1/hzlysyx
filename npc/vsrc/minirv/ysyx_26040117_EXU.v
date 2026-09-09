@@ -7,14 +7,14 @@ module ysyx_26040117_EXU(clk,rst,
     //IDU-EXU
     input IDU_EXU_valid;
     output IDU_EXU_ready;
-    input [152:0]IDU_wrapper;
+    input [155:0]IDU_wrapper;
     //EXU-LSU
     input EXU_LSU_ready;
     output EXU_LSU_valid;
     output [31:0] aux/* verilator public_flat_rd */;
-    output [54:0] EXU_wrapper;
+    output [57:0] EXU_wrapper;
 
-    assign EXU_wrapper={ebreak,register_wen,type_fence_i,trap_ctrl,rd,result,mytype,funct[2:0]};
+    assign EXU_wrapper={register_wen,type_fence_i,trap_info,rd,result,mytype,funct[2:0]};
     //EXU-IFU/IDU
     output redirect_valid/* verilator public_flat_rd */;
     output[5:0] EXU_IDU_wrapper;
@@ -36,19 +36,19 @@ module ysyx_26040117_EXU(clk,rst,
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     //FIFO
-    reg[152:0] IDU_wrapper_reg;
+    reg[155:0] IDU_wrapper_reg;
     wire [8:0]mytype;
     wire [3:0]funct;
     wire [31:0] num1,num2,aux_num1,aux_num2;
-    wire sub,type_fence_i,register_wen,ebreak;
-    wire[2:0] trap_ctrl;
+    wire sub,type_fence_i,register_wen;
+    wire[6:0] trap_info;
     wire [4:0] rd;
     always @(posedge clk) begin
         if(IDU_EXU_fire)begin
             IDU_wrapper_reg<=IDU_wrapper;
         end
     end
-    assign {ebreak,register_wen,type_fence_i,trap_ctrl,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub}=IDU_wrapper_reg;
+    assign {register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub}=IDU_wrapper_reg;
     //result function
     wire carry,sless,less;
     wire[31:0] t_no_cin,result0;
