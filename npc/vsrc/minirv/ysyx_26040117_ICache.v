@@ -12,8 +12,9 @@ module ysyx_26040117_ICache(
     localparam BURST_LEN=WORD_NUM-1;
     wire arvalid,arready,rready;
     wire [31:0] araddr;
-    wire rvalid,rlast;
-    wire [31:0] rdata;
+    wire rlast;
+    reg rvalid;
+    reg [31:0] rdata;
     wire rfire,arfire,rfire_MEM;
     wire fence_i;
     assign arfire=arvalid&&arready;
@@ -24,28 +25,24 @@ module ysyx_26040117_ICache(
     reg flush_pending,fence_done;
     assign is_sdram =araddr[31:29]==3'b101;//SDRAM
     //IFU-ICache
-    assign arready=(state==IDLE)&&!rvalid_hit&&!flush_pending&&!fence_i;
-    assign rvalid=rvalid_hit;
-    assign rdata= rdata_hit;
+    assign arready=(state==IDLE)&&(!rvalid||rready)&&!flush_pending&&!fence_i;
     assign {fence_i,arvalid,araddr,rready}=IFU_ICACHE_wrapper;
     assign ICACHE_IFU_wrapper={fence_done,arready,rvalid,rdata};
 
-    reg rvalid_hit;
-    reg [31:0] rdata_hit;
     always @(posedge clk) begin
         if(rst||fence_i||flush_pending)begin
-            rvalid_hit<=1'd0;
+            rvalid<=1'd0;
         end else begin
-            if(rfire)begin
-                rvalid_hit<=1'b0;
-            end else if((state==IDLE)&&hit&&arfire)begin 
-                rdata_hit<=data_array[{req_index,req_offset}];
-                rvalid_hit<=1'b1;
+            if((state==IDLE)&&hit&&arfire)begin 
+                rdata<=data_array[{req_index,req_offset}];
+                rvalid<=1'b1;
             end else if((state==MISS_DATA)&&rfire_MEM)begin
                 if(offset_count==offset_reg||!is_sdram_reg)begin
-                    rdata_hit<=rdata_MEM;
-                    rvalid_hit<=1'b1;//delay rfire -fence_i
+                    rdata<=rdata_MEM;
+                    rvalid<=1'b1;//delay rfire -fence_i
                 end
+            end else if(rfire)begin
+                rvalid<=1'b0;
             end
         end
     end

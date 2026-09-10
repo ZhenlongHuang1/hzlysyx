@@ -41,33 +41,29 @@ module ysyx_26040117_IFU #(
         next_state=state;
         case (state)
             WAIT_READY:if(arfire)next_state=WAIT_VALID;
-            WAIT_VALID:if(rfire)next_state=WAIT_READY;
+            WAIT_VALID:if(rfire&&!arfire)next_state=WAIT_READY;
             default:next_state=WAIT_READY;
         endcase
     end
-    assign arvalid=state==WAIT_READY&&!rst;
+    assign arvalid=((state==WAIT_READY)||rfire)&&!rst&&!fence_done;
     assign rready=state==WAIT_VALID&&(IFU_IDU_ready||redirect_valid||redirect_pending);
     assign IFU_IDU_valid=(state==WAIT_VALID)&&rvalid&&!redirect_valid&&!redirect_pending;
     assign WBU_IFU_ready=1'b1;
     //pc_next计算
     wire[31:0]snpc;
     assign snpc=pc+32'd4;
+    wire[31:0] next_pc=redirect_valid?dnpc:redirect_pending?redirect_pc:snpc;
     always@(posedge clk)begin
         if(rst)pc<=RESET_VECTOR;
         else if(rfire)begin 
-            if(redirect_valid)
-                pc<=dnpc;
-            else if(redirect_pending)
-                pc<=redirect_pc;
-            else 
-                pc<=snpc;
+            pc<=next_pc;
         end
     end
     //取指
     wire [31:0] rdata;
     wire [31:0] araddr;
 
-    assign araddr=pc;
+    assign araddr=(state==WAIT_VALID)?next_pc:pc;
     assign IFU_MEM_wrapper={fence_i,arvalid,araddr,rready};
     assign {fence_done,arready,rvalid,rdata}=MEM_IFU_wrapper;
     assign inst=rdata;
@@ -79,11 +75,8 @@ module ysyx_26040117_IFU #(
             redirect_pending<=1'b0;
         else if(redirect_valid)begin
             redirect_pc<=dnpc;
-            if(rfire)
-                redirect_pending<=1'b0;
-            else 
-                redirect_pending<=1'b1;
-        end else if(rfire&&redirect_pending)begin
+            redirect_pending<=!rfire;
+        end else if(rfire)begin
             redirect_pending<=1'b0;
         end
     end
@@ -107,8 +100,9 @@ module ysyx_26040117_IFU #(
         end else begin
             if(IFU_IDU_fire)
                 ifu_fetch_inst_count<=ifu_fetch_inst_count+64'd1;
-            if(!rfire)begin
+            else 
                 ifu_no_fetch_count <= ifu_no_fetch_count + 64'd1;
+            if(!rfire)begin
                 if(arvalid&&!arready)
                     ifu_arwait_count<=ifu_arwait_count+64'd1;
                 else if((state==WAIT_VALID)&&!rvalid)
