@@ -36,11 +36,9 @@ module ysyx_26040117_ICache(
             if((state==IDLE)&&hit&&arfire)begin 
                 rdata<=data_array[{req_index,req_offset}];
                 rvalid<=1'b1;
-            end else if((state==MISS_DATA)&&rfire_MEM)begin
-                if(offset_count==offset_reg||!is_sdram_reg)begin
-                    rdata<=rdata_MEM;
-                    rvalid<=1'b1;//delay rfire -fence_i
-                end
+            end else if((state==MISS_DATA)&&rfire_MEM&&(offset_count==offset_reg||!is_sdram_reg))begin
+                rdata<=rdata_MEM;
+                rvalid<=1'b1;//delay rfire -fence_i
             end else if(rfire)begin
                 rvalid<=1'b0;
             end
