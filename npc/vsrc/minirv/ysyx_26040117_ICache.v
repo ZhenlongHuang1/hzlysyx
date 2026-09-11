@@ -11,9 +11,8 @@ module ysyx_26040117_ICache(
     localparam WORD_NUM=2**(OFFSET_WIDTH-2);
     localparam BURST_LEN=WORD_NUM-1;
     wire arvalid,arready,rready,rvalid;
-    wire [31:0] araddr;
+    wire [31:0] araddr,rdata;
     wire rlast;
-    reg [31:0] rdata;
     wire rfire,arfire,rfire_MEM;
     wire fence_i;
     assign arfire=arvalid&&arready;
@@ -25,11 +24,11 @@ module ysyx_26040117_ICache(
     wire redirect_valid;
     assign arready=!pipe_clear&&(state==IDLE)&&(!s1_valid||(s1_s2_fire&&s1_hit));
     assign {fence_i,redirect_valid,arvalid,araddr,rready}=IFU_ICACHE_wrapper;
-    assign ICACHE_IFU_wrapper={fence_done,arready,rvalid,s2_araddr,rdata};
+    assign ICACHE_IFU_wrapper={fence_done,arready,rvalid,rpc,rdata};
     wire pipe_clear=rst||redirect_valid||fence_i||flush_pending||fence_done;
     wire s1_s2_ready,s1_s2_valid;
     assign s1_s2_valid=s1_valid&&!pipe_clear;
-    assign s1_s2_ready=(state==IDLE)&&(!s2_valid||rfire);
+    assign s1_s2_ready=(state==IDLE)&&(s2_count!=2'd2);
     
     //ICache
     reg[31:0] data_array[0:DATA_DEPTH-1];
@@ -79,7 +78,7 @@ module ysyx_26040117_ICache(
     assign s2_offset=s2_araddr[OFFSET_WIDTH-1:2];
     assign s2_index=s2_araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     always @(posedge clk)begin
-        if(s1_s2_fire)begin
+        if(s1_s2_fire&&!s1_hit)begin//??
             s2_araddr<=s1_araddr;
             s2_is_sdram<=s1_is_sdram;
         end
@@ -110,32 +109,42 @@ module ysyx_26040117_ICache(
             endcase
         end
     end
-    reg data_valid;
-    assign rvalid=data_valid&&s2_valid&&!pipe_clear;
-    always @(posedge clk) begin
-        if(rst)
-            data_valid<=1'b0;
-        else if(s1_s2_fire)
-            data_valid<=s1_hit;
-        else if(rfire_MEM&&(offset_count==s2_offset||!s2_is_sdram))
-            data_valid<=1'b1;
-        else if(rfire)
-            data_valid<=1'b0;
-    end
-    always @(posedge clk) begin
-        if(s1_s2_fire&&s1_hit)begin 
-            rdata<=data_array[{s1_index,s1_offset}];
-        end else if(rfire_MEM&&(offset_count==s2_offset||!s2_is_sdram))begin
-            rdata<=rdata_MEM;
-        end
-    end
     always @(posedge clk) begin
         if(pipe_clear)
             s2_valid<=1'b0;
-        else if(s1_s2_fire)
+        else if(s1_s2_fire&&!s1_hit)
             s2_valid<=1'b1;
-        else if(rfire)
+        else if(refill_push)
             s2_valid<=1'b0;
+    end
+    reg [63:0] s2_fifo[0:1];
+    reg s2_head,s2_tail;
+    reg [1:0] s2_count;
+    wire [31:0] rpc;
+    wire hit_push,refill_push,push;
+    assign hit_push=s1_s2_fire&&s1_hit;
+    assign refill_push=rfire_MEM&&s2_valid&&(offset_count==s2_offset||!s2_is_sdram);
+    assign push=hit_push||refill_push;
+    assign rvalid=(s2_count!=0)&&!pipe_clear;
+    assign {rpc,rdata}=s2_fifo[s2_head];
+    always @(posedge clk)begin
+        if(pipe_clear)begin
+            s2_head<=0;
+            s2_tail<=0;
+            s2_count<=0;
+        end else begin
+            if(push)begin
+                s2_fifo[s2_tail]<=hit_push?{s1_araddr,data_array[{s1_index,s1_offset}]}:{s2_araddr,rdata_MEM};
+                s2_tail<=~s2_tail;
+            end
+            if(rfire)
+                s2_head<=~s2_head;
+            case({push,rfire})
+                2'b10:s2_count<=s2_count+1'b1;
+                2'b01:s2_count<=s2_count-1'b1;
+                default:;
+            endcase
+        end
     end
     //state machine
     localparam IDLE=0,MISS_AR=1,MISS_DATA=2;

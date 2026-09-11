@@ -130,6 +130,7 @@ module ysyx_26040117 #(
     ysyx_26040117_IFU #(.RESET_VECTOR(RESET_VECTOR))IFU1(.clk(clock),.rst(reset),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.redirect_valid(redirect_valid),.dnpc(redirect_dnpc),.fence_i(fence_i),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.rpc(ifu_idu_pc),.fence_done(fence_done),
+        .idu_pc(idu_ifu_pc),
         .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper)
     );
     ysyx_26040117_ICache ICache1(.clk(clock),.rst(reset),
@@ -143,11 +144,13 @@ module ysyx_26040117 #(
     wire[155:0]IDU_wrapper;
     wire[4:0] rs1,rs2;
     wire[31:0]src1,src2;
+    wire[31:0] idu_ifu_pc;
     wire [5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;
     ysyx_26040117_IDU IDU1(.clk(clock),.rst(reset),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.fence_done(fence_done),
         .redirect_valid(redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper),.LSU_IDU_wrapper(LSU_IDU_wrapper),.WBU_IDU_wrapper(WBU_IDU_wrapper),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
+        .pc_out(idu_ifu_pc),
         .rs1(rs1),.rs2(rs2),.src1(src1),.src2(src2)
     );
     //Register block

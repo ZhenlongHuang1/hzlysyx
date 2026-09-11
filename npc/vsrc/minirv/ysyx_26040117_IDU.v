@@ -2,6 +2,7 @@ module ysyx_26040117_IDU(clk,rst,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
     redirect_valid,EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper,
     IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
+    pc_out,
     rs1,rs2,src1,src2
 );
     input clk,rst;
@@ -11,6 +12,8 @@ module ysyx_26040117_IDU(clk,rst,
     input [31:0] inst;
     input [31:0] pc;
     input fence_done;
+    //IDU-IFU
+    output [31:0] pc_out;
     //EXU/LSU/WBU-IDU
     input redirect_valid;//control risk
     input[5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;//data risk
@@ -55,16 +58,16 @@ module ysyx_26040117_IDU(clk,rst,
                         next_state=IFU_IDU_fire?WAIT:IDLE;
                 end
             FENCE_PAUSE:if(fence_done) next_state=IDLE;
-            TRAP_PAUSE:if(redirect_valid) next_state=IDLE;//no need?
+            TRAP_PAUSE:;
             default:next_state=IDLE;
         endcase
     end
     wire issue_pause=type_fence_i||type_mret||exception_valid;
-    assign IFU_IDU_ready=!redirect_valid&&((state==IDLE)||(IDU_EXU_fire&&!issue_pause));
+    assign IFU_IDU_ready=!redirect_valid&&((state==IDLE)||(IDU_EXU_fire&&!issue_pause));;
     assign IDU_EXU_valid=state==WAIT&&!redirect_valid&&!raw; 
     //FIFO
     reg[31:0] inst_reg,pc_reg;//FIFO
-    wire [31:0] inst_out,pc_out;
+    wire [31:0] inst_out;
     always @(posedge clk) begin
         if(IFU_IDU_fire)begin
             {inst_reg,pc_reg}<={inst,pc};

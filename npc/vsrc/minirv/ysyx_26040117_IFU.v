@@ -3,6 +3,7 @@ module ysyx_26040117_IFU #(
 )(clk,rst,
     WBU_IFU_valid,WBU_IFU_ready,redirect_valid,dnpc,fence_i,
     IFU_IDU_valid,IFU_IDU_ready,inst,rpc,fence_done,
+    idu_pc,
     MEM_IFU_wrapper,IFU_MEM_wrapper
 );
     input clk,rst;
@@ -19,6 +20,8 @@ module ysyx_26040117_IFU #(
     output [31:0]inst;
     output [31:0]rpc;
     output fence_done;
+    //IDU-IFU
+    input [31:0] idu_pc;
     //IFU-MEM
     input [66:0] MEM_IFU_wrapper;
     output[35:0] IFU_MEM_wrapper;
@@ -29,20 +32,17 @@ module ysyx_26040117_IFU #(
     wire rfire,arfire;
     assign rfire=rvalid&&rready;
     assign arfire=arvalid&&arready;
-    reg[31:0] resume_pc;
     assign arvalid=1;
     assign rready=IFU_IDU_ready;
     assign IFU_IDU_valid=rvalid;
     assign WBU_IFU_ready=1'b1;
     //pc_next计算
     reg[31:0] fetch_pc;
-    wire[31:0]snpc;
-    assign snpc=fetch_pc+32'd4;
     always@(posedge clk)begin
         if(rst)fetch_pc<=RESET_VECTOR;
         else if(redirect_valid) fetch_pc<=dnpc;
-        else if(fence_done) fetch_pc<=resume_pc;
-        else if(arfire)fetch_pc<=snpc;
+        else if(fence_done) fetch_pc<=idu_pc+32'd4;
+        else if(arfire)fetch_pc<=fetch_pc+32'd4;
     end
     //取指
     wire [31:0] rdata;
@@ -52,12 +52,6 @@ module ysyx_26040117_IFU #(
     assign {fence_done,arready,rvalid,rpc,rdata}=MEM_IFU_wrapper;
     assign inst=rdata;
     //FIFO
-    always @(posedge clk) begin
-        if(rst)
-            resume_pc<=RESET_VECTOR;
-        else if(rfire)
-            resume_pc<=rpc+32'd4;
-    end
 `ifdef PERF_COUNTER
     reg [63:0] ifu_fetch_inst_count;
     reg [63:0] ifu_no_fetch_count;
