@@ -104,11 +104,19 @@ module ysyx_26040117 #(
     assign io_slave_rid=4'b0;
 
     //WBU-data
-    wire[31:0]trap_dnpc,redirect_dnpc;//result:ALU结果
+    wire[31:0]trap_dnpc;
+    reg [31:0]redirect_dnpc;//result:ALU结果
     wire fence_i;
-    wire trap_redirect_valid,exu_redirect_valid,redirect_valid;
-    assign redirect_valid=trap_redirect_valid||exu_redirect_valid;
-    assign redirect_dnpc=trap_redirect_valid?trap_dnpc:aux;
+    wire trap_redirect_valid,exu_redirect_valid;
+    reg redirect_valid;
+    wire  redirect_valid_raw=trap_redirect_valid||exu_redirect_valid;
+    always @(posedge clock) begin
+        if(reset)redirect_valid<=1'b0;
+        else redirect_valid<=redirect_valid_raw;
+    end
+    always @(posedge clock) begin
+        if(redirect_valid_raw)redirect_dnpc<=trap_redirect_valid?trap_dnpc:aux;
+    end
     //Instruction Fetch Unit
     wire IFU_IDU_ready,IFU_IDU_valid;
     wire[31:0]ifu_idu_pc;
@@ -157,7 +165,8 @@ module ysyx_26040117 #(
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
         .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.aux(aux),.EXU_wrapper(EXU_wrapper),
-        .redirect_valid(exu_redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper)
+        .redirect_valid(exu_redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper),
+        .flush(redirect_valid)
     );
     //Load-Store Unit
     wire LSU_WBU_ready,LSU_WBU_valid;

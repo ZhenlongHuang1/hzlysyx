@@ -23,7 +23,7 @@ module ysyx_26040117_ICache(
 
     //IFU-ICache
     wire redirect_valid;
-    assign arready=(state==IDLE)&&(!s1_valid||(s1_s2_fire&&s1_hit));
+    assign arready=!pipe_clear&&(state==IDLE)&&(!s1_valid||(s1_s2_fire&&s1_hit));
     assign {fence_i,redirect_valid,arvalid,araddr,rready}=IFU_ICACHE_wrapper;
     assign ICACHE_IFU_wrapper={fence_done,arready,rvalid,s2_araddr,rdata};
     wire pipe_clear=rst||redirect_valid||fence_i||flush_pending||fence_done;
