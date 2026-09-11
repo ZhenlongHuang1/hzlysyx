@@ -2,7 +2,7 @@ module ysyx_26040117_IFU #(
     parameter [31:0] RESET_VECTOR=32'h3000_0000
 )(clk,rst,
     WBU_IFU_valid,WBU_IFU_ready,redirect_valid,dnpc,fence_i,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
+    IFU_IDU_valid,IFU_IDU_ready,inst,rpc,fence_done,
     MEM_IFU_wrapper,IFU_MEM_wrapper
 );
     input clk,rst;
@@ -17,70 +17,47 @@ module ysyx_26040117_IFU #(
     input IFU_IDU_ready;
     output IFU_IDU_valid;
     output [31:0]inst;
-    output reg [31:0]pc;
+    output [31:0]rpc;
     output fence_done;
     //IFU-MEM
-    input [34:0] MEM_IFU_wrapper;
-    output[34:0] IFU_MEM_wrapper;
+    input [66:0] MEM_IFU_wrapper;
+    output[35:0] IFU_MEM_wrapper;
 
     //state machine 
     wire arvalid;
     wire arready,rvalid,rready;
     wire rfire,arfire;
-    reg state,next_state;
-    localparam WAIT_READY=1'd0,WAIT_VALID=1'd1;
-    always@(posedge clk)begin
-        if(rst||fence_done)//icache rvalid may alway equal 0;fence old than redirect
-            state<=WAIT_READY;
-        else
-            state<=next_state;
-    end
     assign rfire=rvalid&&rready;
     assign arfire=arvalid&&arready;
-    always@(*)begin
-        next_state=state;
-        case (state)
-            WAIT_READY:if(arfire)next_state=WAIT_VALID;
-            WAIT_VALID:if(rfire&&!arfire)next_state=WAIT_READY;
-            default:next_state=WAIT_READY;
-        endcase
-    end
-    assign arvalid=((state==WAIT_READY)||rfire)&&!rst&&!fence_done;
-    assign rready=state==WAIT_VALID&&(IFU_IDU_ready||redirect_valid||redirect_pending);
-    assign IFU_IDU_valid=(state==WAIT_VALID)&&rvalid&&!redirect_valid&&!redirect_pending;
+    reg[31:0] resume_pc;
+    assign arvalid=1;
+    assign rready=IFU_IDU_ready;
+    assign IFU_IDU_valid=rvalid;
     assign WBU_IFU_ready=1'b1;
     //pc_next计算
+    reg[31:0] fetch_pc;
     wire[31:0]snpc;
-    assign snpc=pc+32'd4;
-    wire[31:0] next_pc=redirect_valid?dnpc:redirect_pending?redirect_pc:snpc;
+    assign snpc=fetch_pc+32'd4;
     always@(posedge clk)begin
-        if(rst)pc<=RESET_VECTOR;
-        else if(rfire)begin 
-            pc<=next_pc;
-        end
+        if(rst)fetch_pc<=RESET_VECTOR;
+        else if(redirect_valid) fetch_pc<=dnpc;
+        else if(fence_done) fetch_pc<=resume_pc;
+        else if(arfire)fetch_pc<=snpc;
     end
     //取指
     wire [31:0] rdata;
     wire [31:0] araddr;
-
-    assign araddr=(state==WAIT_VALID)?next_pc:pc;
-    assign IFU_MEM_wrapper={fence_i,arvalid,araddr,rready};
-    assign {fence_done,arready,rvalid,rdata}=MEM_IFU_wrapper;
+    assign araddr=fetch_pc;
+    assign IFU_MEM_wrapper={fence_i,redirect_valid,arvalid,araddr,rready};
+    assign {fence_done,arready,rvalid,rpc,rdata}=MEM_IFU_wrapper;
     assign inst=rdata;
     //FIFO
-    reg redirect_pending;
-    reg[31:0] redirect_pc;
     always @(posedge clk) begin
-        if(rst||fence_done)
-            redirect_pending<=1'b0;
-        else if(redirect_valid)begin
-            redirect_pc<=dnpc;
-            redirect_pending<=!rfire;
-        end else if(rfire)begin
-            redirect_pending<=1'b0;
-        end
+        if(rst)
+            resume_pc<=RESET_VECTOR;
+        else if(rfire)
+            resume_pc<=rpc+32'd4;
     end
-
 `ifdef PERF_COUNTER
     reg [63:0] ifu_fetch_inst_count;
     reg [63:0] ifu_no_fetch_count;
@@ -105,9 +82,9 @@ module ysyx_26040117_IFU #(
             if(!rfire)begin
                 if(arvalid&&!arready)
                     ifu_arwait_count<=ifu_arwait_count+64'd1;
-                else if((state==WAIT_VALID)&&!rvalid)
+                else if(!rvalid)
                     ifu_rwait_count<=ifu_rwait_count+64'd1;
-                else if ((state == WAIT_VALID) &&rvalid && !rready)
+                else if (rvalid && !rready)
                     ifu_idublock_count <=ifu_idublock_count + 64'd1;
                 else 
                     ifu_protocol_count<=ifu_protocol_count+64'd1;
