@@ -30,7 +30,7 @@ module ysyx_26040117_LSU (clk,rst,
     assign ren=mytype_in[5]&&EXU_LSU_fire;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
-    assign EXU_LSU_ready=!lsu_valid;
+    assign EXU_LSU_ready=!lsu_valid||LSU_WBU_fire;
     assign LSU_WBU_valid=lsu_valid&&(!(|mytype[6:5])|| 
             (mytype[5]&&!arvalid&&rvalid)||
             (mytype[6]&&!awvalid&&!wvalid&&bvalid)

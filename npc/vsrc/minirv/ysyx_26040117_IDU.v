@@ -54,7 +54,9 @@ module ysyx_26040117_IDU(clk,rst,
                         next_state=FENCE_PAUSE;
                     else if(type_mret||exception_valid)
                         next_state=TRAP_PAUSE;
-                    else
+                    else if(IFU_IDU_fire)
+                        next_state=WAIT;
+                    else 
                         next_state=IDLE;
                 end
             FENCE_PAUSE:if(fence_done) next_state=IDLE;
@@ -62,11 +64,12 @@ module ysyx_26040117_IDU(clk,rst,
             default:next_state=IDLE;
         endcase
     end
-    assign IFU_IDU_ready=state==IDLE;
-    assign IDU_EXU_valid=state==WAIT&&!redirect_valid&&!raw; 
+    wire issue_pause=type_fence_i||type_mret||exception_valid;
+    assign IFU_IDU_ready=(state==IDLE)||(IDU_EXU_fire&&!issue_pause);
+    assign IDU_EXU_valid=(state==WAIT)&&!raw; 
     //FIFO
-    reg[31:0] inst_reg,pc_reg;//FIFO
-    wire [31:0] inst_out,pc_out;
+    reg[31:0] inst_reg,pc_reg;
+    wire [31:0] inst_out;
     always @(posedge clk) begin
         if(IFU_IDU_fire)begin
             {inst_reg,pc_reg}<={inst,pc};
