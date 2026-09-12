@@ -76,7 +76,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             if((state==IDLE)&&hit&&arfire)begin 
                 rdata<=data_array[{req_index,req_offset}];
                 rvalid<=1'b1;
-            end else if((state==MISS_DATA)&&rfire_MEM&&(offset_count==offset_reg||!is_sdram_reg)&&!redirect_valid)begin
+            end else if((state==MISS_DATA)&&rfire_MEM&&(offset_count==offset_reg||!is_sdram_reg)&&!s1_redirect)begin
                 rdata<=rdata_MEM;
                 rvalid<=1'b1;//delay rfire -fence_i
             end else if(rfire)begin

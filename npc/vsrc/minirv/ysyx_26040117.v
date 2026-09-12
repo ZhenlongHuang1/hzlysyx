@@ -117,7 +117,7 @@ module ysyx_26040117 #(
         .idu_pc(idu_ifu_pc),
         .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper)
     );
-    ysyx_26040117_ICache ICache1(.clk(clock),.rst(reset),
+    ysyx_26040117_ICache #(.RESET_VECTOR(RESET_VECTOR))ICache1(.clk(clock),.rst(reset),
         .IFU_ICACHE_wrapper(IFU_ICACHE_wrapper),.ICACHE_IFU_wrapper(ICACHE_IFU_wrapper),
         .MEM_ICACHE_wrapper(MEM_ICACHE_wrapper),.ICACHE_MEM_wrapper(ICACHE_MEM_wrapper)
     );
