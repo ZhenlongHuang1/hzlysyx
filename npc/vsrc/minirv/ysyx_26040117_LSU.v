@@ -30,7 +30,7 @@ module ysyx_26040117_LSU (clk,rst,
     assign ren=mytype_in[5]&&EXU_LSU_fire;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
-    assign EXU_LSU_ready=(!lsu_valid)||LSU_WBU_fire;
+    assign EXU_LSU_ready=!lsu_valid;
     assign LSU_WBU_valid=lsu_valid&&(!(|mytype[6:5])|| 
             (mytype[5]&&!arvalid&&rvalid)||
             (mytype[6]&&!awvalid&&!wvalid&&bvalid)
@@ -184,82 +184,59 @@ module ysyx_26040117_LSU (clk,rst,
     assign is_mimo =(|mytype[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
 `endif
 `ifdef PERF_COUNTER
+    reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;
     wire rfire,bfire;
     assign rfire=rvalid&&rready;
     assign bfire=bvalid&&bready;
-
-    reg [63:0] lsu_load_count,lsu_store_count;
-    reg [63:0] lsu_busy_count;
-    reg [63:0] lsu_arwait_count,lsu_rwait_count;
-    reg [63:0] lsu_awwait_count,lsu_wwait_count,lsu_bwait_count;
-    reg [63:0] lsu_load_wbblock_count,lsu_store_wbblock_count;
-    reg [63:0] lsu_other_wbblock_count;
-    reg [63:0] lsu_load_latency_sum,lsu_store_latency_sum;
-    reg [63:0] lsu_cycle,lsu_start_cycle;
-
-    always @(posedge clk)begin
+    always @(posedge clk) begin
         if(rst)begin
-            lsu_load_count<=0;
-            lsu_store_count<=0;
-            lsu_busy_count<=0;
-            lsu_arwait_count<=0;
-            lsu_rwait_count<=0;
-            lsu_awwait_count<=0;
-            lsu_wwait_count<=0;
-            lsu_bwait_count<=0;
-            lsu_load_wbblock_count<=0;
-            lsu_store_wbblock_count<=0;
-            lsu_other_wbblock_count<=0;
-            lsu_load_latency_sum<=0;
-            lsu_store_latency_sum<=0;
-            lsu_cycle<=0;
-            lsu_start_cycle<=0;
+            lsu_load_count<=64'd0;
+            lsu_rwait_count<=64'd0;
+            lsu_store_count<=64'd0;
+            lsu_bwait_count<=64'd0;
         end else begin
-            lsu_cycle<=lsu_cycle+64'd1;
-            if(ren||wen)
-                lsu_start_cycle<=lsu_cycle;
-            if(lsu_valid)
-                lsu_busy_count<=lsu_busy_count+64'd1;
-            if(rfire)begin
+            if(rfire)
                 lsu_load_count<=lsu_load_count+64'd1;
-                lsu_load_latency_sum<=lsu_load_latency_sum+
-                    (lsu_cycle-lsu_start_cycle);
-            end
-            if(bfire)begin
+            if(lsu_valid&&mytype[5]&&!arvalid&&!rvalid)
+                lsu_rwait_count<=lsu_rwait_count+64'd1;
+            if(bfire)
                 lsu_store_count<=lsu_store_count+64'd1;
-                lsu_store_latency_sum<=lsu_store_latency_sum+
-                    (lsu_cycle-lsu_start_cycle);
-            end
-
-            if(lsu_valid&&mytype[5])begin
-                if(arvalid)begin
-                    if(!arready)
-                        lsu_arwait_count<=lsu_arwait_count+64'd1;
-                end else if(!rvalid)
-                    lsu_rwait_count<=lsu_rwait_count+64'd1;
-                else if(!LSU_WBU_ready)
-                    lsu_load_wbblock_count<=
-                        lsu_load_wbblock_count+64'd1;
-            end
-
-            if(lsu_valid&&mytype[6])begin
-                if(awvalid||wvalid)
-                    ;
-                else if(!bvalid)
-                    lsu_bwait_count<=lsu_bwait_count+64'd1;
-                else if(!LSU_WBU_ready)
-                    lsu_store_wbblock_count<=
-                        lsu_store_wbblock_count+64'd1;
-
-                if(awvalid&&!awready)
-                    lsu_awwait_count<=lsu_awwait_count+64'd1;
-                if(wvalid&&!wready)
-                    lsu_wwait_count<=lsu_wwait_count+64'd1;
-            end
-
-            if(lsu_valid&&!(|mytype[6:5])&&!LSU_WBU_ready)
-                lsu_other_wbblock_count<=lsu_other_wbblock_count+64'd1;
+            if(lsu_valid&&mytype[6]&&!awvalid&&!wvalid&&!bvalid)
+                lsu_bwait_count<=lsu_bwait_count+64'd1;
         end
     end
+    reg [63:0] lsu_cycle;
+    reg [63:0] lsu_start_cycle;
+    reg [63:0] lsu_load_latency_sum;
+    reg [63:0] lsu_store_latency_sum;
+    reg        lsu_pending;
+    reg        lsu_pending_wen;
+
+    always @(posedge clk) begin
+        if (rst) begin
+            lsu_cycle             <= 64'd0;
+            lsu_start_cycle       <= 64'd0;
+            lsu_load_latency_sum  <= 64'd0;
+            lsu_store_latency_sum <= 64'd0;
+            lsu_pending           <= 1'b0;
+            lsu_pending_wen       <= 1'b0;
+        end else begin
+            lsu_cycle <= lsu_cycle + 64'd1;
+            if (!lsu_pending&&(ren||wen))begin
+                lsu_start_cycle <= lsu_cycle;
+                lsu_pending     <= 1'b1;
+                lsu_pending_wen <= wen;
+            end
+            if (lsu_pending && !lsu_pending_wen && rfire) begin
+                lsu_load_latency_sum <=lsu_load_latency_sum +(lsu_cycle - lsu_start_cycle);
+                lsu_pending <= 1'b0;
+            end
+            if (lsu_pending && lsu_pending_wen && bfire) begin
+                lsu_store_latency_sum <=lsu_store_latency_sum +(lsu_cycle - lsu_start_cycle);
+                lsu_pending <= 1'b0;
+            end
+        end
+    end
+
 `endif
 endmodule

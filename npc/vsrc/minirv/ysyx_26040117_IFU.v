@@ -2,8 +2,7 @@ module ysyx_26040117_IFU #(
     parameter [31:0] RESET_VECTOR=32'h3000_0000
 )(clk,rst,
     WBU_IFU_valid,WBU_IFU_ready,redirect_valid,dnpc,fence_i,
-    IFU_IDU_valid,IFU_IDU_ready,inst,rpc,fence_done,
-    idu_pc,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,idu_pc,
     MEM_IFU_wrapper,IFU_MEM_wrapper
 );
     input clk,rst;
@@ -18,73 +17,24 @@ module ysyx_26040117_IFU #(
     input IFU_IDU_ready;
     output IFU_IDU_valid;
     output [31:0]inst;
-    output [31:0]rpc;
+    output [31:0]pc;
     output fence_done;
     //IDU-IFU
     input [31:0] idu_pc;
     //IFU-MEM
-    input [66:0] MEM_IFU_wrapper;
-    output[35:0] IFU_MEM_wrapper;
+    input [65:0] MEM_IFU_wrapper;
+    output[66:0] IFU_MEM_wrapper;
 
     //state machine 
-    wire arvalid;
-    wire arready,rvalid,rready;
-    wire rfire,arfire;
-    assign rfire=rvalid&&rready;
-    assign arfire=arvalid&&arready;
-    assign arvalid=1;
+    wire rvalid,rready;
     assign rready=IFU_IDU_ready;
     assign IFU_IDU_valid=rvalid;
     assign WBU_IFU_ready=1'b1;
-    //pc_next计算
-    reg[31:0] fetch_pc;
-    always@(posedge clk)begin
-        if(rst)fetch_pc<=RESET_VECTOR;
-        else if(redirect_valid) fetch_pc<=dnpc;
-        else if(fence_done) fetch_pc<=idu_pc+32'd4;
-        else if(arfire)fetch_pc<=fetch_pc+32'd4;
-    end
     //取指
-    wire [31:0] rdata;
-    wire [31:0] araddr;
-    assign araddr=fetch_pc;
-    assign IFU_MEM_wrapper={fence_i,redirect_valid,arvalid,araddr,rready};
-    assign {fence_done,arready,rvalid,rpc,rdata}=MEM_IFU_wrapper;
-    assign inst=rdata;
-    //FIFO
-`ifdef PERF_COUNTER
-    reg [63:0] ifu_fetch_inst_count;
-    reg [63:0] ifu_no_fetch_count;
-    reg [63:0] ifu_arwait_count;
-    reg [63:0] ifu_rwait_count;
-    reg [63:0] ifu_idublock_count;
-    reg [63:0] ifu_protocol_count;
-    wire IFU_IDU_fire=IFU_IDU_valid&&IFU_IDU_ready;
-    always @(posedge clk) begin
-        if(rst)begin
-            ifu_fetch_inst_count<=64'd0;
-            ifu_no_fetch_count     <= 64'd0;
-            ifu_arwait_count       <= 64'd0;
-            ifu_rwait_count        <= 64'd0;
-            ifu_idublock_count       <= 64'd0;
-            ifu_protocol_count     <= 64'd0;
-        end else begin
-            if(IFU_IDU_fire)
-                ifu_fetch_inst_count<=ifu_fetch_inst_count+64'd1;
-            else 
-                ifu_no_fetch_count <= ifu_no_fetch_count + 64'd1;
-            if(!rfire)begin
-                if(arvalid&&!arready)
-                    ifu_arwait_count<=ifu_arwait_count+64'd1;
-                else if(!rvalid)
-                    ifu_rwait_count<=ifu_rwait_count+64'd1;
-                else if (rvalid && !rready)
-                    ifu_idublock_count <=ifu_idublock_count + 64'd1;
-                else 
-                    ifu_protocol_count<=ifu_protocol_count+64'd1;
-            end
-        end
-    end
+    wire [31:0] rpc,rdata;
 
-`endif
+    assign IFU_MEM_wrapper={fence_i,redirect_valid,dnpc,idu_pc,rready};
+    assign {fence_done,rvalid,rpc,rdata}=MEM_IFU_wrapper;
+    assign inst=rdata;
+    assign pc=rpc;
 endmodule

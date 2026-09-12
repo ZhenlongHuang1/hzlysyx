@@ -1,8 +1,7 @@
 module ysyx_26040117_EXU(clk,rst,
     IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
     EXU_LSU_ready,EXU_LSU_valid,aux,EXU_wrapper,
-    redirect_valid,EXU_IDU_wrapper,
-    flush
+    redirect_valid,EXU_IDU_wrapper
 );
     input clk,rst;
     //IDU-EXU
@@ -20,22 +19,20 @@ module ysyx_26040117_EXU(clk,rst,
     output redirect_valid/* verilator public_flat_rd */;
     output[5:0] EXU_IDU_wrapper;
     assign EXU_IDU_wrapper={EXU_LSU_valid&&register_wen,rd};
-    //flush
-    input flush;
     //state machine
     wire IDU_EXU_fire,EXU_LSU_fire/* verilator public_flat_rd */;
     reg state;
     localparam IDLE=0,WAIT=1;
     always @(posedge clk) begin
-        if(rst||flush)
+        if(rst)
             state<=IDLE;
         else if(IDU_EXU_fire)
             state<=WAIT;
         else if(EXU_LSU_fire)
             state<=IDLE;
     end
-    assign IDU_EXU_ready=(state==IDLE)||(EXU_LSU_fire);
-    assign EXU_LSU_valid=(state==WAIT)&&!flush;
+    assign IDU_EXU_ready=state==IDLE;
+    assign EXU_LSU_valid=state==WAIT;
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     //FIFO
