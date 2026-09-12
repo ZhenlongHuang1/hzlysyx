@@ -17,8 +17,8 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
 
     assign {fence_i,redirect_valid,dnpc,idu_pc,rready}=IFU_ICACHE_wrapper;
     assign ICACHE_IFU_wrapper={fence_done,rvalid,araddr_reg,rdata};
-    wire fence_clear=fence_i||flush_pending||fence_done;
-    wire pipe_clear=rst||redirect_valid||fence_clear;
+    wire fence_clear=rst||fence_i||flush_pending||fence_done;
+    wire pipe_clear=redirect_valid||fence_clear;
     //S1-FIFO 
     reg s1_valid,s1_redirect;
     reg[31:0] s1_snpc,s1_dnpc;
@@ -28,14 +28,6 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         end
     end
     always @(posedge clk) begin
-        if(rst||fence_clear)
-            s1_redirect<=1'b0;
-        else if(redirect_valid)
-            s1_redirect<=1'b1;
-        else if(arfire)
-            s1_redirect<=1'b0;
-    end
-    always @(posedge clk) begin
         if(rst)
             s1_snpc<=RESET_VECTOR;
         else if(fence_done)
@@ -43,6 +35,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         else if(arfire)
             s1_snpc<=araddr+32'd4;
     end
+    wire [31:0] araddr=s1_redirect?s1_dnpc:s1_snpc;
     always @(posedge clk) begin
         if(rst)
             s1_valid<=1'b1;
@@ -51,7 +44,14 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         else if(fence_done)
             s1_valid<=1'b1;
     end
-    wire [31:0] araddr=s1_redirect?s1_dnpc:s1_snpc;
+    always @(posedge clk) begin
+        if(rst||fence_clear)
+            s1_redirect<=1'b0;
+        else if(redirect_valid)
+            s1_redirect<=1'b1;
+        else if(arfire)
+            s1_redirect<=1'b0;
+    end
     wire arvalid=s1_valid&&!pipe_clear;
     wire is_sdram =araddr[31:29]==3'b101;//SDRAM
     wire [OFFSET_WIDTH-3:0] req_offset;
@@ -92,11 +92,13 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     wire  [OFFSET_WIDTH-3:0] offset_reg;
     reg  [OFFSET_WIDTH-3:0] offset_count;
     wire[INDEX_WIDTH-1:0] index_reg;
+    wire [31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_reg;
     reg[31:0]araddr_reg;
     reg [OFFSET_WIDTH-1:0] mem_offset;
 
     assign offset_reg=araddr_reg[OFFSET_WIDTH-1:2];
     assign index_reg=araddr_reg[OFFSET_WIDTH+:INDEX_WIDTH];
+    assign tag_reg=araddr_reg[31:OFFSET_WIDTH+INDEX_WIDTH];
     always @(posedge clk) begin
         if(arfire)araddr_reg<=araddr;
     end
@@ -109,9 +111,11 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
                         mem_offset<=is_sdram?{OFFSET_WIDTH{1'b0}}:araddr[OFFSET_WIDTH-1:0];
                         is_sdram_reg<=is_sdram;
                         offset_count<=0;
-                        tag_array[req_index]<=req_tag;
-                        if(tag_array[req_index]!=req_tag)
-                            valid_array[req_index*WORD_NUM +: WORD_NUM]<=0;
+                end
+                MISS_AR:begin
+                    tag_array[index_reg]<=tag_reg;
+                    if(tag_array[req_index]!=tag_reg)
+                        valid_array[req_index*WORD_NUM +: WORD_NUM]<=0;
                 end
                 MISS_DATA:if(rfire_MEM)begin
                         if(is_sdram_reg)begin
