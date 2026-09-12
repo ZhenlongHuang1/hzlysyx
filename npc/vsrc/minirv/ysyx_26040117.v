@@ -74,6 +74,14 @@ module ysyx_26040117 #(
     output wire         io_slave_rlast,
     output wire [3:0]   io_slave_rid
 );
+/*
+    //formal verification
+    ,output wire [38:0] formal_wb,
+    output wire [32:0] formal_inst
+);
+    assign formal_wb={WBU_IFU_valid&&WBU_IFU_ready,wbu_register_wen,wbu_register_rd,srcd};
+    assign formal_inst={IFU_IDU_valid&&IFU_IDU_ready,inst};
+    */
     //Master
     wire[139:0] master_wrapper_out;
     wire[49:0] master_wrapper_in;
@@ -96,11 +104,19 @@ module ysyx_26040117 #(
     assign io_slave_rid=4'b0;
 
     //WBU-data
-    wire[31:0]trap_dnpc,redirect_dnpc;//result:ALU结果
+    wire[31:0]trap_dnpc;
+    reg [31:0]redirect_dnpc;//result:ALU结果
     wire fence_i;
-    wire trap_redirect_valid,exu_redirect_valid,redirect_valid;
-    assign redirect_valid=trap_redirect_valid||exu_redirect_valid;
-    assign redirect_dnpc=trap_redirect_valid?trap_dnpc:aux;
+    wire trap_redirect_valid,exu_redirect_valid;
+    reg redirect_valid;
+    wire  redirect_valid_raw=trap_redirect_valid||exu_redirect_valid;
+    always @(posedge clock) begin
+        if(reset)redirect_valid<=1'b0;
+        else redirect_valid<=redirect_valid_raw;
+    end
+    always @(posedge clock) begin
+        if(redirect_valid_raw)redirect_dnpc<=trap_redirect_valid?trap_dnpc:aux;
+    end
     //Instruction Fetch Unit
     wire IFU_IDU_ready,IFU_IDU_valid;
     wire[31:0]ifu_idu_pc;
@@ -109,11 +125,12 @@ module ysyx_26040117 #(
     wire WBU_IFU_valid,WBU_IFU_ready;
     wire [34:0]MEM_ICACHE_wrapper;
     wire [44:0]ICACHE_MEM_wrapper;
-    wire [34:0] ICACHE_IFU_wrapper;
-    wire [34:0] IFU_ICACHE_wrapper;
+    wire [66:0] ICACHE_IFU_wrapper;
+    wire [35:0] IFU_ICACHE_wrapper;
     ysyx_26040117_IFU #(.RESET_VECTOR(RESET_VECTOR))IFU1(.clk(clock),.rst(reset),
         .WBU_IFU_valid(WBU_IFU_valid),.WBU_IFU_ready(WBU_IFU_ready),.redirect_valid(redirect_valid),.dnpc(redirect_dnpc),.fence_i(fence_i),
-        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.fence_done(fence_done),
+        .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.rpc(ifu_idu_pc),.fence_done(fence_done),
+        .idu_pc(idu_ifu_pc),
         .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper)
     );
     ysyx_26040117_ICache ICache1(.clk(clock),.rst(reset),
@@ -127,11 +144,13 @@ module ysyx_26040117 #(
     wire[155:0]IDU_wrapper;
     wire[4:0] rs1,rs2;
     wire[31:0]src1,src2;
+    wire[31:0] idu_ifu_pc;
     wire [5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;
     ysyx_26040117_IDU IDU1(.clk(clock),.rst(reset),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.fence_done(fence_done),
         .redirect_valid(redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper),.LSU_IDU_wrapper(LSU_IDU_wrapper),.WBU_IDU_wrapper(WBU_IDU_wrapper),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
+        .pc_out(idu_ifu_pc),
         .rs1(rs1),.rs2(rs2),.src1(src1),.src2(src2)
     );
     //Register block
@@ -149,7 +168,8 @@ module ysyx_26040117 #(
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
         .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.aux(aux),.EXU_wrapper(EXU_wrapper),
-        .redirect_valid(exu_redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper)
+        .redirect_valid(exu_redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper),
+        .flush(redirect_valid)
     );
     //Load-Store Unit
     wire LSU_WBU_ready,LSU_WBU_valid;
@@ -199,15 +219,35 @@ module ysyx_26040117 #(
             $strobe("AMAT               = %.2f",1.0*ICache1.icache_total_latency/ICache1.icache_access_count);
             $strobe("");
 
-            $strobe("LSU LOAD         = %0d",LSU1.lsu_load_count);
-            $strobe("LSU R wait       = %0d",LSU1.lsu_rwait_count);
-            $strobe("LSU LOAD latency = %0d",LSU1.lsu_load_latency_sum);
-            $strobe("LSU LOAD CPI     = %0d",LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
-            $strobe("LSU STORE        = %0d",LSU1.lsu_store_count);
-            $strobe("LSU B wait       = %0d",LSU1.lsu_bwait_count);
-            $strobe("LSU STORE latency= %0d",LSU1.lsu_store_latency_sum);
-            $strobe("LSU STORE CPI    = %0d",LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
+            $strobe("LSU busy cycles       = %0d",LSU1.lsu_busy_count);
+            $strobe("LSU LOAD count        = %0d",LSU1.lsu_load_count);
+            $strobe("LSU LOAD AR wait      = %0d",LSU1.lsu_arwait_count);
+            $strobe("LSU LOAD R wait       = %0d",LSU1.lsu_rwait_count);
+            $strobe("LSU LOAD WBU block    = %0d",LSU1.lsu_load_wbblock_count);
+            $strobe("LSU LOAD latency sum  = %0d",LSU1.lsu_load_latency_sum);
+            $strobe("LSU LOAD avg latency  = %.2f",1.0*LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
+
+            $strobe("LSU STORE count       = %0d",LSU1.lsu_store_count);
+            $strobe("LSU STORE AW wait     = %0d",LSU1.lsu_awwait_count);
+            $strobe("LSU STORE W wait      = %0d",LSU1.lsu_wwait_count);
+            $strobe("LSU STORE B wait      = %0d",LSU1.lsu_bwait_count);
+            $strobe("LSU STORE WBU block   = %0d",LSU1.lsu_store_wbblock_count);
+            $strobe("LSU STORE latency sum = %0d",LSU1.lsu_store_latency_sum);
+            $strobe("LSU STORE avg latency = %.2f",1.0*LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
+            $strobe("LSU OTHER WBU block   = %0d",LSU1.lsu_other_wbblock_count);
             $strobe("");
+
+            $strobe("IDU recv CPI    = %.3f",1.0*IDU1.idu_recv_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU issue CPI   = %.3f",1.0*IDU1.idu_issue_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU redirect CPI= %.3f",1.0*IDU1.idu_redirect_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU exubolck CPI= %.3f",1.0*IDU1.idu_exublock_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU empty CPI   = %.3f",1.0*IDU1.idu_empty_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU fence CPI   = %.3f",1.0*IDU1.idu_fence_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU trap CPI    = %.3f",1.0*IDU1.idu_trap_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw CPI     = %.3f",1.0*IDU1.idu_raw_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw exu CPI = %.3f",1.0*IDU1.idu_raw_exu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw lsu CPI = %.3f",1.0*IDU1.idu_raw_lsu_count/IFU1.ifu_fetch_inst_count);
+            $strobe("IDU raw wbu CPI = %.3f",1.0*IDU1.idu_raw_wbu_count/IFU1.ifu_fetch_inst_count);
         end
     end
 `endif

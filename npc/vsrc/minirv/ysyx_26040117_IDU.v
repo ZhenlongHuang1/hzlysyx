@@ -2,6 +2,7 @@ module ysyx_26040117_IDU(clk,rst,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
     redirect_valid,EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper,
     IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
+    pc_out,
     rs1,rs2,src1,src2
 );
     input clk,rst;
@@ -11,6 +12,8 @@ module ysyx_26040117_IDU(clk,rst,
     input [31:0] inst;
     input [31:0] pc;
     input fence_done;
+    //IDU-IFU
+    output [31:0] pc_out;
     //EXU/LSU/WBU-IDU
     input redirect_valid;//control risk
     input[5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;//data risk
@@ -52,18 +55,19 @@ module ysyx_26040117_IDU(clk,rst,
                     else if(type_mret||exception_valid)
                         next_state=TRAP_PAUSE;
                     else
-                        next_state=IDLE;
+                        next_state=IFU_IDU_fire?WAIT:IDLE;
                 end
             FENCE_PAUSE:if(fence_done) next_state=IDLE;
-            TRAP_PAUSE:if(redirect_valid) next_state=IDLE;
+            TRAP_PAUSE:;
             default:next_state=IDLE;
         endcase
     end
-    assign IFU_IDU_ready=state==IDLE&&!redirect_valid;
+    wire issue_pause=type_fence_i||type_mret||exception_valid;
+    assign IFU_IDU_ready=!redirect_valid&&((state==IDLE)||(IDU_EXU_fire&&!issue_pause));;
     assign IDU_EXU_valid=state==WAIT&&!redirect_valid&&!raw; 
     //FIFO
     reg[31:0] inst_reg,pc_reg;//FIFO
-    wire [31:0] inst_out,pc_out;
+    wire [31:0] inst_out;
     always @(posedge clk) begin
         if(IFU_IDU_fire)begin
             {inst_reg,pc_reg}<={inst,pc};
@@ -156,5 +160,63 @@ module ysyx_26040117_IDU(clk,rst,
         else if(exception_ecall)
             exception_cause=4'd11;
     end
+`ifdef PERF_COUNTER
+    reg [63:0] idu_empty_count,idu_raw_count,idu_exublock_count;
+    reg [63:0] idu_fence_count,idu_trap_count,idu_redirect_count;
+    reg [63:0] idu_recv_count,idu_issue_count;
+    always @(posedge clk)begin
+        if(rst)begin
+            idu_empty_count<=0;
+            idu_raw_count<=0;
+            idu_exublock_count<=0;
+            idu_fence_count<=0;
+            idu_trap_count<=0;
+            idu_redirect_count<=0;
+            idu_recv_count<=0;
+            idu_issue_count<=0;
+        end else if(redirect_valid)
+            idu_redirect_count<=idu_redirect_count+1'b1;
+        else begin
+            if(IFU_IDU_fire)
+                idu_recv_count<=idu_recv_count+1'b1;
+            case(state)
+                IDLE:begin
+                    if(!IFU_IDU_fire)
+                        idu_empty_count<=idu_empty_count+1'b1;
+                end
+                WAIT:begin
+                    if(raw)
+                        idu_raw_count<=idu_raw_count+1'b1;
+                    else if(!IDU_EXU_ready)
+                        idu_exublock_count<=idu_exublock_count+1'b1;
+                    else
+                        idu_issue_count<=idu_issue_count+1'b1;
+                end
+                FENCE_PAUSE:
+                    idu_fence_count<=idu_fence_count+1'b1;
+                TRAP_PAUSE:
+                    idu_trap_count<=idu_trap_count+1'b1;
+            endcase
+        end
+    end
+    reg [63:0] idu_raw_exu_count;
+    reg [63:0] idu_raw_lsu_count;
+    reg [63:0] idu_raw_wbu_count;
+    always @(posedge clk)begin
+        if(rst)begin
+            idu_raw_exu_count<=0;
+            idu_raw_lsu_count<=0;
+            idu_raw_wbu_count<=0;
+        end else if(state==WAIT&&!redirect_valid)begin
+            if(raw_exu)
+                idu_raw_exu_count<=idu_raw_exu_count+1'b1;
+            if(raw_lsu)
+                idu_raw_lsu_count<=idu_raw_lsu_count+1'b1;
+            if(raw_wbu)
+                idu_raw_wbu_count<=idu_raw_wbu_count+1'b1;
+        end
+    end
 
+
+`endif
 endmodule
