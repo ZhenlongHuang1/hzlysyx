@@ -221,17 +221,17 @@ module ysyx_26040117 #(
             $strobe("");
 
             $strobe("ICache hit rate    = %.3f%%", 100.0*ICache1.icache_hit_count/ICache1.icache_access_count);
-            $strobe("ICache hit time    = %.3f cycles", 1.0);
-            $strobe("ICache miss time   = %.3f cycles", 1.0*ICache1.icache_miss_latency/ICache1.icache_miss_done_count);
-            $strobe("ICache AMAT        = %.3f cycles", (1.0*ICache1.icache_hit_count+ICache1.icache_miss_latency)/(ICache1.icache_hit_count+ICache1.icache_miss_done_count));
+            $strobe("ICache hit time    = %.3f", 1.0);
+            $strobe("ICache miss time   = %.3f", 1.0*ICache1.icache_miss_latency/ICache1.icache_miss_done_count);
+            $strobe("ICache AMAT        = %.3f", (1.0*ICache1.icache_hit_count+ICache1.icache_miss_latency)/(ICache1.icache_hit_count+ICache1.icache_miss_done_count));
             $strobe("");
 
             $strobe("LSU LOAD count     = %0d", LSU1.lsu_load_count);
-            $strobe("LSU LOAD latency   = %0d cycles", LSU1.lsu_load_latency_sum);
-            $strobe("LSU LOAD avg       = %.3f cycles", 1.0*LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
+            $strobe("LSU LOAD latency   = %0d", LSU1.lsu_load_latency_sum);
+            $strobe("LSU LOAD avg       = %.3f", 1.0*LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
             $strobe("LSU STORE count    = %0d", LSU1.lsu_store_count);
-            $strobe("LSU STORE latency  = %0d cycles", LSU1.lsu_store_latency_sum);
-            $strobe("LSU STORE avg      = %.3f cycles", 1.0*LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
+            $strobe("LSU STORE latency  = %0d", LSU1.lsu_store_latency_sum);
+            $strobe("LSU STORE avg      = %.3f", 1.0*LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
             $strobe("");
         end
     end
