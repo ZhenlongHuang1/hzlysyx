@@ -23,9 +23,8 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     reg s1_valid,s1_redirect;
     reg[31:0] s1_snpc,s1_dnpc;
     always @(posedge clk) begin
-        if(redirect_valid)begin
+        if(redirect_valid)
             s1_dnpc<=dnpc;
-        end
     end
     always @(posedge clk) begin
         if(rst)
@@ -45,14 +44,14 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             s1_valid<=1'b1;
     end
     always @(posedge clk) begin
-        if(rst||fence_clear)
+        if(rst||fence_clear)begin
             s1_redirect<=1'b0;
-        else if(redirect_valid)
+        end else if(redirect_valid)begin 
             s1_redirect<=1'b1;
-        else if(arfire)
+        end else if(arfire)begin
             s1_redirect<=1'b0;
+        end
     end
-    wire arvalid=s1_valid&&!pipe_clear;
     wire is_sdram =araddr[31:29]==3'b101;//SDRAM
     wire [OFFSET_WIDTH-3:0] req_offset;
     wire[INDEX_WIDTH-1:0] req_index;
@@ -62,6 +61,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
     assign hit=valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
+    wire arvalid=s1_valid&&!pipe_clear;
     //S2
     wire arready=(state==IDLE)&&(!rvalid||rready);
     wire arfire=arvalid&&arready;
@@ -69,15 +69,20 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
 
     reg rvalid;
     reg [31:0] rdata;
+    wire refill_data_en=rfire_MEM&&((offset_count==offset_reg)||!is_sdram_reg);
+    always @(posedge clk) begin
+        if(s1_valid&&arready)
+            rdata<=data_array[{req_index,req_offset}];
+        else if(refill_data_en)
+            rdata<=rdata_MEM;
+    end
     always @(posedge clk) begin
         if(pipe_clear)begin
             rvalid<=1'd0;
         end else begin
-            if((state==IDLE)&&hit&&arfire)begin 
-                rdata<=data_array[{req_index,req_offset}];
+            if(hit&&arfire)begin 
                 rvalid<=1'b1;
-            end else if((state==MISS_DATA)&&rfire_MEM&&(offset_count==offset_reg||!is_sdram_reg)&&!s1_redirect)begin
-                rdata<=rdata_MEM;
+            end else if(refill_data_en&&!s1_redirect)begin
                 rvalid<=1'b1;//delay rfire -fence_i
             end else if(rfire)begin
                 rvalid<=1'b0;
@@ -114,8 +119,8 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
                 end
                 MISS_AR:begin
                     tag_array[index_reg]<=tag_reg;
-                    if(tag_array[req_index]!=tag_reg)
-                        valid_array[req_index*WORD_NUM +: WORD_NUM]<=0;
+                    if(tag_array[index_reg]!=tag_reg)
+                        valid_array[index_reg*WORD_NUM +: WORD_NUM]<=0;
                 end
                 MISS_DATA:if(rfire_MEM)begin
                         if(is_sdram_reg)begin

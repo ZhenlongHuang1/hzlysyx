@@ -53,7 +53,7 @@ module ysyx_26040117_EXU(clk,rst,
     wire carry,sless,less;
     wire[31:0] t_no_cin,result0;
     assign t_no_cin={32{sub}}^num2;
-    assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+sub;//adder
+    assign {carry,result0}=num1+t_no_cin+sub;//adder
     assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
     assign less=~carry;
     
