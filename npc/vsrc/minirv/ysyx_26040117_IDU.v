@@ -178,4 +178,67 @@ module ysyx_26040117_IDU(clk,rst,
             exception_cause=4'd11;
     end
 
+`ifdef PERF_COUNTER
+    reg [63:0] idu_occupied_cycles;
+    reg [63:0] idu_entry_cycles;
+    reg [63:0] idu_full_block_cycles;
+
+    reg [63:0] idu_flush_cycles;
+    reg [63:0] idu_pause_cycles;
+    reg [63:0] idu_empty_cycles;
+    reg [63:0] idu_raw_cycles;
+    reg [63:0] idu_exu_block_cycles;
+    reg [63:0] idu_issue_count;
+
+    reg [63:0] idu_raw_exu_cycles;
+    reg [63:0] idu_raw_lsu_cycles;
+    reg [63:0] idu_raw_wbu_cycles;
+
+    always @(posedge clk)begin
+        if(rst)begin
+            idu_occupied_cycles<=64'd0;
+            idu_entry_cycles<=64'd0;
+            idu_full_block_cycles<=64'd0;
+            idu_flush_cycles<=64'd0;
+            idu_pause_cycles<=64'd0;
+            idu_empty_cycles<=64'd0;
+            idu_raw_cycles<=64'd0;
+            idu_exu_block_cycles<=64'd0;
+            idu_issue_count<=64'd0;
+            idu_raw_exu_cycles<=64'd0;
+            idu_raw_lsu_cycles<=64'd0;
+            idu_raw_wbu_cycles<=64'd0;
+        end else begin
+            //队列占用
+            idu_entry_cycles<=idu_entry_cycles+{62'd0,buf_count};
+
+            if(buf_count!=0)
+                idu_occupied_cycles<=idu_occupied_cycles+64'd1;
+
+            //每拍只归入一类
+            if(redirect_valid)
+                idu_flush_cycles<=idu_flush_cycles+64'd1;
+            else if(state!=IDLE)
+                idu_pause_cycles<=idu_pause_cycles+64'd1;
+            else if(buf_count==0)
+                idu_empty_cycles<=idu_empty_cycles+64'd1;
+            else if(raw)
+                idu_raw_cycles<=idu_raw_cycles+64'd1;
+            else if(!IDU_EXU_ready)
+                idu_exu_block_cycles<=idu_exu_block_cycles+64'd1;
+            else
+                idu_issue_count<=idu_issue_count+64'd1;
+
+            //RAW来源，允许重叠
+            if(!redirect_valid&&(state==IDLE)&&(buf_count!=0))begin
+                if(raw_exu)
+                    idu_raw_exu_cycles<=idu_raw_exu_cycles+64'd1;
+                if(raw_lsu)
+                    idu_raw_lsu_cycles<=idu_raw_lsu_cycles+64'd1;
+                if(raw_wbu)
+                    idu_raw_wbu_cycles<=idu_raw_wbu_cycles+64'd1;
+            end
+        end
+    end
+`endif
 endmodule

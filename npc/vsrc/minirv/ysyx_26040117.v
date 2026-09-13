@@ -179,37 +179,59 @@ module ysyx_26040117 #(
 `ifdef PERF_COUNTER
     wire perf_done;
     assign perf_done=WBU1.ebreak&&WBU1.WBU_IFU_fire;
-    always @(posedge clock) begin
+
+    always @(posedge clock)begin
         if(!reset&&perf_done)begin
             $strobe("Performance Counters");
-            /*
-            $strobe("IFU fetch cycle    = %0d",IFU1.ifu_fetch_inst_count);
-            $strobe("IFU no fetch cycle = %0d",IFU1.ifu_no_fetch_count);
-            $strobe("IFU no fetch CPI   = %.2f",1.0*IFU1.ifu_no_fetch_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IFU AR wait        = %0d",IFU1.ifu_arwait_count);
-            $strobe("IFU AR wait CPI    = %.2f",1.0*IFU1.ifu_arwait_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IFU protocol wait  = %0d",IFU1.ifu_protocol_count);
-            $strobe("IFU protocol CPI   = %.2f",1.0*IFU1.ifu_protocol_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IFU R wait         = %0d",IFU1.ifu_rwait_count);
-            $strobe("IFU R wait CPI     = %.2f",1.0*IFU1.ifu_rwait_count/IFU1.ifu_fetch_inst_count);
-            $strobe("IFU idu wait       = %0d",IFU1.ifu_idublock_count);
-            $strobe("IFU idu wait CPI   = %.2f",1.0*IFU1.ifu_idublock_count/IFU1.ifu_fetch_inst_count);
-            $strobe("");
-            */
-            $strobe("hit rate p         = %.6f",1.0*ICache1.icache_hit_count/ICache1.icache_access_count);
-            $strobe("access time        = %.2f",1.0*ICache1.icache_hit_latency/ICache1.icache_hit_count);
-            $strobe("miss time          = %.2f",1.0*ICache1.icache_miss_latency/ICache1.icache_miss_count);
-            $strobe("AMAT               = %.2f",1.0*ICache1.icache_total_latency/ICache1.icache_access_count);
+            $strobe("Total cycles             = %0d", ICache1.ifu_cycles);
             $strobe("");
 
-            $strobe("LSU LOAD         = %0d",LSU1.lsu_load_count);
-            $strobe("LSU R wait       = %0d",LSU1.lsu_rwait_count);
-            $strobe("LSU LOAD latency = %0d",LSU1.lsu_load_latency_sum);
-            $strobe("LSU LOAD CPI     = %0d",LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
-            $strobe("LSU STORE        = %0d",LSU1.lsu_store_count);
-            $strobe("LSU B wait       = %0d",LSU1.lsu_bwait_count);
-            $strobe("LSU STORE latency= %0d",LSU1.lsu_store_latency_sum);
-            $strobe("LSU STORE CPI    = %0d",LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
+            $strobe("IFU occupied %%           = %.3f", 100.0*ICache1.ifu_occupied_cycles/ICache1.ifu_cycles);
+            $strobe("IFU output %%             = %.3f", 100.0*ICache1.ifu_out_count/ICache1.ifu_cycles);
+            $strobe("IFU blocked %%            = %.3f", 100.0*ICache1.ifu_blocked_cycles/ICache1.ifu_cycles);
+            $strobe("");
+
+            $strobe("IDU occupied %%           = %.3f", 100.0*IDU1.idu_occupied_cycles/ICache1.ifu_cycles);
+            $strobe("IDU output %%             = %.3f", 100.0*IDU1.idu_issue_count/ICache1.ifu_cycles);
+            $strobe("IDU avg queue (entries)   = %.3f", 1.0*IDU1.idu_entry_cycles/ICache1.ifu_cycles);
+            $strobe("IDU instruction wait %%   = %.3f", 100.0*IDU1.idu_empty_cycles/ICache1.ifu_cycles);
+            $strobe("IDU RAW wait %%           = %.3f", 100.0*IDU1.idu_raw_cycles/ICache1.ifu_cycles);
+            $strobe("IDU EXU wait %%           = %.3f", 100.0*IDU1.idu_exu_block_cycles/ICache1.ifu_cycles);
+            $strobe("IDU pause %%              = %.3f", 100.0*IDU1.idu_pause_cycles/ICache1.ifu_cycles);
+            $strobe("IDU flush %%              = %.3f", 100.0*IDU1.idu_flush_cycles/ICache1.ifu_cycles);
+            $strobe("IDU RAW EXU %%            = %.3f", 100.0*IDU1.idu_raw_exu_cycles/ICache1.ifu_cycles);
+            $strobe("IDU RAW LSU %%            = %.3f", 100.0*IDU1.idu_raw_lsu_cycles/ICache1.ifu_cycles);
+            $strobe("IDU RAW WBU %%            = %.3f", 100.0*IDU1.idu_raw_wbu_cycles/ICache1.ifu_cycles);
+            $strobe("");
+
+            $strobe("EXU occupied %%           = %.3f", 100.0*EXU1.exu_occupied_cycles/ICache1.ifu_cycles);
+            $strobe("EXU output %%             = %.3f", 100.0*EXU1.exu_out_count/ICache1.ifu_cycles);
+            $strobe("EXU blocked %%            = %.3f", 100.0*(EXU1.exu_occupied_cycles-EXU1.exu_out_count)/ICache1.ifu_cycles);
+            $strobe("");
+
+            $strobe("LSU occupied %%           = %.3f", 100.0*LSU1.lsu_occupied_cycles/ICache1.ifu_cycles);
+            $strobe("LSU output %%             = %.3f", 100.0*LSU1.lsu_out_count/ICache1.ifu_cycles);
+            $strobe("LSU memory wait %%        = %.3f", 100.0*LSU1.lsu_mem_wait_cycles/ICache1.ifu_cycles);
+            $strobe("LSU WBU wait %%           = %.3f", 100.0*LSU1.lsu_wbu_block_cycles/ICache1.ifu_cycles);
+            $strobe("");
+
+            $strobe("WBU occupied %%           = %.3f", 100.0*WBU1.wbu_occupied_cycles/ICache1.ifu_cycles);
+            $strobe("WBU output %%             = %.3f", 100.0*WBU1.wbu_out_count/ICache1.ifu_cycles);
+            $strobe("WBU blocked %%            = %.3f", 100.0*(WBU1.wbu_occupied_cycles-WBU1.wbu_out_count)/ICache1.ifu_cycles);
+            $strobe("");
+
+            $strobe("ICache hit rate %%        = %.3f", 100.0*ICache1.icache_hit_count/ICache1.icache_access_count);
+            $strobe("ICache hit time (cycles)  = %.3f", 1.0);
+            $strobe("ICache miss time (cycles) = %.3f", 1.0*ICache1.icache_miss_latency/ICache1.icache_miss_done_count);
+            $strobe("ICache AMAT (cycles)      = %.3f", (1.0*ICache1.icache_hit_count+ICache1.icache_miss_latency)/(ICache1.icache_hit_count+ICache1.icache_miss_done_count));
+            $strobe("");
+
+            $strobe("LSU LOAD count           = %0d", LSU1.lsu_load_count);
+            $strobe("LSU LOAD latency (cycles)= %0d", LSU1.lsu_load_latency_sum);
+            $strobe("LSU LOAD avg (cycles)    = %.3f", 1.0*LSU1.lsu_load_latency_sum/LSU1.lsu_load_count);
+            $strobe("LSU STORE count          = %0d", LSU1.lsu_store_count);
+            $strobe("LSU STORE latency(cycles)= %0d", LSU1.lsu_store_latency_sum);
+            $strobe("LSU STORE avg (cycles)   = %.3f", 1.0*LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
             $strobe("");
         end
     end

@@ -72,4 +72,20 @@ module ysyx_26040117_WBU(clk,rst,
         end
     end
 `endif
+`ifdef PERF_COUNTER
+    reg [63:0] wbu_occupied_cycles;
+    reg [63:0] wbu_out_count;
+
+    always @(posedge clk)begin
+        if(rst)begin
+            wbu_occupied_cycles<=64'd0;
+            wbu_out_count<=64'd0;
+        end else begin
+            if(WBU_IFU_valid)
+                wbu_occupied_cycles<=wbu_occupied_cycles+64'd1;
+            if(WBU_IFU_fire)
+                wbu_out_count<=wbu_out_count+64'd1;
+        end
+    end
+`endif
 endmodule

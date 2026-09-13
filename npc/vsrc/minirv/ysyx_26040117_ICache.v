@@ -191,51 +191,52 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign {arready_MEM,rvalid_MEM,rdata_MEM,rlast}=MEM_ICACHE_wrapper;
 
 `ifdef PERF_COUNTER
+    reg [63:0] ifu_cycles;
+    reg [63:0] ifu_occupied_cycles;
+    reg [63:0] ifu_blocked_cycles;
+    reg [63:0] ifu_out_count;
+
     reg [63:0] icache_access_count;
     reg [63:0] icache_hit_count;
-    reg [63:0] icache_miss_count;
-    reg [63:0] icache_total_latency;
-    reg [63:0] icache_hit_latency;
+    reg [63:0] icache_miss_done_count;
     reg [63:0] icache_miss_latency;
-    reg icache_access,icache_ifhit;
-    wire icache_done;
-    assign icache_done=icache_ifhit?rvalid:(rfire_MEM&&rlast);
-    always @(posedge clk) begin
+    reg [63:0] miss_start;
+
+    always @(posedge clk)begin
         if(rst)begin
-            icache_hit_count<=64'd0;
-            icache_miss_count<=64'd0;
+            ifu_cycles<=64'd0;
+            ifu_occupied_cycles<=64'd0;
+            ifu_blocked_cycles<=64'd0;
+            ifu_out_count<=64'd0;
             icache_access_count<=64'd0;
-            icache_total_latency<=64'd0;
-            icache_hit_latency<=64'd0;
+            icache_hit_count<=64'd0;
+            icache_miss_done_count<=64'd0;
             icache_miss_latency<=64'd0;
+            miss_start<=64'd0;
         end else begin
+            ifu_cycles<=ifu_cycles+64'd1;
+
+            if(rvalid)
+                ifu_occupied_cycles<=ifu_occupied_cycles+64'd1;
+            if(rvalid&&!rready&&!pipe_clear)
+                ifu_blocked_cycles<=ifu_blocked_cycles+64'd1;
+            if(rfire)
+                ifu_out_count<=ifu_out_count+64'd1;
+
             if(arfire)begin
                 icache_access_count<=icache_access_count+64'd1;
-                if(hit) icache_hit_count<=icache_hit_count+64'd1;
-                else icache_miss_count<=icache_miss_count+64'd1;
+                if(hit)
+                    icache_hit_count<=icache_hit_count+64'd1;
+                else begin
+                    miss_start<=ifu_cycles;
+                end
             end
-            if(icache_access)begin
-                icache_total_latency<=icache_total_latency+64'd1;
-                if(icache_ifhit)icache_hit_latency<=icache_hit_latency+64'd1;
-                else icache_miss_latency<=icache_miss_latency+64'd1;
+
+            if(refill_data_en)begin
+                icache_miss_done_count<=icache_miss_done_count+64'd1;
+                icache_miss_latency<=icache_miss_latency+(ifu_cycles-miss_start+64'd1);
             end
         end
     end
-    always @(posedge clk) begin
-        if(rst)begin
-            icache_access<=1'b0;
-            icache_ifhit<=1'b0;
-        end else begin
-            if(arfire)begin
-                icache_access<=1'b1; 
-                icache_ifhit<=hit;
-            end else if(icache_done)begin
-                icache_access<=1'b0;
-            end
-
-        end
-    end
-
 `endif
-
 endmodule

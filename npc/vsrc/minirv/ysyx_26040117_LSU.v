@@ -184,59 +184,56 @@ module ysyx_26040117_LSU (clk,rst,
     assign is_mimo =(|mytype[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
 `endif
 `ifdef PERF_COUNTER
-    reg [63:0] lsu_load_count,lsu_rwait_count,lsu_store_count,lsu_bwait_count;
-    wire rfire,bfire;
-    assign rfire=rvalid&&rready;
-    assign bfire=bvalid&&bready;
-    always @(posedge clk) begin
-        if(rst)begin
-            lsu_load_count<=64'd0;
-            lsu_rwait_count<=64'd0;
-            lsu_store_count<=64'd0;
-            lsu_bwait_count<=64'd0;
-        end else begin
-            if(rfire)
-                lsu_load_count<=lsu_load_count+64'd1;
-            if(lsu_valid&&mytype[5]&&!arvalid&&!rvalid)
-                lsu_rwait_count<=lsu_rwait_count+64'd1;
-            if(bfire)
-                lsu_store_count<=lsu_store_count+64'd1;
-            if(lsu_valid&&mytype[6]&&!awvalid&&!wvalid&&!bvalid)
-                lsu_bwait_count<=lsu_bwait_count+64'd1;
-        end
-    end
-    reg [63:0] lsu_cycle;
-    reg [63:0] lsu_start_cycle;
+    reg [63:0] lsu_occupied_cycles;
+    reg [63:0] lsu_out_count;
+    reg [63:0] lsu_mem_wait_cycles;
+    reg [63:0] lsu_wbu_block_cycles;
+
+    reg [63:0] lsu_load_count;
+    reg [63:0] lsu_store_count;
     reg [63:0] lsu_load_latency_sum;
     reg [63:0] lsu_store_latency_sum;
-    reg        lsu_pending;
-    reg        lsu_pending_wen;
+    reg [63:0] lsu_age;
 
-    always @(posedge clk) begin
-        if (rst) begin
-            lsu_cycle             <= 64'd0;
-            lsu_start_cycle       <= 64'd0;
-            lsu_load_latency_sum  <= 64'd0;
-            lsu_store_latency_sum <= 64'd0;
-            lsu_pending           <= 1'b0;
-            lsu_pending_wen       <= 1'b0;
+    always @(posedge clk)begin
+        if(rst)begin
+            lsu_occupied_cycles<=64'd0;
+            lsu_out_count<=64'd0;
+            lsu_mem_wait_cycles<=64'd0;
+            lsu_wbu_block_cycles<=64'd0;
+            lsu_load_count<=64'd0;
+            lsu_store_count<=64'd0;
+            lsu_load_latency_sum<=64'd0;
+            lsu_store_latency_sum<=64'd0;
+            lsu_age<=64'd0;
         end else begin
-            lsu_cycle <= lsu_cycle + 64'd1;
-            if (!lsu_pending&&(ren||wen))begin
-                lsu_start_cycle <= lsu_cycle;
-                lsu_pending     <= 1'b1;
-                lsu_pending_wen <= wen;
-            end
-            if (lsu_pending && !lsu_pending_wen && rfire) begin
-                lsu_load_latency_sum <=lsu_load_latency_sum +(lsu_cycle - lsu_start_cycle);
-                lsu_pending <= 1'b0;
-            end
-            if (lsu_pending && lsu_pending_wen && bfire) begin
-                lsu_store_latency_sum <=lsu_store_latency_sum +(lsu_cycle - lsu_start_cycle);
-                lsu_pending <= 1'b0;
+            //阶段效率
+            if(lsu_valid)
+                lsu_occupied_cycles<=lsu_occupied_cycles+64'd1;
+            if(LSU_WBU_fire)
+                lsu_out_count<=lsu_out_count+64'd1;
+            if(lsu_valid&&!LSU_WBU_valid)
+                lsu_mem_wait_cycles<=lsu_mem_wait_cycles+64'd1;
+            if(LSU_WBU_valid&&!LSU_WBU_ready)
+                lsu_wbu_block_cycles<=lsu_wbu_block_cycles+64'd1;
+
+            //当前指令的驻留周期，接收后下一拍输出记1
+            if(EXU_LSU_fire)
+                lsu_age<=64'd1;
+            else if(lsu_valid)
+                lsu_age<=lsu_age+64'd1;
+
+            //完成时统计，使用当前指令的类型和驻留周期
+            if(LSU_WBU_fire)begin
+                if(mytype[5])begin
+                    lsu_load_count<=lsu_load_count+64'd1;
+                    lsu_load_latency_sum<=lsu_load_latency_sum+lsu_age;
+                end else if(mytype[6])begin
+                    lsu_store_count<=lsu_store_count+64'd1;
+                    lsu_store_latency_sum<=lsu_store_latency_sum+lsu_age;
+                end
             end
         end
     end
-
 `endif
 endmodule

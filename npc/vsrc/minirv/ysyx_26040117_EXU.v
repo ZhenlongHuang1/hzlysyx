@@ -97,4 +97,20 @@ module ysyx_26040117_EXU(clk,rst,
     assign aux0=aux_num1+aux_num2;
     assign aux={aux0[31:1],aux0[0]&&~mytype[3]};
     assign redirect_valid=(|mytype[3:2]||(mytype[4]&&branch_decision))&&EXU_LSU_fire;
+`ifdef PERF_COUNTER
+    reg [63:0] exu_occupied_cycles;
+    reg [63:0] exu_out_count;
+
+    always @(posedge clk)begin
+        if(rst)begin
+            exu_occupied_cycles<=64'd0;
+            exu_out_count<=64'd0;
+        end else begin
+            if(EXU_LSU_valid)
+                exu_occupied_cycles<=exu_occupied_cycles+64'd1;
+            if(EXU_LSU_fire)
+                exu_out_count<=exu_out_count+64'd1;
+        end
+    end
+`endif
 endmodule
