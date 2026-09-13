@@ -16,8 +16,8 @@ extern VerilatedVcdC* tfp;
 #ifdef RISCV32E_NPC
 #define cpu_gpr(i)     dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__Register1__DOT__rf[i]
 #define DIDU_EXU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__IDU_EXU_fire
-#define DIDU_INST      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__inst_reg
-#define DIDU_PC        dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__pc_reg
+#define DIDU_INST      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__inst_out
+#define DIDU_PC        dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__pc_out
 #define DEXU_LSU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__EXU_LSU_fire
 #define DEXU_REDIRECT  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__redirect_valid
 #define DEXU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__aux
@@ -32,8 +32,8 @@ extern VerilatedVcdC* tfp;
 #else
 #define cpu_gpr(i) dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Register1__DOT__rf[i]
 #define DIDU_EXU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__IDU_EXU_fire
-#define DIDU_INST dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__inst_reg
-#define DIDU_PC dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__pc_reg
+#define DIDU_INST dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__inst_out
+#define DIDU_PC dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__pc_out
 #define DEXU_LSU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__EXU_LSU_fire
 #define DEXU_REDIRECT dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__redirect_valid
 #define DEXU_AUX dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__aux

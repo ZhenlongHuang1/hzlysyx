@@ -42,9 +42,13 @@ module ysyx_26040117_CSR(clk,rst,
             default:wdata=0;
         endcase
     end
-    wire [31:0] lo_inc=mcycle_lo+32'd1;
-    wire [31:0] hi_inc=mcycle_hi+32'd1;
-    wire lo_wrap=&mcycle_lo;
+    /*
+    wire [63:0] mcycle_next;
+    ysyx_26040117_Incrementer #(.WIDTH(64)) mtime_inc(
+        .data({mcycle_hi,mcycle_lo}),
+        .result(mcycle_next)
+    );
+    */
     always @(posedge clk) begin
         if(rst)begin
             mstatus<=32'h1800;
@@ -52,9 +56,7 @@ module ysyx_26040117_CSR(clk,rst,
             mcycle_lo<=32'h0;
             mcycle_hi<=32'h0;
         end else begin
-            mcycle_lo<=lo_inc;
-            if(lo_wrap)
-                mcycle_hi<=hi_inc;
+            {mcycle_hi,mcycle_lo}<={mcycle_hi,mcycle_lo}+64'd1;
             if(wen)begin
                 if(trap_info[2])begin//trap entry
                     mstatus[7]<=mstatus[3];//mpie=mie
