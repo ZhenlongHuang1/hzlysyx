@@ -43,8 +43,8 @@ endif
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O3 -flto
-#CXXFLAGS += -g3 -O0 -fno-omit-frame-pointer
-LDFLAGS += -lreadline -flto
+CXXFLAGS += -g3 -O0 -fno-omit-frame-pointer
+LDFLAGS += -lreadline #-flto
 
 #CXXFLAGS += -Wall -Wextra -fsanitize=address,undefined
 #LDFLAGS  += -fsanitize=address,undefined
@@ -91,7 +91,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
 SYN_TOP = ysyx_26040117
-STA_FREQ_MHZ ?= 1000
+STA_FREQ_MHZ ?= 900
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
 YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 SYN_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")

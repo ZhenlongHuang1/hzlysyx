@@ -42,19 +42,31 @@ module ysyx_26040117_CSR(clk,rst,
             default:wdata=0;
         endcase
     end
-    wire [31:0] lo_inc=mcycle_lo+32'd1;
-    wire [31:0] hi_inc=mcycle_hi+32'd1;
-    wire lo_wrap=&mcycle_lo;
+    reg lo_wrap;
+    always @(posedge clk) begin
+        if(rst)begin
+            mcycle_lo<=32'd0;
+            mcycle_hi<=32'd0;
+            lo_wrap<=1'b0;
+        end else begin
+            mcycle_lo<=mcycle_lo+32'd1;
+            lo_wrap<=(mcycle_lo==32'hfffffffe);
+            mcycle_hi<=mcycle_hi+lo_wrap;
+            if(wen&&trap_info[0]&&!trap_info[2])begin
+                if(csr_addr==CSR_MCYCLE_LO) begin 
+                    mcycle_lo<=wdata;
+                    lo_wrap<=&wdata;
+                end
+                else if(csr_addr==CSR_MCYCLE_HI)mcycle_hi<=wdata;
+            end
+        end
+    end
     always @(posedge clk) begin
         if(rst)begin
             mstatus<=32'h1800;
             mcause<=32'h0;
-            mcycle_lo<=32'h0;
-            mcycle_hi<=32'h0;
         end else begin
-            mcycle_lo<=lo_inc;
-            if(lo_wrap)
-                mcycle_hi<=hi_inc;
+            //{mcycle_hi,mcycle_lo}<={mcycle_hi,mcycle_lo}+64'd1;
             if(wen)begin
                 if(trap_info[2])begin//trap entry
                     mstatus[7]<=mstatus[3];//mpie=mie
@@ -68,8 +80,8 @@ module ysyx_26040117_CSR(clk,rst,
                     mstatus[12:11]<=2'b11;
                 end else if(trap_info[0])begin
                     case(csr_addr)
-                        CSR_MCYCLE_LO:mcycle_lo<=wdata;
-                        CSR_MCYCLE_HI:mcycle_hi<=wdata;
+                        //CSR_MCYCLE_LO:mcycle_lo<=wdata;
+                        //CSR_MCYCLE_HI:mcycle_hi<=wdata;
                         CSR_MEPC:     mepc<={wdata[31:2],2'd0};
                         CSR_MSTATUS:  mstatus<=wdata;
                         CSR_MCAUSE:   mcause<=wdata;

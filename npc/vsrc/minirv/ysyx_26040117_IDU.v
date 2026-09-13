@@ -1,8 +1,8 @@
 module ysyx_26040117_IDU(clk,rst,
     IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
     redirect_valid,EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper,
-    IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
     pc_out,
+    IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
     rs1,rs2,src1,src2
 );
     input clk,rst;
@@ -12,11 +12,11 @@ module ysyx_26040117_IDU(clk,rst,
     input [31:0] inst;
     input [31:0] pc;
     input fence_done;
-    //IDU-IFU
-    output [31:0] pc_out;
     //EXU/LSU/WBU-IDU
     input redirect_valid;//control risk
     input[5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;//data risk
+    //IDU-IFU
+    output[31:0] pc_out/* verilator public_flat_rd */;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
@@ -36,7 +36,7 @@ module ysyx_26040117_IDU(clk,rst,
     //state machine
     wire IFU_IDU_fire,IDU_EXU_fire/* verilator public_flat_rd */;
     reg [1:0] state,next_state;
-    localparam IDLE=2'b0,WAIT=2'b1,FENCE_PAUSE=2'd2,TRAP_PAUSE=2'd3;
+    localparam IDLE=2'b0,FENCE_PAUSE=2'd2,TRAP_PAUSE=2'd3;
     assign IFU_IDU_fire=IFU_IDU_ready&&IFU_IDU_valid;//IDU is empty,IFU pop->IDU push
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;//EXU is empty,IDU pop->EXU push
     always @(posedge clk) begin
@@ -48,14 +48,11 @@ module ysyx_26040117_IDU(clk,rst,
     always @(*) begin
         next_state=state;
         case(state)
-            IDLE:if(IFU_IDU_fire) next_state=WAIT;
-            WAIT:if(IDU_EXU_fire) begin
+            IDLE:if(IDU_EXU_fire) begin
                     if(type_fence_i)
                         next_state=FENCE_PAUSE;
                     else if(type_mret||exception_valid)
                         next_state=TRAP_PAUSE;
-                    else
-                        next_state=IFU_IDU_fire?WAIT:IDLE;
                 end
             FENCE_PAUSE:if(fence_done) next_state=IDLE;
             TRAP_PAUSE:;
@@ -63,17 +60,37 @@ module ysyx_26040117_IDU(clk,rst,
         endcase
     end
     wire issue_pause=type_fence_i||type_mret||exception_valid;
-    assign IFU_IDU_ready=!redirect_valid&&((state==IDLE)||(IDU_EXU_fire&&!issue_pause));;
-    assign IDU_EXU_valid=state==WAIT&&!redirect_valid&&!raw; 
+    assign IFU_IDU_ready=(state==IDLE)&&(buf_count!=2'd2);
+    assign IDU_EXU_valid=(state==IDLE)&&(buf_count!=2'd0)&&!raw; 
     //FIFO
-    reg[31:0] inst_reg,pc_reg;//FIFO
-    wire [31:0] inst_out;
+    reg[63:0] idu_buf[1:0];
+    wire [31:0] inst_out/* verilator public_flat_rd */;
+    reg[1:0] buf_count;
     always @(posedge clk) begin
-        if(IFU_IDU_fire)begin
-            {inst_reg,pc_reg}<={inst,pc};
+        if(rst||redirect_valid)begin
+            buf_count<=2'd0;
+        end else if((IDU_EXU_fire&&issue_pause))begin
+            buf_count<=2'd0;
+        end else begin
+            case({IFU_IDU_fire,IDU_EXU_fire})
+                2'b10:begin 
+                    if(buf_count==2'd0)
+                        idu_buf[0]<={inst,pc};
+                    else 
+                        idu_buf[1]<={inst,pc};
+                    buf_count<=buf_count+2'd1;
+                end
+                2'b01:begin 
+                    if(buf_count==2'd2)
+                        idu_buf[0]<=idu_buf[1];
+                    buf_count<=buf_count-2'd1;
+                end
+                2'b11:idu_buf[0]<={inst,pc};
+                default:;
+            endcase
         end
     end
-    assign {inst_out,pc_out}={inst_reg,pc_reg};
+    assign {inst_out,pc_out}=idu_buf[0];
     //function logic
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil,type_fence_i;
     wire [6:0]opcode;
@@ -138,7 +155,7 @@ module ysyx_26040117_IDU(clk,rst,
     assign raw_exu=exu_rd_valid&&((rs1_use&&(rs1==exu_rd))|(rs2_use&&(rs2==exu_rd)));
     assign raw_lsu=lsu_rd_valid&&((rs1_use&&(rs1==lsu_rd))|(rs2_use&&(rs2==lsu_rd)));
     assign raw_wbu=wbu_rd_valid&&((rs1_use&&(rs1==wbu_rd))|(rs2_use&&(rs2==wbu_rd)));
-    wire raw=(state==WAIT)&&(raw_exu||raw_lsu||raw_wbu);
+    wire raw=(state==IDLE)&&(raw_exu||raw_lsu||raw_wbu);
     //Exception interrupt
     wire type_trap=type_I_privil&&funct3_zero;
 
@@ -160,63 +177,5 @@ module ysyx_26040117_IDU(clk,rst,
         else if(exception_ecall)
             exception_cause=4'd11;
     end
-`ifdef PERF_COUNTER
-    reg [63:0] idu_empty_count,idu_raw_count,idu_exublock_count;
-    reg [63:0] idu_fence_count,idu_trap_count,idu_redirect_count;
-    reg [63:0] idu_recv_count,idu_issue_count;
-    always @(posedge clk)begin
-        if(rst)begin
-            idu_empty_count<=0;
-            idu_raw_count<=0;
-            idu_exublock_count<=0;
-            idu_fence_count<=0;
-            idu_trap_count<=0;
-            idu_redirect_count<=0;
-            idu_recv_count<=0;
-            idu_issue_count<=0;
-        end else if(redirect_valid)
-            idu_redirect_count<=idu_redirect_count+1'b1;
-        else begin
-            if(IFU_IDU_fire)
-                idu_recv_count<=idu_recv_count+1'b1;
-            case(state)
-                IDLE:begin
-                    if(!IFU_IDU_fire)
-                        idu_empty_count<=idu_empty_count+1'b1;
-                end
-                WAIT:begin
-                    if(raw)
-                        idu_raw_count<=idu_raw_count+1'b1;
-                    else if(!IDU_EXU_ready)
-                        idu_exublock_count<=idu_exublock_count+1'b1;
-                    else
-                        idu_issue_count<=idu_issue_count+1'b1;
-                end
-                FENCE_PAUSE:
-                    idu_fence_count<=idu_fence_count+1'b1;
-                TRAP_PAUSE:
-                    idu_trap_count<=idu_trap_count+1'b1;
-            endcase
-        end
-    end
-    reg [63:0] idu_raw_exu_count;
-    reg [63:0] idu_raw_lsu_count;
-    reg [63:0] idu_raw_wbu_count;
-    always @(posedge clk)begin
-        if(rst)begin
-            idu_raw_exu_count<=0;
-            idu_raw_lsu_count<=0;
-            idu_raw_wbu_count<=0;
-        end else if(state==WAIT&&!redirect_valid)begin
-            if(raw_exu)
-                idu_raw_exu_count<=idu_raw_exu_count+1'b1;
-            if(raw_lsu)
-                idu_raw_lsu_count<=idu_raw_lsu_count+1'b1;
-            if(raw_wbu)
-                idu_raw_wbu_count<=idu_raw_wbu_count+1'b1;
-        end
-    end
 
-
-`endif
 endmodule
