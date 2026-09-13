@@ -54,7 +54,6 @@ module ysyx_26040117_CLINT(clk,rst,
     end
     //function
     reg [31:0]mtime_lo,mtime_hi;
-    /*
     reg lo_wrap;
     always @(posedge clk) begin
         if(rst)begin
@@ -68,11 +67,12 @@ module ysyx_26040117_CLINT(clk,rst,
                 mtime_hi<=mtime_hi+32'd1;
         end
     end
-    */
+    /*
     always @(posedge clk) begin
         if(rst)
             {mtime_hi,mtime_lo}<=0;
         else 
             {mtime_hi,mtime_lo}<={mtime_hi,mtime_lo}+64'd1;
     end
+    */
 endmodule
