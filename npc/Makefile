@@ -20,7 +20,7 @@ ARGS ?=
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
 					-O3 --x-assign fast --x-initial fast --noassert
-VERILATOR_FLAGS += --trace-vcd
+#VERILATOR_FLAGS += --trace-vcd
 VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv)
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing --autoflush#uart flush
 VERILATOR_FLAGS += -DPERF_COUNTER
@@ -43,8 +43,8 @@ endif
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="V$(TOPNAME)" -g -O3 -flto
-CXXFLAGS += -g3 -O0 -fno-omit-frame-pointer
-LDFLAGS += -lreadline #-flto
+#CXXFLAGS += -g3 -O0 -fno-omit-frame-pointer
+LDFLAGS += -lreadline -flto
 
 #CXXFLAGS += -Wall -Wextra -fsanitize=address,undefined
 #LDFLAGS  += -fsanitize=address,undefined
