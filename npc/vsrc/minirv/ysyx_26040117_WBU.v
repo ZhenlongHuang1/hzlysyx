@@ -19,8 +19,8 @@ module ysyx_26040117_WBU(clk,rst,
     output [4:0]rd;
     output register_wen_out;
     //WBU-IDU
-    output[5:0] WBU_IDU_wrapper;
-    assign WBU_IDU_wrapper={WBU_IFU_valid&&register_wen,rd};
+    output[37:0] WBU_IDU_wrapper;
+    assign WBU_IDU_wrapper={srcd,WBU_IFU_valid&&register_wen,rd};
     //state machine
     wire LSU_WBU_fire,WBU_IFU_fire/* verilator public_flat_rd */;
     reg state;

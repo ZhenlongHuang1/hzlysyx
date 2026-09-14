@@ -14,20 +14,21 @@ module ysyx_26040117_IDU(clk,rst,
     input fence_done;
     //EXU/LSU/WBU-IDU
     input redirect_valid;//control risk
-    input[5:0] EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper;//data risk
+    input[38:0] EXU_IDU_wrapper,LSU_IDU_wrapper;
+    input[37:0] WBU_IDU_wrapper;//data risk
     //IDU-IFU
     output[31:0] pc_out/* verilator public_flat_rd */;
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
-    output[155:0]IDU_wrapper;
+    output[157:0]IDU_wrapper;
 
     wire [3:0] funct;
     wire [8:0] mytype;
     wire [31:0] num1,num2;
     wire [31:0] aux_num1,aux_num2;
     wire sub;
-    assign IDU_wrapper={register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
+    assign IDU_wrapper={register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
     assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
     input [31:0] src1,src2;
@@ -130,32 +131,44 @@ module ysyx_26040117_IDU(clk,rst,
                 (immJ&{32{type_J}});
     assign funct3=inst_out[14:12];
 
-    assign num1=({32{(|mytype[8:4]) ||type_csr}} & src1)|//alu,alui,load,store,branch,csrr
+    assign num1=({32{(|mytype[8:4]) ||type_csr}} & src1_forward)|//alu,alui,load,store,branch,csrr
                  ({32{(|mytype[3:1]) || exception_valid}} & pc_out);//jalr,jal,auipc,ecall
-    assign num2= ({32{mytype[8]||mytype[4]}}&src2)|//branch,alu
+    assign num2= ({32{mytype[8]||mytype[4]}}&src2_forward)|//branch,alu
                  ({32{(|mytype[1:0])||(|mytype[7:5])}}&imm)|//lui,auipc,load,store,alui
                  ({29'd0,|mytype[3:2],2'd0});//jal,jalr
     assign aux_num1=({32{mytype[2]||mytype[4]}}&pc_out)|
-                    ({32{mytype[3]}}&src1);
-    assign aux_num2=({32{mytype[6]}}&src2)|
+                    ({32{mytype[3]}}&src1_forward);
+    assign aux_num2=({32{mytype[6]}}&src2_forward)|
                      ({32{(|mytype[4:2])||type_csr}}&imm);
     wire is_slt =(~funct[2])&&funct[1];
     assign sub  =(mytype[8]&&funct[3])||((mytype[8]||mytype[7])&&is_slt);
-    wire register_wen=(type_csr||(|mytype[3:0])||mytype[5]||(|mytype[8:7]))&&(rd!=5'd0);
+    wire rd_valid=rd!=5'd0;
+    wire register_wen_ok=((|mytype[3:0])||(|mytype[8:7]))&&(rd_valid);
+    wire register_wen_load=rd_valid&&(mytype[5]);
+    wire register_wen=register_wen_ok||register_wen_load||(rd_valid&&type_csr);
     //Data adventure
     wire rs1_use,rs2_use;
     assign rs1_use=(|mytype[8:3])||type_csr;
     assign rs2_use=mytype[8]||mytype[6]||mytype[4];
-    wire raw_exu,raw_lsu,raw_wbu;
-    wire exu_rd_valid,lsu_rd_valid,wbu_rd_valid;
+    wire exu_pending,exu_ready,lsu_pending,lsu_ready,wbu_ready;
+    wire [31:0] exu_data,lsu_data,wbu_data;
     wire[4:0] exu_rd,lsu_rd,wbu_rd;
-    assign {exu_rd_valid,exu_rd}=EXU_IDU_wrapper;
-    assign {lsu_rd_valid,lsu_rd}=LSU_IDU_wrapper;
-    assign {wbu_rd_valid,wbu_rd}=WBU_IDU_wrapper;
-    assign raw_exu=exu_rd_valid&&((rs1_use&&(rs1==exu_rd))|(rs2_use&&(rs2==exu_rd)));
-    assign raw_lsu=lsu_rd_valid&&((rs1_use&&(rs1==lsu_rd))|(rs2_use&&(rs2==lsu_rd)));
-    assign raw_wbu=wbu_rd_valid&&((rs1_use&&(rs1==wbu_rd))|(rs2_use&&(rs2==wbu_rd)));
-    wire raw=(state==IDLE)&&(raw_exu||raw_lsu||raw_wbu);
+    assign {exu_data,exu_pending,exu_ready,exu_rd}=EXU_IDU_wrapper;
+    assign {lsu_data,lsu_pending,lsu_ready,lsu_rd}=LSU_IDU_wrapper;
+    assign {wbu_data,wbu_ready,wbu_rd}=WBU_IDU_wrapper;
+    wire rs1_exu=rs1_use&&exu_pending&&(exu_rd==rs1);
+    wire rs1_lsu=rs1_use&&lsu_pending&&(lsu_rd==rs1);
+    wire rs1_wbu=rs1_use&&wbu_ready&&(wbu_rd==rs1);
+    wire rs2_exu=rs2_use&&exu_pending&&(exu_rd==rs2);
+    wire rs2_lsu=rs2_use&&lsu_pending&&(lsu_rd==rs2);
+    wire rs2_wbu=rs2_use&&wbu_ready&&(wbu_rd==rs2);
+
+    wire rs1_wait=rs1_exu?!exu_ready:rs1_lsu?!lsu_ready:1'b0;
+    wire rs2_wait=rs2_exu?!exu_ready:rs2_lsu?!lsu_ready:1'b0;
+    wire raw=rs1_wait||rs2_wait;
+    wire[31:0] src1_forward=rs1_exu?exu_data:rs1_lsu?lsu_data:rs1_wbu?wbu_data:src1;
+    wire[31:0] src2_forward=rs2_exu?exu_data:rs2_lsu?lsu_data:rs2_wbu?wbu_data:src2;
+
     //Exception interrupt
     wire type_trap=type_I_privil&&funct3_zero;
 
@@ -194,6 +207,9 @@ module ysyx_26040117_IDU(clk,rst,
     reg [63:0] idu_raw_lsu_cycles;
     reg [63:0] idu_raw_wbu_cycles;
 
+    wire raw_exu=(rs1_exu||rs2_exu)&&!exu_ready;
+    wire raw_lsu=((!rs1_exu&&rs1_lsu)||(!rs2_exu&&rs2_lsu))&&!lsu_ready;
+    wire raw_wbu=1'b0;
     always @(posedge clk)begin
         if(rst)begin
             idu_occupied_cycles<=64'd0;

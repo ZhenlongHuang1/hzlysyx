@@ -97,7 +97,12 @@ module ysyx_26040117_Xbar(clk,rst,
     assign ar_in_clint =araddr>=32'h02000000&&araddr<=32'h0200bfff;//clint
     assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart||ar_in_flash||ar_in_spi||ar_in_psram||ar_in_sdram||ar_in_gpio||ar_in_ps2||ar_in_vga||ar_in_chip);
     assign dec_clint_r=arvalid&&ar_in_clint;
-
+    reg read_clint;
+    wire arfire=arvalid&&arready;
+    always @(posedge clk) begin
+        if(rst) read_clint<=1'b0;
+        else if(arfire)read_clint<=dec_clint_r;
+    end
     //clint
     wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;
     wire[1:0] clint_bresp,clint_rresp;
@@ -118,7 +123,7 @@ module ysyx_26040117_Xbar(clk,rst,
     assign rvalid=io_master_rvalid||clint_rvalid;
     assign rresp=clint_rvalid?clint_rresp:io_master_rresp;
     assign rlast=(clint_rvalid)||(io_master_rlast);
-    assign rdata=({32{io_master_rvalid}}&io_master_rdata)|({32{clint_rvalid}}&clint_rdata);
+    assign rdata=read_clint?clint_rdata:io_master_rdata;
 
     assign awready=(dec_clint_w&&clint_awready)||(dec_soc_w&&io_master_awready);
     assign wready=(sel_clint_w&&clint_wready)||(sel_soc_w&&io_master_wready);
