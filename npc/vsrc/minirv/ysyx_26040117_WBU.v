@@ -19,8 +19,8 @@ module ysyx_26040117_WBU(clk,rst,
     output [4:0]rd;
     output register_wen_out;
     //WBU-IDU
-    output[5:0] WBU_IDU_wrapper;
-    assign WBU_IDU_wrapper={WBU_IFU_valid&&register_wen,rd};
+    output[37:0] WBU_IDU_wrapper;
+    assign WBU_IDU_wrapper={srcd,WBU_IFU_valid&&register_wen,rd};
     //state machine
     wire LSU_WBU_fire,WBU_IFU_fire/* verilator public_flat_rd */;
     reg state;
@@ -69,6 +69,22 @@ module ysyx_26040117_WBU(clk,rst,
     always@(posedge clk)begin
         if(ebreak&&!rst&&WBU_IFU_fire)begin
             npc_trap();
+        end
+    end
+`endif
+`ifdef PERF_COUNTER
+    reg [63:0] wbu_occupied_cycles;
+    reg [63:0] wbu_out_count;
+
+    always @(posedge clk)begin
+        if(rst)begin
+            wbu_occupied_cycles<=64'd0;
+            wbu_out_count<=64'd0;
+        end else begin
+            if(WBU_IFU_valid)
+                wbu_occupied_cycles<=wbu_occupied_cycles+64'd1;
+            if(WBU_IFU_fire)
+                wbu_out_count<=wbu_out_count+64'd1;
         end
     end
 `endif

@@ -46,10 +46,10 @@ module ysyx_26040117_CLINT(clk,rst,
             rvalid<=1'b0;
         else if(arfire) begin
             rvalid<=1'b1;
-            if(araddr[2]==1'b0)//0200bff8
-                rdata<=mtime_lo;
-            else if(araddr[2]==1'b1)//0200bffc
+            if(araddr[2])//0200bffc
                 rdata<=mtime_hi;
+            else //0200bff8
+                rdata<=mtime_lo;
         end
     end
     //function

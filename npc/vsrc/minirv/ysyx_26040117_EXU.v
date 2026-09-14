@@ -7,18 +7,18 @@ module ysyx_26040117_EXU(clk,rst,
     //IDU-EXU
     input IDU_EXU_valid;
     output IDU_EXU_ready;
-    input [155:0]IDU_wrapper;
+    input [157:0]IDU_wrapper;
     //EXU-LSU
     input EXU_LSU_ready;
     output EXU_LSU_valid;
     output [31:0] aux/* verilator public_flat_rd */;
-    output [57:0] EXU_wrapper;
-
-    assign EXU_wrapper={register_wen,type_fence_i,trap_info,rd,result,mytype,funct[2:0]};
+    output [59:0] EXU_wrapper;
+    
+    assign EXU_wrapper={register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,mytype,funct[2:0]};
     //EXU-IFU/IDU
     output redirect_valid/* verilator public_flat_rd */;
-    output[5:0] EXU_IDU_wrapper;
-    assign EXU_IDU_wrapper={EXU_LSU_valid&&register_wen,rd};
+    output[38:0] EXU_IDU_wrapper;
+    assign EXU_IDU_wrapper={result,EXU_LSU_valid&&register_wen,EXU_LSU_valid&&register_wen_ok,rd};
     //state machine
     wire IDU_EXU_fire,EXU_LSU_fire/* verilator public_flat_rd */;
     reg state;
@@ -36,11 +36,11 @@ module ysyx_26040117_EXU(clk,rst,
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     //FIFO
-    reg[155:0] IDU_wrapper_reg;
+    reg[157:0] IDU_wrapper_reg;
     wire [8:0]mytype;
     wire [3:0]funct;
     wire [31:0] num1,num2,aux_num1,aux_num2;
-    wire sub,type_fence_i,register_wen;
+    wire sub,type_fence_i,register_wen_ok,register_wen_load,register_wen;
     wire[6:0] trap_info;
     wire [4:0] rd;
     always @(posedge clk) begin
@@ -48,7 +48,7 @@ module ysyx_26040117_EXU(clk,rst,
             IDU_wrapper_reg<=IDU_wrapper;
         end
     end
-    assign {register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub}=IDU_wrapper_reg;
+    assign {register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub}=IDU_wrapper_reg;
     //result function
     wire carry,sless,less;
     wire[31:0] t_no_cin,result0;
@@ -97,4 +97,20 @@ module ysyx_26040117_EXU(clk,rst,
     assign aux0=aux_num1+aux_num2;
     assign aux={aux0[31:1],aux0[0]&&~mytype[3]};
     assign redirect_valid=(|mytype[3:2]||(mytype[4]&&branch_decision))&&EXU_LSU_fire;
+`ifdef PERF_COUNTER
+    reg [63:0] exu_occupied_cycles;
+    reg [63:0] exu_out_count;
+
+    always @(posedge clk)begin
+        if(rst)begin
+            exu_occupied_cycles<=64'd0;
+            exu_out_count<=64'd0;
+        end else begin
+            if(EXU_LSU_valid)
+                exu_occupied_cycles<=exu_occupied_cycles+64'd1;
+            if(EXU_LSU_fire)
+                exu_out_count<=exu_out_count+64'd1;
+        end
+    end
+`endif
 endmodule
