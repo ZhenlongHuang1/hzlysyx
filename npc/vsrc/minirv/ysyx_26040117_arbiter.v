@@ -53,12 +53,13 @@ module ysyx_26040117_arbiter(clk,rst,
     wire[1:0] rresp;
     wire[2:0] arsize;
     wire rlast;
-    assign {arsize,arvalid,rready,araddr}=({37{lsu_fire}}&{lsu_arsize,lsu_arvalid,lsu_rready,lsu_araddr})|
-                                        ({37{ifu_fire}}&{ifu_arsize,ifu_arvalid,ifu_rready,ifu_araddr});
     wire [3:0]arid;
     wire [7:0]arlen;
-    assign arid=lsu_fire?4'd1:4'd0;
-    assign arlen=lsu_fire?8'd0:ifu_arlen;
+    assign {arsize,araddr}=lsu_fire?{lsu_arsize,lsu_araddr}:{ifu_arsize,ifu_araddr};
+    assign arvalid=lsu_fire?lsu_arvalid:ifu_arvalid;
+    assign rready=lsu_fire?lsu_rready:ifu_rready;
+    assign arid={3'd0,lsu_fire};
+    assign arlen={6'd0,lsu_fire?2'd0:ifu_arlen[1:0]};
     
     //write
     wire awvalid,wvalid,bready;

@@ -2,19 +2,19 @@ module ysyx_26040117_CSR(clk,rst,
     wen,trap_info,funct3,csr_addr,result,
     rdata,trap_dnpc
 );
-    localparam CSR_MCYCLE_LO = 4'd0;
-    localparam CSR_MCYCLE_HI = 4'd1;
-    localparam CSR_MEPC      = 4'd2;
-    localparam CSR_MSTATUS   = 4'd3;
-    localparam CSR_MCAUSE    = 4'd4;
-    localparam CSR_MTVEC     = 4'd5;
-    localparam CSR_MVENDORID = 4'd6;
-    localparam CSR_MARCHID   = 4'd7;
+    localparam CSR_MCYCLE_LO = 3'd0;
+    localparam CSR_MCYCLE_HI = 3'd1;
+    localparam CSR_MEPC      = 3'd2;
+    localparam CSR_MSTATUS   = 3'd3;
+    localparam CSR_MCAUSE    = 3'd4;
+    localparam CSR_MTVEC     = 3'd5;
+    localparam CSR_MVENDORID = 3'd6;
+    localparam CSR_MARCHID   = 3'd7;
     input clk,rst;
     input wen;
     input [2:0]funct3;//0:csrr,1:ecall,2:mret
     input [6:0] trap_info;
-    input [3:0]csr_addr;
+    input [2:0]csr_addr;
     input [31:0]result;
     output reg[31:0]rdata;
     output [31:0] trap_dnpc;

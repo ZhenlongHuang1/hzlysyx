@@ -36,8 +36,8 @@ module ysyx_26040117_CLINT(clk,rst,
     assign arready=!rvalid;
     assign rresp=2'b00;
     //write
-    assign awready=1'b0;
-    assign wready=1'b0;
+    assign awready=1'b1;
+    assign wready=1'b1;
     assign bvalid=1'b0;
     assign bresp=2'b0;
     always @(posedge clk) begin
