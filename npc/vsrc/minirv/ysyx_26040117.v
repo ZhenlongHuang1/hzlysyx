@@ -220,6 +220,7 @@ module ysyx_26040117 #(
             $strobe("LSU occupied       = %.3f%%", 100.0*LSU1.lsu_occupied_cycles/ICache1.ifu_cycles);
             $strobe("LSU output         = %.3f%%", 100.0*LSU1.lsu_out_count/ICache1.ifu_cycles);
             $strobe("LSU memory wait    = %.3f%%", 100.0*LSU1.lsu_mem_wait_cycles/ICache1.ifu_cycles);
+            $strobe("LSU ifu wait       = %.3f%%", 100.0*lsu_ifu_block_cycles/ICache1.ifu_cycles);
             $strobe("LSU WBU wait       = %.3f%%", 100.0*LSU1.lsu_wbu_block_cycles/ICache1.ifu_cycles);
             $strobe("");
 
@@ -242,6 +243,17 @@ module ysyx_26040117 #(
             $strobe("LSU STORE avg      = %.3f", 1.0*LSU1.lsu_store_latency_sum/LSU1.lsu_store_count);
             $strobe("");
         end
+    end
+    reg [63:0] lsu_ifu_block_cycles;
+
+    wire lsu_ifu_block;
+    assign lsu_ifu_block=arbiter1.lsu_arvalid&&arbiter1.ifu_fire;
+
+    always @(posedge clock)begin
+        if(reset)
+            lsu_ifu_block_cycles<=64'd0;
+        else if(lsu_ifu_block)
+            lsu_ifu_block_cycles<=lsu_ifu_block_cycles+64'd1;
     end
 `endif
 endmodule
