@@ -52,7 +52,8 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             s1_redirect<=1'b0;
         end
     end
-    wire is_sdram =araddr[31:29]==3'b101;//SDRAM
+    //wire is_sdram =araddr[31:29]==3'b101;//SDRAM
+    wire is_sdram =btb_target_array[req_offset]==30'b101;//SDRAM
     wire [OFFSET_WIDTH-3:0] req_offset;
     wire[INDEX_WIDTH-1:0] req_index;
     wire[31-OFFSET_WIDTH-INDEX_WIDTH:0] req_tag;
@@ -62,6 +63,19 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
     assign hit=valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
     wire arvalid=s1_valid&&!pipe_clear;
+    reg[3:0] btb_valid;
+    reg[27:0]btb_tag_array[3:0];
+    reg[29:0]btb_target_array[3:0];
+    always @(posedge clk) begin
+        if(rst)begin
+            btb_valid<=4'd0;
+        end else if(arfire)begin
+            btb_tag_array[req_offset]<=araddr[31:4];
+            if(btb_valid[req_offset])begin
+                btb_target_array[req_offset]<={btb_tag_array[req_offset],2'b0};
+            end
+        end
+    end
     //S2
     wire arready=(state==IDLE)&&(!rvalid||rready);
     wire arfire=arvalid&&arready;
