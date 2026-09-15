@@ -52,8 +52,8 @@ module ysyx_26040117_Xbar(clk,rst,
     assign aw_in_uart  =awaddr>=32'h10000000&&awaddr<=32'h10000fff;//UART16550
     assign aw_in_sram  =awaddr>=32'h0f000000&&awaddr<=32'h0f001fff;//SRAM
     assign aw_in_clint =awaddr>=32'h02000000&&awaddr<=32'h0200bfff;//CLINT
-    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi||aw_in_psram||aw_in_sdram||aw_in_gpio||aw_in_ps2||aw_in_vga||aw_in_chip);
-    assign dec_clint_w=awvalid&&aw_in_clint;
+    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi||aw_in_psram||aw_in_sdram||aw_in_gpio||aw_in_ps2||aw_in_vga||aw_in_chip||aw_in_clint);
+    assign dec_clint_w=awvalid&&0;
 
     wire awfire,wfire,bfire;
     assign awfire=awvalid&&awready;
@@ -95,13 +95,13 @@ module ysyx_26040117_Xbar(clk,rst,
     assign ar_in_mrom  =araddr>=32'h20000000&&araddr<=32'h20000fff;//MROM
     assign ar_in_sram  =araddr>=32'h0f000000&&araddr<=32'h0f001fff;//SRAM
     assign ar_in_clint =araddr>=32'h02000000&&araddr<=32'h0200bfff;//clint
-    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart||ar_in_flash||ar_in_spi||ar_in_psram||ar_in_sdram||ar_in_gpio||ar_in_ps2||ar_in_vga||ar_in_chip);
-    assign dec_clint_r=arvalid&&ar_in_clint;
+    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart||ar_in_flash||ar_in_spi||ar_in_psram||ar_in_sdram||ar_in_gpio||ar_in_ps2||ar_in_vga||ar_in_chip||ar_in_clint);
+    assign dec_clint_r=arvalid&&0;
     reg read_clint;
     wire arfire=arvalid&&arready;
     always @(posedge clk) begin
         if(rst) read_clint<=1'b0;
-        else if(arfire)read_clint<=dec_clint_r;
+        else if(arfire)read_clint<=0;
     end
     //clint
     wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;
