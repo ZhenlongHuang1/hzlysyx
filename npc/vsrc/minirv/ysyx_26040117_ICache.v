@@ -2,39 +2,44 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     input wire clk,
     input wire rst,
     input [66:0]IFU_ICACHE_wrapper,
-    output[65:0]ICACHE_IFU_wrapper,
+    output[66:0]ICACHE_IFU_wrapper,
     input [34:0]MEM_ICACHE_wrapper,
-    output[44:0]ICACHE_MEM_wrapper
+    output[44:0]ICACHE_MEM_wrapper,
+    output [31:0]btb_araddr,
+    input [31:0]btb_target,
+    input btb_hit
 );
     parameter OFFSET_WIDTH=4,INDEX_WIDTH=2;
     localparam DATA_DEPTH=2**(OFFSET_WIDTH+INDEX_WIDTH-2);
     localparam WORD_NUM=2**(OFFSET_WIDTH-2);
     localparam BURST_LEN=WORD_NUM-1;
+    localparam [29:0] RESET_PC=RESET_VECTOR[31:2];
     wire rready,rfire;
     wire fence_i,redirect_valid;
     wire [31:0] dnpc,idu_pc;
     assign rfire=rvalid&&rready;
 
     assign {fence_i,redirect_valid,dnpc,idu_pc,rready}=IFU_ICACHE_wrapper;
-    assign ICACHE_IFU_wrapper={fence_done,rvalid,araddr_reg,rdata};
+    assign ICACHE_IFU_wrapper={s1_btb_valid,fence_done,rvalid,araddr_reg,rdata};
     wire fence_clear=rst||fence_i||flush_pending||fence_done;
     wire pipe_clear=redirect_valid||fence_clear;
     //S1-FIFO 
-    reg s1_valid,s1_redirect;
-    reg[31:0] s1_snpc,s1_dnpc;
+    reg s1_valid,s1_redirect,s1_btb_valid;
+    reg[29:0] s1_snpc,s1_dnpc;
     always @(posedge clk) begin
         if(redirect_valid)
-            s1_dnpc<=dnpc;
+            s1_dnpc<=dnpc[31:2];
+        else if(btb_hit&&arfire)
+            s1_dnpc<=btb_target[31:2];
     end
+    wire[29:0] snpc_next=fence_done?idu_pc[31:2]:araddr[31:2];
     always @(posedge clk) begin
         if(rst)
-            s1_snpc<=RESET_VECTOR;
-        else if(fence_done)
-            s1_snpc<=idu_pc+32'd4;
-        else if(arfire)
-            s1_snpc<=araddr+32'd4;
+            s1_snpc<=RESET_PC;
+        else if(fence_done||arfire)
+            s1_snpc<=snpc_next+30'd1;
     end
-    wire [31:0] araddr=s1_redirect?s1_dnpc:s1_snpc;
+    wire [31:0] araddr={(s1_redirect||s1_btb_valid)?s1_dnpc:s1_snpc,2'b00};
     always @(posedge clk) begin
         if(rst)
             s1_valid<=1'b1;
@@ -44,7 +49,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             s1_valid<=1'b1;
     end
     always @(posedge clk) begin
-        if(rst||fence_clear)begin
+        if(fence_clear)begin
             s1_redirect<=1'b0;
         end else if(redirect_valid)begin 
             s1_redirect<=1'b1;
@@ -60,8 +65,17 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign req_offset=araddr[OFFSET_WIDTH-1:2];
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    assign hit=valid_array[{req_index,req_offset}]&&(tag_array[req_index]==req_tag);
+    wire req_tag_match=tag_array[req_index]==req_tag;
+    assign hit=valid_array[{req_index,req_offset}]&&req_tag_match;
     wire arvalid=s1_valid&&!pipe_clear;
+    //BTB
+    assign btb_araddr=araddr;
+    always @(posedge clk) begin
+        if(pipe_clear)
+            s1_btb_valid<=1'b0;
+        else if(arfire)
+            s1_btb_valid<=btb_hit;
+    end
     //S2
     wire arready=(state==IDLE)&&(!rvalid||rready);
     wire arfire=arvalid&&arready;
@@ -98,41 +112,40 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     reg  [OFFSET_WIDTH-3:0] offset_count;
     wire[INDEX_WIDTH-1:0] index_reg;
     wire [31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_reg;
-    reg[31:0]araddr_reg;
-    reg [OFFSET_WIDTH-1:0] mem_offset;
+    reg[29:0]araddr_word_reg;
+    wire[31:0] araddr_reg={araddr_word_reg,2'b00};
+    reg req_tag_match_reg;
 
     assign offset_reg=araddr_reg[OFFSET_WIDTH-1:2];
     assign index_reg=araddr_reg[OFFSET_WIDTH+:INDEX_WIDTH];
     assign tag_reg=araddr_reg[31:OFFSET_WIDTH+INDEX_WIDTH];
     always @(posedge clk) begin
-        if(arfire)araddr_reg<=araddr;
+        if(arfire)begin 
+            araddr_word_reg<=araddr[31:2];
+            req_tag_match_reg<=req_tag_match;
+        end
     end
+    wire [OFFSET_WIDTH-3:0] refill_offset=is_sdram_reg?offset_count:offset_reg;
     always @(posedge clk) begin
         if(rst||fence_i||flush_pending) begin
             valid_array<=0;
         end else begin
             case(state)
                 IDLE:if(arfire&&!hit)begin
-                        mem_offset<=is_sdram?{OFFSET_WIDTH{1'b0}}:araddr[OFFSET_WIDTH-1:0];
                         is_sdram_reg<=is_sdram;
                         offset_count<=0;
                 end
                 MISS_AR:begin
                     tag_array[index_reg]<=tag_reg;
-                    if(tag_array[index_reg]!=tag_reg)
+                    if(!req_tag_match_reg)
                         valid_array[index_reg*WORD_NUM +: WORD_NUM]<=0;
                 end
                 MISS_DATA:if(rfire_MEM)begin
-                        if(is_sdram_reg)begin
-                            data_array[{index_reg,offset_count}]<=rdata_MEM;
-                            valid_array[{index_reg,offset_count}]<=1'b1;
-                            if(!rlast)
+                            data_array[{index_reg,refill_offset}]<=rdata_MEM;
+                            valid_array[{index_reg,refill_offset}]<=1'b1;
+                            if(is_sdram_reg&&!rlast)
                                 offset_count<=offset_count+1'b1;
-                        end else begin
-                            data_array[{index_reg,offset_reg}]<=rdata_MEM;
-                            valid_array[{index_reg,offset_reg}]<=1'b1;
                         end
-                    end
                 default:;
             endcase
         end
@@ -184,7 +197,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     wire [7:0]arlen;
     wire rlast;
     assign arlen=is_sdram_reg?BURST_LEN:8'd0;
-    assign araddr_MEM={araddr_reg[31:OFFSET_WIDTH],mem_offset};
+    assign araddr_MEM={araddr_reg[31:OFFSET_WIDTH],is_sdram_reg?{OFFSET_WIDTH-2{1'b0}}:araddr_reg[OFFSET_WIDTH-1:2],2'b00};
     assign arvalid_MEM=state==MISS_AR;
     assign rready_MEM=state==MISS_DATA;
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr_MEM,arlen,rready_MEM};

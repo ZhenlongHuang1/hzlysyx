@@ -1,5 +1,5 @@
 module ysyx_26040117_LSU (clk,rst,
-    EXU_LSU_ready,EXU_LSU_valid,aux_in,EXU_wrapper,
+    EXU_LSU_ready,EXU_LSU_valid,EXU_wrapper,
     LSU_WBU_ready,LSU_WBU_valid,LSU_wrapper,
     LSU_IDU_wrapper,
     MEM_LSU_wrapper,LSU_MEM_wrapper
@@ -8,12 +8,11 @@ module ysyx_26040117_LSU (clk,rst,
     //EXU-LSU
     input EXU_LSU_valid;
     output EXU_LSU_ready;
-    input [59:0]EXU_wrapper;
-    input [31:0]aux_in;
+    input [84:0]EXU_wrapper;
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [52:0]LSU_wrapper;
+    output [51:0]LSU_wrapper;
     assign LSU_wrapper={register_wen,type_fence_i,trap_info,rd,result_out,csr_addr,funct3};
     //LSU-IDU
     output [38:0] LSU_IDU_wrapper;
@@ -26,15 +25,15 @@ module ysyx_26040117_LSU (clk,rst,
     reg lsu_valid;
     wire wen,ren;
     wire EXU_LSU_fire,LSU_WBU_fire/* verilator public_flat_rd */;
-    wire [8:0]mytype_in=EXU_wrapper[11:3];
-    assign wen=mytype_in[6]&&EXU_LSU_fire;//right now
-    assign ren=mytype_in[5]&&EXU_LSU_fire;
+    wire [1:0]mytype_in=EXU_wrapper[4:3];
+    assign wen=mytype_in[1]&&EXU_LSU_fire;//right now
+    assign ren=mytype_in[0]&&EXU_LSU_fire;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
     assign EXU_LSU_ready=!lsu_valid||LSU_WBU_fire;
-    assign LSU_WBU_valid=lsu_valid&&(!(|mytype[6:5])|| 
-            (mytype[5]&&!arvalid&&rvalid)||
-            (mytype[6]&&!awvalid&&!wvalid&&bvalid)
+    assign LSU_WBU_valid=lsu_valid&&(!(is_load||is_store)|| 
+            (is_load&&!arvalid&&rvalid)||
+            (is_store&&!awvalid&&!wvalid&&bvalid)
     );
     always @(posedge clk) begin
         if(rst)
@@ -60,7 +59,7 @@ module ysyx_26040117_LSU (clk,rst,
         else if(ren)
             arvalid<=1'b1;
     end
-    assign rready=lsu_valid&&mytype[5]&&!arvalid&&LSU_WBU_ready;
+    assign rready=lsu_valid&&is_load&&!arvalid&&LSU_WBU_ready;
     assign {araddr,arsize}={result,{1'b0,funct3[1:0]}};
     //read function
     reg[31:0] rdata_out;
@@ -113,7 +112,7 @@ module ysyx_26040117_LSU (clk,rst,
             wvalid<=1'b1;
     end
     //b
-    assign bready=lsu_valid&&mytype[6]&&!wvalid&&!awvalid&&LSU_WBU_ready;
+    assign bready=lsu_valid&&is_store&&!wvalid&&!awvalid&&LSU_WBU_ready;
     //write function
     wire[3:0] aw_mask;
     assign wdata=(funct3[1:0] == 2'b00) ? {4{aux[7:0]}} :   // sb
@@ -127,35 +126,31 @@ module ysyx_26040117_LSU (clk,rst,
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
     //FIFO
-    reg [59:0] wrapper_reg;
-    reg [31:0]aux_reg;
-    wire register_wen_ok,register_wen_load,register_wen,type_fence_i;
+    reg [84:0] wrapper_reg;
+    wire register_wen_ok,register_wen_load,register_wen,type_fence_i,is_store,is_load;
     wire[31:0] aux,result;
-    wire [8:0]mytype;
     wire [2:0]funct3;
     wire [6:0]trap_info;
     wire [4:0]rd;
     always @(posedge clk) begin
         if(EXU_LSU_fire)begin
             wrapper_reg<=EXU_wrapper;
-            aux_reg<=aux_in;
         end
     end
-    assign {register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,mytype,funct3}=wrapper_reg;
-    assign aux=aux_reg;
+    assign {register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,aux,is_store,is_load,funct3}=wrapper_reg;
     wire [31:0] result_out;
-    assign result_out=mytype[5]?rdata_out:result;
-    localparam CSR_MCYCLE_LO = 4'd0;
-    localparam CSR_MCYCLE_HI = 4'd1;
-    localparam CSR_MEPC      = 4'd2;
-    localparam CSR_MSTATUS   = 4'd3;
-    localparam CSR_MCAUSE    = 4'd4;
-    localparam CSR_MTVEC     = 4'd5;
-    localparam CSR_MVENDORID = 4'd6;
-    localparam CSR_MARCHID   = 4'd7;
-    reg[3:0] csr_addr;
+    assign result_out=is_load?rdata_out:result;
+    localparam CSR_MCYCLE_LO = 3'd0;
+    localparam CSR_MCYCLE_HI = 3'd1;
+    localparam CSR_MEPC      = 3'd2;
+    localparam CSR_MSTATUS   = 3'd3;
+    localparam CSR_MCAUSE    = 3'd4;
+    localparam CSR_MTVEC     = 3'd5;
+    localparam CSR_MVENDORID = 3'd6;
+    localparam CSR_MARCHID   = 3'd7;
+    reg[2:0] csr_addr;
     always @(*) begin
-        csr_addr=4'd0;
+        csr_addr=3'd0;
         if(trap_info[0])begin
             case(aux[11:0])
                 12'hb00:csr_addr={CSR_MCYCLE_LO};
@@ -166,7 +161,7 @@ module ysyx_26040117_LSU (clk,rst,
                 12'h305:csr_addr={CSR_MTVEC};
                 12'hf11:csr_addr={CSR_MVENDORID};
                 12'hf12:csr_addr={CSR_MARCHID};
-                default:csr_addr=4'd0;
+                default:csr_addr=3'd0;
             endcase
         end
     end
@@ -181,7 +176,7 @@ module ysyx_26040117_LSU (clk,rst,
     assign is_flash=addr >= 32'h30000000 && addr <= 32'h3fffffff;
     assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
     assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
-    assign is_mimo =(|mytype[6:5])&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
+    assign is_mimo =(is_load||is_store)&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
 `endif
 `ifdef PERF_COUNTER
     reg [63:0] lsu_occupied_cycles;
@@ -225,10 +220,10 @@ module ysyx_26040117_LSU (clk,rst,
 
             //完成时统计，使用当前指令的类型和驻留周期
             if(LSU_WBU_fire)begin
-                if(mytype[5])begin
+                if(is_load)begin
                     lsu_load_count<=lsu_load_count+64'd1;
                     lsu_load_latency_sum<=lsu_load_latency_sum+lsu_age;
-                end else if(mytype[6])begin
+                end else if(is_store)begin
                     lsu_store_count<=lsu_store_count+64'd1;
                     lsu_store_latency_sum<=lsu_store_latency_sum+lsu_age;
                 end

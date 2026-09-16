@@ -8,7 +8,7 @@ module ysyx_26040117_WBU(clk,rst,
     //LSU-WBU
     input LSU_WBU_valid;
     output LSU_WBU_ready;
-    input [52:0]LSU_wrapper;
+    input [51:0]LSU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output WBU_IFU_valid;
@@ -35,19 +35,17 @@ module ysyx_26040117_WBU(clk,rst,
     end
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
     assign WBU_IFU_fire=WBU_IFU_ready&&WBU_IFU_valid;
-    assign LSU_WBU_ready=(state==IDLE)||WBU_IFU_fire;
+    assign LSU_WBU_ready=1;
     assign WBU_IFU_valid=state==WAIT;
     //FIFO
-    reg [52:0] LSU_wrapper_reg;
+    reg [51:0] LSU_wrapper_reg;
     wire [31:0] result;
     wire [2:0] funct3;
     wire register_wen,type_fence_i;
     wire [6:0]trap_info/* verilator public_flat_rd */;//0:csrr,1:ecall,2:mret,
-    wire [3:0] csr_addr/* verilator public_flat_rd */;
+    wire [2:0] csr_addr/* verilator public_flat_rd */;
     always @(posedge clk) begin
-        if(LSU_WBU_fire)begin
-            LSU_wrapper_reg<=LSU_wrapper;
-        end
+        LSU_wrapper_reg<=LSU_wrapper;
     end
     assign {register_wen,type_fence_i,trap_info,rd,result,csr_addr,funct3}=LSU_wrapper_reg;
 

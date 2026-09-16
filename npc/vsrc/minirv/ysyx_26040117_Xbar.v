@@ -40,19 +40,9 @@ module ysyx_26040117_Xbar(clk,rst,
     //aw_choose
     wire dec_soc_w,sel_soc_w,dec_clint_w,sel_clint_w;
     reg reg_soc_w,reg_clint_w,w_routed;
-    wire aw_in_uart,aw_in_sram,aw_in_clint,aw_in_flash,aw_in_spi,aw_in_psram,aw_in_sdram,aw_in_gpio,aw_in_ps2,aw_in_vga,aw_in_chip;
-    assign aw_in_chip  =awaddr>=32'hc0000000;                      //CHIPLINK
-    assign aw_in_vga   =awaddr>=32'h21000000&&awaddr<=32'h211fffff;//VGA
-    assign aw_in_ps2   =awaddr>=32'h10011000&&awaddr<=32'h10011007;//PS2
-    assign aw_in_gpio  =awaddr>=32'h10002000&&awaddr<=32'h1000200f;//GPIO
-    assign aw_in_sdram =awaddr>=32'ha0000000&&awaddr<=32'hbfffffff;//SDRAM
-    assign aw_in_psram =awaddr>=32'h80000000&&awaddr<=32'h9fffffff;//PSRAM
-    assign aw_in_spi   =awaddr>=32'h10001000&&awaddr<=32'h10001fff;//SPI-master
-    assign aw_in_flash =awaddr>=32'h30000000&&awaddr<=32'h3fffffff;//FLASH
-    assign aw_in_uart  =awaddr>=32'h10000000&&awaddr<=32'h10000fff;//UART16550
-    assign aw_in_sram  =awaddr>=32'h0f000000&&awaddr<=32'h0f001fff;//SRAM
-    assign aw_in_clint =awaddr>=32'h02000000&&awaddr<=32'h0200bfff;//CLINT
-    assign dec_soc_w=awvalid&&(aw_in_uart||aw_in_sram||aw_in_flash||aw_in_spi||aw_in_psram||aw_in_sdram||aw_in_gpio||aw_in_ps2||aw_in_vga||aw_in_chip);
+    wire aw_in_clint;
+    assign aw_in_clint =(awaddr[31:16]==16'h0200)&&(awaddr[15:14]!=2'b11);//CLINT 02000000~0200bfff
+    assign dec_soc_w=awvalid&&!aw_in_clint;
     assign dec_clint_w=awvalid&&aw_in_clint;
 
     wire awfire,wfire,bfire;
@@ -82,26 +72,15 @@ module ysyx_26040117_Xbar(clk,rst,
     assign sel_clint_w=w_routed?reg_clint_w:dec_clint_w;
     //ar_choose
     wire dec_soc_r,dec_clint_r;
-    wire ar_in_mrom,ar_in_sram,ar_in_clint,ar_in_uart,ar_in_flash,ar_in_spi,ar_in_psram,ar_in_sdram,ar_in_gpio,ar_in_ps2,ar_in_vga,ar_in_chip;
-    assign ar_in_chip  =araddr>=32'hc0000000;                      //CHIPLINK
-    assign ar_in_vga   =araddr>=32'h21000000&&araddr<=32'h211fffff;//VGA
-    assign ar_in_ps2   =araddr>=32'h10011000&&araddr<=32'h10011007;//PS2
-    assign ar_in_gpio  =araddr>=32'h10002000&&araddr<=32'h1000200f;//GPIO
-    assign ar_in_sdram =araddr>=32'ha0000000&&araddr<=32'hbfffffff;//SDRAM
-    assign ar_in_psram =araddr>=32'h80000000&&araddr<=32'h9fffffff;//PSRAM
-    assign ar_in_spi   =araddr>=32'h10001000&&araddr<=32'h10001fff;//SPI-master
-    assign ar_in_flash =araddr>=32'h30000000&&araddr<=32'h3fffffff;//FLASH
-    assign ar_in_uart  =araddr>=32'h10000000&&araddr<=32'h10000fff;//UART16550
-    assign ar_in_mrom  =araddr>=32'h20000000&&araddr<=32'h20000fff;//MROM
-    assign ar_in_sram  =araddr>=32'h0f000000&&araddr<=32'h0f001fff;//SRAM
-    assign ar_in_clint =araddr>=32'h02000000&&araddr<=32'h0200bfff;//clint
-    assign dec_soc_r=arvalid&&(ar_in_mrom||ar_in_sram||ar_in_uart||ar_in_flash||ar_in_spi||ar_in_psram||ar_in_sdram||ar_in_gpio||ar_in_ps2||ar_in_vga||ar_in_chip);
+    wire ar_in_clint;
+    assign ar_in_clint =(araddr[31:16]==16'h0200)&&(araddr[15:14]!=2'b11);//CLINT 02000000~0200bfff
+    assign dec_soc_r=arvalid&&!ar_in_clint;
     assign dec_clint_r=arvalid&&ar_in_clint;
     reg read_clint;
     wire arfire=arvalid&&arready;
     always @(posedge clk) begin
         if(rst) read_clint<=1'b0;
-        else if(arfire)read_clint<=dec_clint_r;
+        else if(arfire)read_clint<=ar_in_clint;
     end
     //clint
     wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;

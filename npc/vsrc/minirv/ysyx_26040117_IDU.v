@@ -1,5 +1,5 @@
 module ysyx_26040117_IDU(clk,rst,
-    IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,
+    IFU_IDU_valid,IFU_IDU_ready,inst,pc,fence_done,pred_taken,
     redirect_valid,EXU_IDU_wrapper,LSU_IDU_wrapper,WBU_IDU_wrapper,
     pc_out,
     IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
@@ -11,7 +11,7 @@ module ysyx_26040117_IDU(clk,rst,
     output IFU_IDU_ready;
     input [31:0] inst;
     input [31:0] pc;
-    input fence_done;
+    input fence_done,pred_taken;
     //EXU/LSU/WBU-IDU
     input redirect_valid;//control risk
     input[38:0] EXU_IDU_wrapper,LSU_IDU_wrapper;
@@ -21,14 +21,14 @@ module ysyx_26040117_IDU(clk,rst,
     //IDU_EXU
     input IDU_EXU_ready;
     output IDU_EXU_valid;
-    output[157:0]IDU_wrapper;
+    output[158:0]IDU_wrapper;
 
     wire [3:0] funct;
     wire [8:0] mytype;
     wire [31:0] num1,num2;
     wire [31:0] aux_num1,aux_num2;
     wire sub;
-    assign IDU_wrapper={register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
+    assign IDU_wrapper={pred_taken_out,register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
     assign funct={inst_out[30],inst_out[14:12]};
     //IDU-REGISTERS
     input [31:0] src1,src2;
@@ -64,8 +64,10 @@ module ysyx_26040117_IDU(clk,rst,
     assign IFU_IDU_ready=(state==IDLE)&&(buf_count!=2'd2);
     assign IDU_EXU_valid=(state==IDLE)&&(buf_count!=2'd0)&&!raw; 
     //FIFO
-    reg[63:0] idu_buf[1:0];
+    reg[62:0] idu_buf[1:0];
     wire [31:0] inst_out/* verilator public_flat_rd */;
+    wire [29:0]pc_word;
+    wire pred_taken_out;
     reg[1:0] buf_count;
     always @(posedge clk) begin
         if(rst||redirect_valid)begin
@@ -76,9 +78,9 @@ module ysyx_26040117_IDU(clk,rst,
             case({IFU_IDU_fire,IDU_EXU_fire})
                 2'b10:begin 
                     if(buf_count==2'd0)
-                        idu_buf[0]<={inst,pc};
+                        idu_buf[0]<={pred_taken,inst,pc[31:2]};
                     else 
-                        idu_buf[1]<={inst,pc};
+                        idu_buf[1]<={pred_taken,inst,pc[31:2]};
                     buf_count<=buf_count+2'd1;
                 end
                 2'b01:begin 
@@ -86,12 +88,13 @@ module ysyx_26040117_IDU(clk,rst,
                         idu_buf[0]<=idu_buf[1];
                     buf_count<=buf_count-2'd1;
                 end
-                2'b11:idu_buf[0]<={inst,pc};
+                2'b11:idu_buf[0]<={pred_taken,inst,pc[31:2]};
                 default:;
             endcase
         end
     end
-    assign {inst_out,pc_out}=idu_buf[0];
+    assign {pred_taken_out,inst_out,pc_word}=idu_buf[0];
+    assign pc_out={pc_word,2'b00};
     //function logic
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil,type_fence_i;
     wire [6:0]opcode;
