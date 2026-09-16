@@ -157,8 +157,8 @@ module ysyx_26040117 #(
     wire [84:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
-        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.exu_redirect_pc(exu_redirect_pc),.EXU_wrapper(EXU_wrapper),
-        .redirect_valid(exu_redirect_valid),.EXU_IDU_wrapper(EXU_IDU_wrapper),
+        .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.EXU_wrapper(EXU_wrapper),
+        .redirect_valid(exu_redirect_valid),.exu_redirect_pc(exu_redirect_pc),.EXU_IDU_wrapper(EXU_IDU_wrapper),
         .exu_btb_wen(exu_btb_wen),.exu_btb_waddr(exu_btb_waddr),.exu_btb_wtarget(exu_btb_wtarget)
     );
     //Load-Store Unit
@@ -215,6 +215,14 @@ module ysyx_26040117 #(
             $strobe("EXU occupied       = %.3f%%", 100.0*EXU1.exu_occupied_cycles/ICache1.ifu_cycles);
             $strobe("EXU output         = %.3f%%", 100.0*EXU1.exu_out_count/ICache1.ifu_cycles);
             $strobe("EXU blocked        = %.3f%%", 100.0*(EXU1.exu_occupied_cycles-EXU1.exu_out_count)/ICache1.ifu_cycles);
+            $strobe("Branch count       = %0d",EXU1.branch_count);
+            $strobe("Branch accuracy    = %.3f%%",100.0*EXU1.branch_correct/EXU1.branch_count);
+            $strobe("JAL count          = %0d",EXU1.jal_count);
+            $strobe("JAL accuracy       = %.3f%%",100.0*EXU1.jal_correct/EXU1.jal_count);
+            $strobe("JALR count         = %0d",EXU1.jalr_count);
+            $strobe("JALR accuracy      = %.3f%%",100.0*EXU1.jalr_correct/EXU1.jalr_count);
+            $strobe("Jump count         = %0d",EXU1.jump_count);
+            $strobe("Jump accuracy      = %.3f%%",100.0*EXU1.jump_correct/EXU1.jump_count);
             $strobe("");
 
             $strobe("LSU occupied       = %.3f%%", 100.0*LSU1.lsu_occupied_cycles/ICache1.ifu_cycles);

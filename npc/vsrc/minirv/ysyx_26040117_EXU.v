@@ -128,5 +128,41 @@ module ysyx_26040117_EXU(clk,rst,
                 exu_out_count<=exu_out_count+64'd1;
         end
     end
+    reg [63:0] branch_count,branch_correct;
+    reg [63:0] jal_count,jal_correct;
+    reg [63:0] jalr_count,jalr_correct;
+
+    always @(posedge clk)begin
+        if(rst)begin
+            branch_count<=64'd0;
+            branch_correct<=64'd0;
+            jal_count<=64'd0;
+            jal_correct<=64'd0;
+            jalr_count<=64'd0;
+            jalr_correct<=64'd0;
+        end else if(EXU_LSU_fire)begin
+            if(mytype[4])begin
+                branch_count<=branch_count+64'd1;
+                if(!mispredict)
+                    branch_correct<=branch_correct+64'd1;
+            end
+
+            if(mytype[2])begin
+                jal_count<=jal_count+64'd1;
+                if(!mispredict)
+                    jal_correct<=jal_correct+64'd1;
+            end
+
+            if(mytype[3])begin
+                jalr_count<=jalr_count+64'd1;
+                if(!mispredict)
+                    jalr_correct<=jalr_correct+64'd1;
+            end
+        end
+    end
+
+    wire [63:0] jump_count,jump_correct;
+    assign jump_count=branch_count+jal_count+jalr_count;
+    assign jump_correct=branch_correct+jal_correct+jalr_correct;
 `endif
 endmodule
