@@ -1,13 +1,12 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_arbiter(clk,rst,
     MEM_IFU_wrapper,IFU_MEM_wrapper,
-    MEM_LSU_wrapper,LSU_MEM_wrapper,lsu_read_soon,
+    MEM_LSU_wrapper,LSU_MEM_wrapper,
     master_wrapper_in,master_wrapper_out
 );
     input clk,rst;
     input [44:0] IFU_MEM_wrapper;
     input[110:0] LSU_MEM_wrapper;
-    input lsu_read_soon;
     output [40:0] MEM_LSU_wrapper;
     output [34:0] MEM_IFU_wrapper;
     input [49:0]master_wrapper_in;
@@ -35,7 +34,7 @@ module ysyx_26040117_arbiter(clk,rst,
         next_state=state;
         case(state)
             IDLE: begin
-                if(lsu_arvalid||lsu_read_soon)next_state=WAIT_LSU;//0延迟会死锁
+                if(lsu_arvalid)next_state=WAIT_LSU;//0延迟会死锁
                 else if(ifu_arvalid)next_state=WAIT_IFU;
             end
             WAIT_LSU:if(rdone) next_state=IDLE;
@@ -45,7 +44,7 @@ module ysyx_26040117_arbiter(clk,rst,
     end
     wire lsu_fire,ifu_fire;
     assign lsu_fire=(state==IDLE&&lsu_arvalid)||state==WAIT_LSU;
-    assign ifu_fire=(state==IDLE&&ifu_arvalid&&!lsu_arvalid&&!lsu_read_soon)||state==WAIT_IFU;
+    assign ifu_fire=(state==IDLE&&ifu_arvalid&&!lsu_arvalid)||state==WAIT_IFU;
     //read
     wire arvalid,rready;
     wire [31:0] araddr;

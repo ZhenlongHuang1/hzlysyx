@@ -159,8 +159,7 @@ module ysyx_26040117 #(
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
         .EXU_LSU_ready(EXU_LSU_ready),.EXU_LSU_valid(EXU_LSU_valid),.EXU_wrapper(EXU_wrapper),
         .redirect_valid(exu_redirect_valid),.exu_redirect_pc(exu_redirect_pc),.EXU_IDU_wrapper(EXU_IDU_wrapper),
-        .exu_btb_wen(exu_btb_wen),.exu_btb_waddr(exu_btb_waddr),.exu_btb_wtarget(exu_btb_wtarget),
-        .lsu_read_soon(lsu_read_soon)
+        .exu_btb_wen(exu_btb_wen),.exu_btb_waddr(exu_btb_waddr),.exu_btb_wtarget(exu_btb_wtarget)
     );
     //Load-Store Unit
     wire LSU_WBU_ready,LSU_WBU_valid;
@@ -173,10 +172,9 @@ module ysyx_26040117 #(
         .LSU_IDU_wrapper(LSU_IDU_wrapper),
         .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper)
     );
-    wire lsu_read_soon;
     ysyx_26040117_arbiter arbiter1(.clk(clock),.rst(reset),
         .MEM_IFU_wrapper(MEM_ICACHE_wrapper),.IFU_MEM_wrapper(ICACHE_MEM_wrapper),
-        .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper),.lsu_read_soon(lsu_read_soon),
+        .MEM_LSU_wrapper(MEM_LSU_wrapper),.LSU_MEM_wrapper(LSU_MEM_wrapper),
         .master_wrapper_in(master_wrapper_in),.master_wrapper_out(master_wrapper_out)
     );
 

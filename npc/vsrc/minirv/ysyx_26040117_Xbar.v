@@ -169,5 +169,5 @@ module ysyx_26040117_Xbar(clk,rst,
     assign io_master_arid=arid;
     assign io_master_arlen=arlen;
     assign io_master_arsize=arsize;
-    assign io_master_arburst=2'b01;
+    assign io_master_arburst=2'b10;
 endmodule

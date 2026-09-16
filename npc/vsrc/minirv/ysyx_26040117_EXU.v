@@ -2,8 +2,7 @@ module ysyx_26040117_EXU(clk,rst,
     IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
     EXU_LSU_ready,EXU_LSU_valid,exu_redirect_pc,EXU_wrapper,
     redirect_valid,EXU_IDU_wrapper,
-    exu_btb_wen,exu_btb_waddr,exu_btb_wtarget,
-    lsu_read_soon
+    exu_btb_wen,exu_btb_waddr,exu_btb_wtarget
 );
     input clk,rst;
     //IDU-EXU
@@ -27,9 +26,6 @@ module ysyx_26040117_EXU(clk,rst,
     assign exu_btb_waddr=aux_num1;
     assign exu_btb_wtarget=aux;
     assign exu_btb_wen=EXU_LSU_fire&&(mytype[2]||(mytype[4]&&aux_num2[31]));
-    //EXU-arbiter
-    output lsu_read_soon;
-    assign lsu_read_soon=EXU_LSU_fire&&mytype[5];
     //state machine
     wire IDU_EXU_fire,EXU_LSU_fire/* verilator public_flat_rd */;
     reg state;

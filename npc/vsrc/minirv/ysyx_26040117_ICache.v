@@ -133,7 +133,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             case(state)
                 IDLE:if(arfire&&!hit)begin
                         is_sdram_reg<=is_sdram;
-                        offset_count<=0;
+                        offset_count<=req_offset;
                 end
                 MISS_AR:begin
                     tag_array[index_reg]<=tag_reg;
@@ -197,7 +197,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     wire [7:0]arlen;
     wire rlast;
     assign arlen=is_sdram_reg?BURST_LEN:8'd0;
-    assign araddr_MEM={araddr_reg[31:OFFSET_WIDTH],is_sdram_reg?{OFFSET_WIDTH-2{1'b0}}:araddr_reg[OFFSET_WIDTH-1:2],2'b00};
+    assign araddr_MEM=araddr_reg;
     assign arvalid_MEM=state==MISS_AR;
     assign rready_MEM=state==MISS_DATA;
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr_MEM,arlen,rready_MEM};
