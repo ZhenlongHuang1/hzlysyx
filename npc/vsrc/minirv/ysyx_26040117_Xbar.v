@@ -2,7 +2,7 @@
 module ysyx_26040117_Xbar(clk,rst,
     master_wrapper_in,master_wrapper_out,
     arvalid,arready,araddr,arsize,arid,arlen,
-    rvalid,rready,rdata,rresp,rlast,
+    rvalid,rready,rdata,rresp,rlast,rid,
     awvalid,awready,awaddr,awsize,
     wvalid,wready,wdata,wstrb,
     bvalid,bready,bresp
@@ -24,6 +24,7 @@ module ysyx_26040117_Xbar(clk,rst,
     output [31:0]rdata;
     output[1:0] rresp;
     output rlast;
+    output[3:0] rid;
     //write
     input awvalid;
     output awready;
@@ -76,39 +77,50 @@ module ysyx_26040117_Xbar(clk,rst,
     assign ar_in_clint =(araddr[31:16]==16'h0200)&&(araddr[15:14]!=2'b11);//CLINT 02000000~0200bfff
     assign dec_soc_r=arvalid&&!ar_in_clint;
     assign dec_clint_r=arvalid&&ar_in_clint;
-    reg read_clint;
     wire arfire=arvalid&&arready;
-    always @(posedge clk) begin
-        if(rst) read_clint<=1'b0;
-        else if(arfire)read_clint<=ar_in_clint;
-    end
     //clint
     wire clint_awready,clint_wready,clint_bvalid,clint_awvalid,clint_wvalid;
     wire[1:0] clint_bresp,clint_rresp;
-    wire clint_arvalid,clint_arready,clint_rvalid;
+    wire clint_arvalid,clint_arready,clint_rvalid,clint_rready;
     wire [31:0] clint_rdata;
+    wire [3:0] clint_rid;
     assign clint_arvalid=dec_clint_r;
     assign clint_awvalid=dec_clint_w;
     assign clint_wvalid=sel_clint_w&&wvalid;
     ysyx_26040117_CLINT clint1(.clk(clk),.rst(rst),
-        .arvalid(clint_arvalid),.arready(clint_arready),.araddr(araddr),
-        .rvalid(clint_rvalid),.rready(rready),.rdata(clint_rdata),.rresp(clint_rresp),
+        .arvalid(clint_arvalid),.arready(clint_arready),.araddr(araddr),.arid(arid),
+        .rvalid(clint_rvalid),.rready(clint_rready),.rdata(clint_rdata),.rresp(clint_rresp),.rid(clint_rid),
         .awvalid(clint_awvalid),.awready(clint_awready),.awaddr(awaddr),
         .wvalid(clint_wvalid),.wready(clint_wready),.wdata(wdata),.wstrb(wstrb),
         .bvalid(clint_bvalid),.bready(bready),.bresp(clint_bresp)
 );
     //output
     assign arready=(dec_clint_r&&clint_arready)||(dec_soc_r&&io_master_arready);
-    assign rvalid=io_master_rvalid||clint_rvalid;
-    assign rresp=clint_rvalid?clint_rresp:io_master_rresp;
-    assign rlast=(clint_rvalid)||(io_master_rlast);
-    assign rdata=read_clint?clint_rdata:io_master_rdata;
+    assign rvalid=sel_clint?clint_rvalid:io_master_rvalid;
+    assign rdata =sel_clint?clint_rdata :io_master_rdata;
+    assign rresp =sel_clint?clint_rresp :io_master_rresp;
+    assign rlast =sel_clint?1'b1       :io_master_rlast;
+    assign rid   =sel_clint?clint_rid:io_master_rid;
+
+    assign clint_rready=sel_clint&&rready;
+    assign io_master_rready=!sel_clint&&rready;
 
     assign awready=(dec_clint_w&&clint_awready)||(dec_soc_w&&io_master_awready);
     assign wready=(sel_clint_w&&clint_wready)||(sel_soc_w&&io_master_wready);
     assign bvalid=clint_bvalid||io_master_bvalid;
     assign bresp=clint_bvalid?clint_bresp:io_master_bresp;
-
+    reg r_locked,r_sel_clint;
+    wire sel_clint=r_locked?r_sel_clint:clint_rvalid;
+    always @(posedge clk) begin
+        if(rst)begin
+            r_locked<=1'b0;
+            r_sel_clint<=1'b0;
+        end else begin
+            r_locked<=rvalid&&!rready;
+            if(rvalid&&!rready)
+                r_sel_clint<=sel_clint;
+        end
+    end
     //AXI-lite
     wire         io_master_awready;
     wire         io_master_awvalid;
@@ -158,7 +170,6 @@ module ysyx_26040117_Xbar(clk,rst,
     assign io_master_bready=bready;
     assign io_master_arvalid=dec_soc_r;
     assign io_master_araddr=araddr;
-    assign io_master_rready=rready;
 
     assign io_master_awid=4'd0;
     assign io_master_awlen=8'd0;
@@ -169,5 +180,5 @@ module ysyx_26040117_Xbar(clk,rst,
     assign io_master_arid=arid;
     assign io_master_arlen=arlen;
     assign io_master_arsize=arsize;
-    assign io_master_arburst=2'b10;
+    assign io_master_arburst=(arlen[1:0]==2'd0)?2'b01:2'b10;
 endmodule

@@ -1,7 +1,7 @@
 `include "ysyx_26040117__defines.vh"
 module ysyx_26040117_CLINT(clk,rst,
-    arvalid,arready,araddr,
-    rvalid,rready,rdata,rresp,
+    arvalid,arready,araddr,arid,
+    rvalid,rready,rdata,rresp,rid,
     awvalid,awready,awaddr,
     wvalid,wready,wdata,wstrb,
     bvalid,bready,bresp
@@ -11,11 +11,13 @@ module ysyx_26040117_CLINT(clk,rst,
     input arvalid;
     output arready;
     input[31:0]araddr;
+    input[3:0] arid;
 
     output reg rvalid;
     input rready;
     output reg [31:0]rdata;
     output[1:0] rresp;
+    output [3:0] rid;
     //write
     input awvalid;
     output awready;
@@ -40,6 +42,12 @@ module ysyx_26040117_CLINT(clk,rst,
     assign wready=1'b1;
     assign bvalid=1'b0;
     assign bresp=2'b0;
+    reg rid_reg;
+    assign rid={3'd0,rid_reg};
+    always @(posedge clk) begin
+        if(arvalid&&arready)
+            rid_reg<=arid[0];
+    end
     always @(posedge clk) begin
         if(rst) rvalid<=1'b0;
         else if(rfire) 
