@@ -2,7 +2,8 @@ module ysyx_26040117_EXU(clk,rst,
     IDU_EXU_ready,IDU_EXU_valid,IDU_wrapper,
     EXU_LSU_ready,EXU_LSU_valid,exu_redirect_pc,EXU_wrapper,
     redirect_valid,EXU_IDU_wrapper,
-    exu_btb_wen,exu_btb_waddr,exu_btb_wtarget
+    exu_btb_wen,exu_btb_waddr,exu_btb_wtarget,
+    lsu_read_soon
 );
     input clk,rst;
     //IDU-EXU
@@ -26,6 +27,9 @@ module ysyx_26040117_EXU(clk,rst,
     assign exu_btb_waddr=aux_num1;
     assign exu_btb_wtarget=aux;
     assign exu_btb_wen=EXU_LSU_fire&&(mytype[2]||(mytype[4]&&aux_num2[31]));
+    //EXU-arbiter
+    output lsu_read_soon;
+    assign lsu_read_soon=EXU_LSU_fire&&mytype[5];
     //state machine
     wire IDU_EXU_fire,EXU_LSU_fire/* verilator public_flat_rd */;
     reg state;
@@ -128,5 +132,41 @@ module ysyx_26040117_EXU(clk,rst,
                 exu_out_count<=exu_out_count+64'd1;
         end
     end
+    reg [63:0] branch_count,branch_correct;
+    reg [63:0] jal_count,jal_correct;
+    reg [63:0] jalr_count,jalr_correct;
+
+    always @(posedge clk)begin
+        if(rst)begin
+            branch_count<=64'd0;
+            branch_correct<=64'd0;
+            jal_count<=64'd0;
+            jal_correct<=64'd0;
+            jalr_count<=64'd0;
+            jalr_correct<=64'd0;
+        end else if(EXU_LSU_fire)begin
+            if(mytype[4])begin
+                branch_count<=branch_count+64'd1;
+                if(!mispredict)
+                    branch_correct<=branch_correct+64'd1;
+            end
+
+            if(mytype[2])begin
+                jal_count<=jal_count+64'd1;
+                if(!mispredict)
+                    jal_correct<=jal_correct+64'd1;
+            end
+
+            if(mytype[3])begin
+                jalr_count<=jalr_count+64'd1;
+                if(!mispredict)
+                    jalr_correct<=jalr_correct+64'd1;
+            end
+        end
+    end
+
+    wire [63:0] jump_count,jump_correct;
+    assign jump_count=branch_count+jal_count+jalr_count;
+    assign jump_correct=branch_correct+jal_correct+jalr_correct;
 `endif
 endmodule
