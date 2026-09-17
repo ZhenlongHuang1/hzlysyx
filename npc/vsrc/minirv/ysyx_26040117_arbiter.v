@@ -18,27 +18,27 @@ module ysyx_26040117_arbiter(clk,rst,
     wire [7:0] ifu_arlen;
     assign {ifu_arsize,ifu_arvalid,ifu_araddr,ifu_arlen,ifu_rready}=IFU_MEM_wrapper;
     assign {lsu_arsize,lsu_awsize,lsu_arvalid,lsu_araddr,lsu_rready}=LSU_MEM_wrapper[110:71];
-    assign MEM_IFU_wrapper={ifu_fire&&arready,ifu_fire&&rvalid,rdata,rlast};
-    assign MEM_LSU_wrapper[40:5]={lsu_fire&&arready,lsu_fire&&rvalid,rdata,rresp};
+    assign MEM_IFU_wrapper={ifu_fire&&arready,resp_ifu&&rvalid,rdata,rlast};
+    assign MEM_LSU_wrapper[40:5]={lsu_fire&&arready,resp_lsu&&rvalid,rdata,rresp};
     //state machine
+    wire arfire=arvalid&&arready;
     reg [1:0] state,next_state;
     localparam IDLE=2'd0,WAIT_LSU=2'd1,WAIT_IFU=2'd2;
     always @(posedge clk) begin
         if(rst) state<=IDLE;
         else state<=next_state;
     end
-    wire rfire,rdone;
+    wire rfire;
     assign rfire=rvalid&&rready;
-    assign rdone=rfire&&rlast;
     always @(*) begin
         next_state=state;
         case(state)
-            IDLE: begin
+            IDLE: begin if(arvalid&&!arready)
                 if(lsu_arvalid)next_state=WAIT_LSU;//0延迟会死锁
                 else if(ifu_arvalid)next_state=WAIT_IFU;
             end
-            WAIT_LSU:if(rdone) next_state=IDLE;
-            WAIT_IFU:if(rdone) next_state=IDLE;
+            WAIT_LSU:if(arfire) next_state=IDLE;
+            WAIT_IFU:if(arfire) next_state=IDLE;
             default:next_state=state;
         endcase
     end
@@ -53,11 +53,13 @@ module ysyx_26040117_arbiter(clk,rst,
     wire[1:0] rresp;
     wire[2:0] arsize;
     wire rlast;
-    wire [3:0]arid;
+    wire [3:0]arid,rid;
     wire [7:0]arlen;
+    wire resp_ifu=!rid[0];
+    wire resp_lsu=rid[0];
     assign {arsize,araddr}=lsu_fire?{lsu_arsize,lsu_araddr}:{ifu_arsize,ifu_araddr};
     assign arvalid=(lsu_fire&&lsu_arvalid)||(ifu_fire&&ifu_arvalid);
-    assign rready=(lsu_fire&&lsu_rready)||(ifu_fire&&ifu_rready);
+    assign rready=(resp_lsu&&lsu_rready)||(resp_ifu&&ifu_rready);
     assign arid={3'd0,lsu_fire};
     assign arlen={6'd0,lsu_fire?2'd0:ifu_arlen[1:0]};
     
@@ -75,7 +77,7 @@ module ysyx_26040117_arbiter(clk,rst,
     ysyx_26040117_Xbar xbar1(.clk(clk),.rst(rst),
         .master_wrapper_in(master_wrapper_in),.master_wrapper_out(master_wrapper_out),
         .arvalid(arvalid),.arready(arready),.araddr(araddr),.arsize(arsize),.arid(arid),.arlen(arlen),
-        .rvalid(rvalid),.rready(rready),.rdata(rdata),.rresp(rresp),.rlast(rlast),
+        .rvalid(rvalid),.rready(rready),.rdata(rdata),.rresp(rresp),.rlast(rlast),.rid(rid),
         .awvalid(awvalid),.awready(awready),.awaddr(awaddr),.awsize(awsize),
         .wvalid(wvalid),.wready(wready),.wdata(wdata),.wstrb(wstrb),
         .bvalid(bvalid),.bready(bready),.bresp(bresp)

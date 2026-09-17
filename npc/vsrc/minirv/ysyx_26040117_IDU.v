@@ -169,9 +169,27 @@ module ysyx_26040117_IDU(clk,rst,
     wire rs1_wait=rs1_exu?!exu_ready:rs1_lsu?!lsu_ready:1'b0;
     wire rs2_wait=rs2_exu?!exu_ready:rs2_lsu?!lsu_ready:1'b0;
     wire raw=rs1_wait||rs2_wait;
-    wire[31:0] src1_forward=rs1_exu?exu_data:rs1_lsu?lsu_data:rs1_wbu?wbu_data:src1;
-    wire[31:0] src2_forward=rs2_exu?exu_data:rs2_lsu?lsu_data:rs2_wbu?wbu_data:src2;
-
+    //wire[31:0] src1_forward=rs1_exu?exu_data:rs1_lsu?lsu_data:rs1_wbu?wbu_data:src1;
+    //wire[31:0] src2_forward=rs2_exu?exu_data:rs2_lsu?lsu_data:rs2_wbu?wbu_data:src2;
+    wire rs1_sel_exu=rs1_exu;
+    wire rs1_sel_lsu=!rs1_exu&&rs1_lsu;
+    wire rs1_sel_wbu=!rs1_exu&&!rs1_lsu&&rs1_wbu;
+    wire rs1_sel_rf =!rs1_exu&&!rs1_lsu&&!rs1_wbu;
+    wire [31:0] src1_forward=
+        ({32{rs1_sel_exu}}&exu_data)|
+        ({32{rs1_sel_lsu}}&lsu_data)|
+        ({32{rs1_sel_wbu}}&wbu_data)|
+        ({32{rs1_sel_rf }}&src1);
+    wire rs2_sel_exu=rs2_exu;
+    wire rs2_sel_lsu=!rs2_exu&&rs2_lsu;
+    wire rs2_sel_wbu=!rs2_exu&&!rs2_lsu&&rs2_wbu;
+    wire rs2_sel_rf =!rs2_exu&&!rs2_lsu&&!rs2_wbu;
+    wire [31:0] src2_forward=
+        ({32{rs2_sel_exu}}&exu_data)|
+        ({32{rs2_sel_lsu}}&lsu_data)|
+        ({32{rs2_sel_wbu}}&wbu_data)|
+        ({32{rs2_sel_rf }}&src2);
+    
     //Exception interrupt
     wire type_trap=type_I_privil&&funct3_zero;
 

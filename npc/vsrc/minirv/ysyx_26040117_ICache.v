@@ -29,14 +29,14 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     always @(posedge clk) begin
         if(redirect_valid)
             s1_dnpc<=dnpc[31:2];
-        else if(btb_hit&&arfire)
+        else if(btb_hit&&s1_valid&&arready)
             s1_dnpc<=btb_target[31:2];
     end
     wire[29:0] snpc_next=fence_done?idu_pc[31:2]:araddr[31:2];
     always @(posedge clk) begin
         if(rst)
             s1_snpc<=RESET_PC;
-        else if(fence_done||arfire)
+        else if(fence_done||(s1_valid&&arready))
             s1_snpc<=snpc_next+30'd1;
     end
     wire [31:0] araddr={(s1_redirect||s1_btb_valid)?s1_dnpc:s1_snpc,2'b00};
@@ -119,12 +119,11 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
 
     assign tag_reg=araddr_reg[31:OFFSET_WIDTH+INDEX_WIDTH];
     assign {index_reg,offset_reg}=miss_pos;
-    wire miss_fire=arfire&&!hit;
     always @(posedge clk) begin
-        if(arfire)begin 
+        if(s1_valid&&arready)begin 
             araddr_word_reg<=araddr[31:2];
         end
-        if(miss_fire)begin
+        if(s1_valid&&arready&&!hit)begin
             req_tag_match_reg<=req_tag_match;
             miss_pos<=araddr[INDEX_WIDTH+OFFSET_WIDTH-1:2];
         end
@@ -132,7 +131,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     always @(posedge clk) begin
         if(pipe_clear)
             miss_pending<=1'b0;
-        else if(miss_fire)
+        else if(s1_valid&&arready&&!hit)
             miss_pending<=1'b1;
         else if(refill_data_en)
             miss_pending<=1'b0;
@@ -143,7 +142,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             valid_array<=0;
         end else begin
             case(state)
-                IDLE:if(miss_fire)begin
+                IDLE:if(s1_valid&&arready&&!hit)begin
                         is_sdram_reg<=is_sdram;
                         offset_count<=req_offset;
                 end
@@ -174,7 +173,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     always @(*) begin
         next_state=state;
         case(state)
-            IDLE:if(miss_fire)next_state=MISS_AR;
+            IDLE:if(arfire&&!hit)next_state=MISS_AR;
             MISS_AR:if(arfire_MEM)next_state=MISS_DATA;
             MISS_DATA:if(rfire_MEM&&rlast)next_state=IDLE;
             default:next_state=IDLE;
