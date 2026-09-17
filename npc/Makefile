@@ -11,6 +11,10 @@ else ifeq ($(SIM_ENV),npc)
 TOPNAME=ysyx_26040117_SIM
 VSRCS += $(shell find $(abspath ./vsrc/riscv32e_npc) -name "*.v")
 CXXFLAGS+=-DRISCV32E_NPC
+else ifeq ($(SIM_ENV),iverilog)
+TOPNAME=ysyx_26040117_iverilog_tb
+VSRCS += vsrc/riscv32e_npc/ysyx_26040117_iverilog.v
+VSRCS += vsrc/riscv32e_npc/ysyx_26040117_iverilog_tb.v
 endif
 
 INC_PATH +=$(abspath ./csrc)
@@ -23,7 +27,6 @@ VERILATOR_CFLAGS += -MMD --build -cc \
 VERILATOR_FLAGS += --trace-vcd
 VERILATOR_FLAGS += -I$(abspath ./vsrc/minirv)
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing --autoflush#uart flush
-VERILATOR_FLAGS += -DPERF_COUNTER
 
 BUILD_DIR =./build
 OBJ_DIR = $(BUILD_DIR)/sim/$(SIM_ENV)/obj_dir
@@ -74,15 +77,24 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
 lint:
-	$(VERILATOR) --lint-only -Wall -Wno-DECLFILENAME --top-module $(TOPNAME) $(VSRCS)
+	$(VERILATOR) --lint-only -Wall -Wno-DECLFILENAME -Wno-UNUSED --top-module ysyx_26040117 vsrc/minirv/ysyx_26040117.v
 all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "$(BIN) $(ARGS) $(IMG)"
 	$(BIN) $(ARGS) $(IMG)
-sim_ysyxsoc: 
+
+iv-image=$(basename $(abspath $(IMG))).elf
+sim_i:
+	riscv64-linux-gnu-objcopy -O verilog --verilog-data-width=4  --adjust-vma=-0x80000000  "$(iv-image)" build/iverilog.hex
+	iverilog -g2012 -s $(TOPNAME) -o build/iverilog.vvp $(VSRCS) 
+	vvp build/iverilog.vvp
+sim-iverilog:
+	$(MAKE) sim_i SIM_ENV=iverilog
+
+sim-ysyxsoc: 
 	$(MAKE) sim SIM_ENV=ysyxsoc
-sim_npc: 
+sim-npc: 
 	$(MAKE) sim SIM_ENV=npc
 gdb: $(BIN)
 	gdb --args $(BIN) $(ARGS) $(IMG)
@@ -107,7 +119,7 @@ syn:
 		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR)
 
 MICROBENCH_HOME ?= $(abspath ../am-kernels/benchmarks/microbench)
-.PHONY: default all sim sim_ysyxsoc sim_npc lint gdb clean sta syn perf
+.PHONY: default all sim sim_i sim-ysyxsoc sim-npc lint gdb clean sta syn perf
 perf:
 	$(MAKE) -C $(MICROBENCH_HOME) \
 		ARCH=riscv32e-ysyxsoc  \

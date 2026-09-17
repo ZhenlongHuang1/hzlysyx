@@ -1,4 +1,4 @@
-module ysyx_26040117_SIM(
+module ysyx_26040117_iverilog(
     input clock,
     input reset
 );
@@ -67,14 +67,31 @@ module ysyx_26040117_SIM(
                 io_master_rid<=io_master_arid;
         end
     end
-    import "DPI-C" function void paddr_read(input int addr, output int data);
-    always @(posedge clock) begin
-        if(!reset&&arfire) paddr_read(io_master_araddr,io_master_rdata);
+    reg[31:0] mem[0:4194303];
+    initial begin
+        $readmemh("build/iverilog.hex",mem);
     end
-    import "DPI-C" function void paddr_write(input int addr, input int data,input int mask);
     always @(posedge clock) begin
-        if(!reset&&awfire&&wfire) paddr_write(io_master_awaddr,io_master_wdata,{28'd0,io_master_wstrb});
-
+        if(reset)
+            io_master_rdata<=0;
+        else if(arfire)
+            io_master_rdata<=mem[io_master_araddr[23:2]];
+    end
+    wire[31:0]data_replace,data_origin;
+    wire [31:0]mask_replace,mask_origin;
+    assign mask_replace={{8{io_master_wstrb[3]}},{8{io_master_wstrb[2]}},{8{io_master_wstrb[1]}},{8{io_master_wstrb[0]}}};
+    assign mask_origin=~mask_replace;
+    assign data_origin=mem[io_master_awaddr[23:2]]&mask_origin;
+    assign data_replace=io_master_wdata&mask_replace;
+    always @(posedge clock) begin
+        if(!reset&&awfire&&wfire)begin
+            if(io_master_awaddr>=32'h80000000&&io_master_awaddr<=32'h9fffffff)
+                mem[io_master_awaddr[23:2]]<=data_origin|data_replace;
+            else if(io_master_awaddr==32'h10000000)begin
+                if(io_master_wstrb[0])
+                    $write("%c",io_master_wdata[7:0]);
+            end
+        end
     end
 
 
