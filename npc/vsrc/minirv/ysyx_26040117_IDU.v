@@ -169,8 +169,7 @@ module ysyx_26040117_IDU(clk,rst,
     wire rs1_wait=rs1_exu?!exu_ready:rs1_lsu?!lsu_ready:1'b0;
     wire rs2_wait=rs2_exu?!exu_ready:rs2_lsu?!lsu_ready:1'b0;
     wire raw=rs1_wait||rs2_wait;
-    //wire[31:0] src1_forward=rs1_exu?exu_data:rs1_lsu?lsu_data:rs1_wbu?wbu_data:src1;
-    //wire[31:0] src2_forward=rs2_exu?exu_data:rs2_lsu?lsu_data:rs2_wbu?wbu_data:src2;
+
     wire rs1_sel_exu=rs1_exu;
     wire rs1_sel_lsu=!rs1_exu&&rs1_lsu;
     wire rs1_sel_wbu=!rs1_exu&&!rs1_lsu&&rs1_wbu;
