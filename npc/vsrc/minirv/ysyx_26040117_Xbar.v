@@ -109,17 +109,13 @@ module ysyx_26040117_Xbar(clk,rst,
     assign wready=(sel_clint_w&&clint_wready)||(sel_soc_w&&io_master_wready);
     assign bvalid=clint_bvalid||io_master_bvalid;
     assign bresp=clint_bvalid?clint_bresp:io_master_bresp;
-    reg r_locked,r_sel_clint;
-    wire sel_clint=r_locked?r_sel_clint:clint_rvalid;
+    reg hold_soc;
+    wire sel_clint=clint_rvalid&&!hold_soc;
     always @(posedge clk) begin
-        if(rst)begin
-            r_locked<=1'b0;
-            r_sel_clint<=1'b0;
-        end else begin
-            r_locked<=rvalid&&!rready;
-            if(rvalid&&!rready)
-                r_sel_clint<=sel_clint;
-        end
+        if(rst)
+            hold_soc<=1'b0;
+        else
+            hold_soc<=!sel_clint&&io_master_rvalid&&!rready;
     end
     //AXI-lite
     wire         io_master_awready;
