@@ -295,7 +295,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign req_offset=araddr[OFFSET_WIDTH-1:2];
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    wire req_tag_match=tag_array[req_index]==req_tag;
+    wire req_tag_match=(tag_array[req_index]==req_tag)&&(|valid_array[req_index*WORD_NUM +: WORD_NUM]);
     assign hit=valid_array[{req_index,req_offset}]&&req_tag_match;
     wire arvalid=s1_valid&&!pipe_clear;
     //BTB
@@ -369,6 +369,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     always @(posedge clk) begin
         if(rst||fence_i||flush_pending) begin
             valid_array<=0;
+            is_sdram_reg<=1'b0;
         end else begin
             case(state)
                 IDLE:if(s1_valid&&arready&&!hit)begin
