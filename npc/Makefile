@@ -7,10 +7,12 @@ VSRCS += $(shell find $(YSYXSOC_HOME)/perip -name "*.v")
 VSRCS += $(YSYXSOC_HOME)/build/ysyxSoCFull.v
 VERILATOR_FLAGS += -I$(YSYXSOC_HOME)/perip/uart16550/rtl -I$(YSYXSOC_HOME)/perip/spi/rtl
 CXXFLAGS +=-DUSE_NVBOARD
+VERILATOR_FLAGS += -Uysyx_26040117_STA_MODE
 else ifeq ($(SIM_ENV),npc)
 TOPNAME=ysyx_26040117_SIM
 VSRCS += $(shell find $(abspath ./vsrc/riscv32e_npc) -name "*.v")
 CXXFLAGS+=-DRISCV32E_NPC
+VERILATOR_FLAGS += -Uysyx_26040117_STA_MODE
 else ifeq ($(SIM_ENV),iverilog)
 TOPNAME=ysyx_26040117_iverilog_tb
 VSRCS += vsrc/riscv32e_npc/ysyx_26040117_iverilog.v
@@ -86,8 +88,10 @@ sim: $(BIN)
 
 iv-image=$(basename $(abspath $(IMG))).elf
 sim_i:
-	riscv64-linux-gnu-objcopy -O verilog --verilog-data-width=4  --adjust-vma=-0x80000000  "$(iv-image)" build/iverilog.hex
-	iverilog -g2012 -s $(TOPNAME) -o build/iverilog.vvp $(VSRCS) 
+	@mkdir -p $(OBJ_DIR)
+	riscv64-linux-gnu-objcopy -I binary -O elf32-littleriscv -B riscv "$(IMG)" build/iverilog-image.o
+	riscv64-linux-gnu-objcopy -O verilog --verilog-data-width=4 build/iverilog-image.o build/iverilog.hex
+	iverilog -g2012 -Dysyxsoc_26040117_STA_MODE -s $(TOPNAME) -o build/iverilog.vvp $(VSRCS) 
 	vvp build/iverilog.vvp
 sim-iverilog:
 	$(MAKE) sim_i SIM_ENV=iverilog

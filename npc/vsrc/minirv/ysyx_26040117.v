@@ -101,6 +101,7 @@ module ysyx_26040117 #(
     wire[31:0]trap_dnpc,redirect_dnpc;//result:ALU结果
     wire fence_i;
     wire trap_redirect_valid,exu_redirect_valid,redirect_valid;
+    wire [31:0]exu_redirect_pc;
     assign redirect_valid=trap_redirect_valid||exu_redirect_valid;
     assign redirect_dnpc=trap_redirect_valid?trap_dnpc:exu_redirect_pc;
     //Instruction Fetch Unit
@@ -119,13 +120,15 @@ module ysyx_26040117 #(
         .idu_pc(idu_ifu_pc),
         .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper)
     );
+    wire [31:0] btb_araddr,btb_target;
+    wire btb_hit;
     ysyx_26040117_ICache #(.RESET_VECTOR(RESET_VECTOR))ICache1(.clk(clock),.rst(reset),
         .IFU_ICACHE_wrapper(IFU_ICACHE_wrapper),.ICACHE_IFU_wrapper(ICACHE_IFU_wrapper),
         .MEM_ICACHE_wrapper(MEM_ICACHE_wrapper),.ICACHE_MEM_wrapper(ICACHE_MEM_wrapper),
         .btb_araddr(btb_araddr),.btb_hit(btb_hit),.btb_target(btb_target)
     );
-    wire [31:0] btb_araddr,btb_target,exu_btb_waddr,exu_btb_wtarget;
-    wire btb_hit,exu_btb_wen;
+    wire [31:0] exu_btb_waddr,exu_btb_wtarget;
+    wire exu_btb_wen;
     ysyx_26040117_BTB BTB1(.clk(clock),.rst(reset),.flush(fence_i),
         .araddr(btb_araddr),.hit(btb_hit),.target(btb_target),
         .wen(exu_btb_wen),.waddr(exu_btb_waddr),.wtarget(exu_btb_wtarget)
@@ -155,7 +158,6 @@ module ysyx_26040117 #(
     );
     //Execution Unit
     wire EXU_LSU_ready,EXU_LSU_valid;
-    wire [31:0]exu_redirect_pc;
     wire [84:0]EXU_wrapper; 
     ysyx_26040117_EXU EXU1(.clk(clock),.rst(reset),
         .IDU_EXU_ready(IDU_EXU_ready),.IDU_EXU_valid(IDU_EXU_valid),.IDU_wrapper(IDU_wrapper),
@@ -235,17 +237,26 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     localparam WORD_NUM=2**(OFFSET_WIDTH-2);
     localparam BURST_LEN=WORD_NUM-1;
     localparam [29:0] RESET_PC=RESET_VECTOR[31:2];
-    wire rready,rfire;
-    wire fence_i,redirect_valid;
+    wire arready,rready,rfire,arfire;
+    reg rvalid;
+    reg[31:0] rdata;
     wire [31:0] dnpc,idu_pc;
+    wire[31:0] araddr_reg,araddr;
+    wire fence_i,redirect_valid;
+    reg flush_pending,fence_done,s1_btb_valid;
     assign rfire=rvalid&&rready;
 
     assign {fence_i,redirect_valid,dnpc,idu_pc,rready}=IFU_ICACHE_wrapper;
     assign ICACHE_IFU_wrapper={s1_btb_valid,fence_done,rvalid,araddr_reg,rdata};
     wire fence_clear=rst||fence_i||flush_pending||fence_done;
     wire pipe_clear=redirect_valid||fence_clear;
+    localparam IDLE=0,MISS_AR=1,MISS_DATA=2;
+    reg[1:0] state,next_state;
+    reg[31:0] data_array[0:DATA_DEPTH-1];
+    reg[31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_array[0:(2**INDEX_WIDTH)-1];
+    reg[DATA_DEPTH-1:0] valid_array;
     //S1-FIFO 
-    reg s1_valid,s1_redirect,s1_btb_valid;
+    reg s1_valid,s1_redirect;
     reg[29:0] s1_snpc,s1_dnpc;
     always @(posedge clk) begin
         if(redirect_valid)
@@ -260,7 +271,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         else if(fence_done||(s1_valid&&arready))
             s1_snpc<=snpc_next+30'd1;
     end
-    wire [31:0] araddr={(s1_redirect||s1_btb_valid)?s1_dnpc:s1_snpc,2'b00};
+    assign  araddr={(s1_redirect||s1_btb_valid)?s1_dnpc:s1_snpc,2'b00};
     always @(posedge clk) begin
         if(rst)
             s1_valid<=1'b1;
@@ -298,13 +309,18 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             s1_btb_valid<=btb_hit;
     end
     //S2
-    wire out_ready=!rvalid||rready;
-    wire arready=out_ready&&((state==IDLE)||((state==MISS_DATA)&&!miss_pending&&hit));
-    wire arfire=arvalid&&arready;
-    reg is_sdram_reg;
+    wire arready_MEM,arvalid_MEM,arfire_MEM;
+    wire rready_MEM,rvalid_MEM,rfire_MEM,rlast;
+    wire [31:0] rdata_MEM,araddr_MEM;
 
-    reg rvalid;
-    reg [31:0] rdata;
+    reg miss_pending;
+    wire out_ready=!rvalid||rready;
+    assign  arready=out_ready&&((state==IDLE)||((state==MISS_DATA)&&!miss_pending&&hit));
+    assign  arfire=arvalid&&arready;
+    reg is_sdram_reg;
+    
+    wire  [OFFSET_WIDTH-3:0] offset_reg;
+    reg  [OFFSET_WIDTH-3:0] offset_count;
     wire refill_data_en=rfire_MEM&&((offset_count==offset_reg)||!is_sdram_reg);
     always @(posedge clk) begin
         if(out_ready)
@@ -324,18 +340,12 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         end
     end
     //ICache
-    reg[31:0] data_array[0:DATA_DEPTH-1];
-    reg[31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_array[0:(2**INDEX_WIDTH)-1];
-    reg[DATA_DEPTH-1:0] valid_array;
 
-    wire  [OFFSET_WIDTH-3:0] offset_reg;
-    reg  [OFFSET_WIDTH-3:0] offset_count;
     wire[INDEX_WIDTH-1:0] index_reg;
     wire [31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_reg;
     reg[29:0]araddr_word_reg;
-    wire[31:0] araddr_reg={araddr_word_reg,2'b00};
+    assign araddr_reg={araddr_word_reg,2'b00};
     reg [INDEX_WIDTH+OFFSET_WIDTH-3:0] miss_pos;
-    reg miss_pending;
     reg req_tag_match_reg;
 
     assign tag_reg=araddr_reg[31:OFFSET_WIDTH+INDEX_WIDTH];
@@ -383,8 +393,6 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         end
     end
     //state machine
-    localparam IDLE=0,MISS_AR=1,MISS_DATA=2;
-    reg[1:0] state,next_state;
     always @(posedge clk) begin
         if(rst)
             state<=IDLE;
@@ -401,7 +409,6 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         endcase
     end
     wire refill_done=(state==MISS_DATA)&&rfire_MEM&&rlast;
-    reg flush_pending,fence_done;
     always @(posedge clk) begin
         if(rst)
             {flush_pending,fence_done}<=2'b0;
@@ -421,13 +428,9 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         end
     end
     //ICache-arbiter
-    wire arvalid_MEM,arready_MEM;
-    wire arfire_MEM=arvalid_MEM&&arready_MEM;
-    wire rvalid_MEM,rready_MEM;
-    wire rfire_MEM=rvalid_MEM&&rready_MEM;
-    wire [31:0] rdata_MEM,araddr_MEM;
+    assign  arfire_MEM=arvalid_MEM&&arready_MEM;
+    assign  rfire_MEM=rvalid_MEM&&rready_MEM;
     wire [7:0]arlen;
-    wire rlast;
     assign arlen=is_sdram_reg?BURST_LEN:8'd0;
     assign araddr_MEM=araddr_reg;
     assign arvalid_MEM=state==MISS_AR;
@@ -497,18 +500,27 @@ module ysyx_26040117_IDU(clk,rst,
     input IDU_EXU_ready;
     output IDU_EXU_valid;
     output[158:0]IDU_wrapper;
+    
+
 
     wire [3:0] funct;
     wire [8:0] mytype;
     wire [31:0] num1,num2;
     wire [31:0] aux_num1,aux_num2;
-    wire sub;
+    wire [6:0] trap_info;
+    wire [4:0] rd;
+    wire sub,type_fence_i;
+    wire register_wen,register_wen_ok,register_wen_load;
+    wire[31:0] inst_out/* verilator public_flat_rd */;
+    wire pred_taken_out;
     assign IDU_wrapper={pred_taken_out,register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub};
     assign funct={inst_out[30],inst_out[14:12]};
+    reg [3:0] exception_cause;
+    wire type_mret,exception_valid,type_csr;
+    wire raw;
     //IDU-REGISTERS
     input [31:0] src1,src2;
     output [4:0] rs1,rs2;
-    wire [4:0] rd;
     //state machine
     wire IFU_IDU_fire,IDU_EXU_fire/* verilator public_flat_rd */;
     reg [1:0] state,next_state;
@@ -536,14 +548,12 @@ module ysyx_26040117_IDU(clk,rst,
         endcase
     end
     wire issue_pause=type_fence_i||type_mret||exception_valid;
+    reg[1:0] buf_count;
     assign IFU_IDU_ready=(state==IDLE)&&(buf_count!=2'd2);
     assign IDU_EXU_valid=(state==IDLE)&&(buf_count!=2'd0)&&!raw; 
     //FIFO
     reg[62:0] idu_buf[1:0];
-    wire [31:0] inst_out/* verilator public_flat_rd */;
     wire [29:0]pc_word;
-    wire pred_taken_out;
-    reg[1:0] buf_count;
     always @(posedge clk) begin
         if(rst||redirect_valid)begin
             buf_count<=2'd0;
@@ -571,7 +581,7 @@ module ysyx_26040117_IDU(clk,rst,
     assign {pred_taken_out,inst_out,pc_word}=idu_buf[0];
     assign pc_out={pc_word,2'b00};
     //function logic
-    wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil,type_fence_i;
+    wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil;
     wire [6:0]opcode;
     wire [2:0]funct3;
     wire funct3_zero;
@@ -609,6 +619,7 @@ module ysyx_26040117_IDU(clk,rst,
                 (immJ&{32{type_J}});
     assign funct3=inst_out[14:12];
 
+    wire[31:0] src1_forward,src2_forward;
     assign num1=({32{(|mytype[8:4]) ||type_csr}} & src1_forward)|//alu,alui,load,store,branch,csrr
                  ({32{(|mytype[3:1]) || exception_valid}} & pc_out);//jalr,jal,auipc,ecall
     assign num2= ({32{mytype[8]||mytype[4]}}&src2_forward)|//branch,alu
@@ -621,9 +632,9 @@ module ysyx_26040117_IDU(clk,rst,
     wire is_slt =(~funct[2])&&funct[1];
     assign sub  =(mytype[8]&&funct[3])||((mytype[8]||mytype[7])&&is_slt);
     wire rd_valid=rd!=5'd0;
-    wire register_wen_ok=((|mytype[3:0])||(|mytype[8:7]))&&(rd_valid);
-    wire register_wen_load=rd_valid&&(mytype[5]);
-    wire register_wen=register_wen_ok||register_wen_load||(rd_valid&&type_csr);
+    assign register_wen_ok=((|mytype[3:0])||(|mytype[8:7]))&&(rd_valid);
+    assign register_wen_load=rd_valid&&(mytype[5]);
+    assign  register_wen=register_wen_ok||register_wen_load||(rd_valid&&type_csr);
     //Data adventure
     wire rs1_use,rs2_use;
     assign rs1_use=(|mytype[8:3])||type_csr;
@@ -643,13 +654,13 @@ module ysyx_26040117_IDU(clk,rst,
 
     wire rs1_wait=rs1_exu?!exu_ready:rs1_lsu?!lsu_ready:1'b0;
     wire rs2_wait=rs2_exu?!exu_ready:rs2_lsu?!lsu_ready:1'b0;
-    wire raw=rs1_wait||rs2_wait;
+    assign raw=rs1_wait||rs2_wait;
 
     wire rs1_sel_exu=rs1_exu;
     wire rs1_sel_lsu=!rs1_exu&&rs1_lsu;
     wire rs1_sel_wbu=!rs1_exu&&!rs1_lsu&&rs1_wbu;
     wire rs1_sel_rf =!rs1_exu&&!rs1_lsu&&!rs1_wbu;
-    wire [31:0] src1_forward=
+    assign src1_forward=
         ({32{rs1_sel_exu}}&exu_data)|
         ({32{rs1_sel_lsu}}&lsu_data)|
         ({32{rs1_sel_wbu}}&wbu_data)|
@@ -658,7 +669,7 @@ module ysyx_26040117_IDU(clk,rst,
     wire rs2_sel_lsu=!rs2_exu&&rs2_lsu;
     wire rs2_sel_wbu=!rs2_exu&&!rs2_lsu&&rs2_wbu;
     wire rs2_sel_rf =!rs2_exu&&!rs2_lsu&&!rs2_wbu;
-    wire [31:0] src2_forward=
+    assign src2_forward=
         ({32{rs2_sel_exu}}&exu_data)|
         ({32{rs2_sel_lsu}}&lsu_data)|
         ({32{rs2_sel_wbu}}&wbu_data)|
@@ -670,12 +681,11 @@ module ysyx_26040117_IDU(clk,rst,
     wire exception_illegal=1'b0;
     wire exception_breakpoint=type_trap&&(immI[11:0]==12'b1);
     wire exception_ecall=type_trap&&(immI[11:0]==12'b0);
-    wire exception_valid=exception_illegal||exception_ecall||exception_breakpoint;
-    wire type_mret=type_trap&&(immI[11:0]==12'b001100000010);
-    wire type_csr=~funct3_zero&type_I_privil;
+    assign exception_valid=exception_illegal||exception_ecall||exception_breakpoint;
+    assign type_mret=type_trap&&(immI[11:0]==12'b001100000010);
+    assign  type_csr=~funct3_zero&type_I_privil;
 
-    wire [6:0] trap_info={exception_cause,exception_valid,type_mret,type_csr};
-    reg [3:0] exception_cause;
+    assign trap_info={exception_cause,exception_valid,type_mret,type_csr};
     always @(*) begin
         exception_cause=4'd0;
         if(exception_illegal)
@@ -721,6 +731,25 @@ module ysyx_26040117_EXU(clk,rst,
     output [31:0] exu_redirect_pc/* verilator public_flat_rd */;
     output [84:0] EXU_wrapper;
     
+    
+    //FIFO
+    reg[158:0] IDU_wrapper_reg;
+    wire [8:0]mytype;
+    wire [3:0]funct;
+    wire [31:0] num1,num2,aux_num1,aux_num2,aux0;
+    wire [31:0]aux/* verilator public_flat_rd */;
+    wire sub,type_fence_i,register_wen_ok,register_wen_load,register_wen,pred_taken;
+    wire[6:0] trap_info;
+    wire [4:0] rd;
+    reg [31:0]result;
+    wire IDU_EXU_fire,EXU_LSU_fire/* verilator public_flat_rd */;
+    always @(posedge clk) begin
+        if(IDU_EXU_fire)begin
+            IDU_wrapper_reg<=IDU_wrapper;
+        end
+    end
+    assign {pred_taken,register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub}=IDU_wrapper_reg;
+
     assign EXU_wrapper={register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,aux_num2,mytype[6:5],funct[2:0]};
     //EXU-IFU/IDU
     output redirect_valid/* verilator public_flat_rd */;
@@ -733,7 +762,6 @@ module ysyx_26040117_EXU(clk,rst,
     assign exu_btb_wtarget=aux;
     assign exu_btb_wen=EXU_LSU_fire&&(mytype[2]||(mytype[4]&&aux_num2[31]));
     //state machine
-    wire IDU_EXU_fire,EXU_LSU_fire/* verilator public_flat_rd */;
     reg state;
     localparam IDLE=0,WAIT=1;
     always @(posedge clk) begin
@@ -748,20 +776,6 @@ module ysyx_26040117_EXU(clk,rst,
     assign EXU_LSU_valid=state==WAIT;
     assign IDU_EXU_fire=IDU_EXU_ready&&IDU_EXU_valid;
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
-    //FIFO
-    reg[158:0] IDU_wrapper_reg;
-    wire [8:0]mytype;
-    wire [3:0]funct;
-    wire [31:0] num1,num2,aux_num1,aux_num2;
-    wire sub,type_fence_i,register_wen_ok,register_wen_load,register_wen,pred_taken;
-    wire[6:0] trap_info;
-    wire [4:0] rd;
-    always @(posedge clk) begin
-        if(IDU_EXU_fire)begin
-            IDU_wrapper_reg<=IDU_wrapper;
-        end
-    end
-    assign {pred_taken,register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,funct,mytype,num1,num2,aux_num1,aux_num2,sub}=IDU_wrapper_reg;
     //result function
     wire carry,sless,less;
     wire[31:0] t_no_cin,result0;
@@ -772,7 +786,6 @@ module ysyx_26040117_EXU(clk,rst,
     
     wire signed [32:0] shift_src={funct[3]&num1[31],num1};
     wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
-    reg [31:0]result;
     always @(*) begin
         result=result0;//load,store,jal,jalr
         if(mytype[8]||mytype[7])begin
@@ -807,7 +820,6 @@ module ysyx_26040117_EXU(clk,rst,
     end
     assign branch_decision=funct[0]^branch_decision0;
     //aux
-    wire[31:0] aux0,aux/* verilator public_flat_rd */;
     assign aux0=aux_num1+aux_num2;
     assign aux={aux0[31:1],aux0[0]&&~mytype[3]};
     //redirect
@@ -835,18 +847,36 @@ module ysyx_26040117_LSU (clk,rst,
     input LSU_WBU_ready;
     output LSU_WBU_valid;
     output [51:0]LSU_wrapper;
-    assign LSU_wrapper={register_wen,type_fence_i,trap_info,rd,result_out,csr_addr,funct3};
     //LSU-IDU
     output [38:0] LSU_IDU_wrapper;
-    wire load_ready=register_wen_load&&!arvalid&&rvalid;
-    assign LSU_IDU_wrapper={result_out,lsu_valid&&register_wen,lsu_valid&&(register_wen_ok||load_ready),rd};
     //LSU-MEM
     input [40:0]MEM_LSU_wrapper;
     output[110:0] LSU_MEM_wrapper;
 
-    reg lsu_valid;
-    wire wen,ren;
+    //FIFO
+    reg [84:0] wrapper_reg;
+    wire register_wen_ok,register_wen_load,register_wen,type_fence_i,is_store,is_load;
+    wire[31:0] aux,result;
+    wire [2:0]funct3;
+    wire [6:0]trap_info;
+    wire [4:0]rd;
+    wire [31:0] result_out;
+    reg[2:0] csr_addr;
     wire EXU_LSU_fire,LSU_WBU_fire/* verilator public_flat_rd */;
+    always @(posedge clk) begin
+        if(EXU_LSU_fire)begin
+            wrapper_reg<=EXU_wrapper;
+        end
+    end
+    assign {register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,aux,is_store,is_load,funct3}=wrapper_reg;
+    assign LSU_wrapper={register_wen,type_fence_i,trap_info,rd,result_out,csr_addr,funct3};
+    wire rvalid,arready,rready,bvalid;;
+    reg arvalid,awvalid,wvalid;
+    reg lsu_valid;
+    wire load_ready=register_wen_load&&!arvalid&&rvalid;
+    assign LSU_IDU_wrapper={result_out,lsu_valid&&register_wen,lsu_valid&&(register_wen_ok||load_ready),rd};
+    //
+    wire wen,ren;
     wire [1:0]mytype_in=EXU_wrapper[4:3];
     assign wen=mytype_in[1]&&EXU_LSU_fire;//right now
     assign ren=mytype_in[0]&&EXU_LSU_fire;
@@ -868,8 +898,6 @@ module ysyx_26040117_LSU (clk,rst,
     //read
     wire[31:0] rdata;
     wire[1:0] rresp;
-    wire arready,rvalid,rready;
-    reg arvalid;
     wire [31:0] araddr;
     wire [2:0] arsize;
     wire arfire;
@@ -908,8 +936,7 @@ module ysyx_26040117_LSU (clk,rst,
         endcase
     end
     //write
-    wire awready,wready,bvalid,bready;
-    reg awvalid,wvalid;
+    wire awready,wready,bready;
     wire[1:0] bresp;
     wire [2:0] awsize;
     wire [31:0] awaddr,wdata;
@@ -947,20 +974,7 @@ module ysyx_26040117_LSU (clk,rst,
     assign LSU_MEM_wrapper={arsize,awsize,arvalid,araddr,rready,awvalid,awaddr,wvalid,wdata,wstrb,bready};
     assign {arready,rvalid,rdata,rresp,awready,wready,bvalid,bresp}=MEM_LSU_wrapper;//save rdata?
 
-    //FIFO
-    reg [84:0] wrapper_reg;
-    wire register_wen_ok,register_wen_load,register_wen,type_fence_i,is_store,is_load;
-    wire[31:0] aux,result;
-    wire [2:0]funct3;
-    wire [6:0]trap_info;
-    wire [4:0]rd;
-    always @(posedge clk) begin
-        if(EXU_LSU_fire)begin
-            wrapper_reg<=EXU_wrapper;
-        end
-    end
-    assign {register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,aux,is_store,is_load,funct3}=wrapper_reg;
-    wire [31:0] result_out;
+    //output
     assign result_out=is_load?rdata_out:result;
     localparam CSR_MCYCLE_LO = 3'd0;
     localparam CSR_MCYCLE_HI = 3'd1;
@@ -970,7 +984,6 @@ module ysyx_26040117_LSU (clk,rst,
     localparam CSR_MTVEC     = 3'd5;
     localparam CSR_MVENDORID = 3'd6;
     localparam CSR_MARCHID   = 3'd7;
-    reg[2:0] csr_addr;
     always @(*) begin
         csr_addr=3'd0;
         if(trap_info[0])begin
@@ -1021,6 +1034,7 @@ module ysyx_26040117_WBU(clk,rst,
     wire WBU_IFU_valid;
     //WBU-IDU
     output[37:0] WBU_IDU_wrapper;
+    wire register_wen;
     assign WBU_IDU_wrapper={srcd,WBU_IFU_valid&&register_wen,rd};
     //state machine
     wire LSU_WBU_fire,WBU_IFU_fire/* verilator public_flat_rd */;
@@ -1042,7 +1056,7 @@ module ysyx_26040117_WBU(clk,rst,
     reg [51:0] LSU_wrapper_reg;
     wire [31:0] result;
     wire [2:0] funct3;
-    wire register_wen,type_fence_i;
+    wire type_fence_i;
     wire [6:0]trap_info/* verilator public_flat_rd */;//0:csrr,1:ecall,2:mret,
     wire [2:0] csr_addr/* verilator public_flat_rd */;
     always @(posedge clk) begin
@@ -1062,14 +1076,23 @@ module ysyx_26040117_WBU(clk,rst,
         .rdata(csr_rdata),.trap_dnpc(trap_dnpc)
     );
     //ebreak
-`ifndef ysyx_26040117_STA_MODE
+`ifdef __ICARUS__
     wire ebreak=trap_info[2]&&(trap_info[6:3]==4'd3);
-    import "DPI-C" function void npc_trap();
-    always@(posedge clk)begin
+    always @(posedge clk) begin
         if(ebreak&&!rst&&WBU_IFU_fire)begin
-            npc_trap();
+            $display("EBREAK finish");
+            $finish;
         end
     end
+`else `ifndef ysyx_26040117_STA_MODE
+        wire ebreak=trap_info[2]&&(trap_info[6:3]==4'd3);
+        import "DPI-C" function void npc_trap();
+        always@(posedge clk)begin
+            if(ebreak&&!rst&&WBU_IFU_fire)begin
+                npc_trap();
+            end
+        end
+    `endif
 `endif
 endmodule
 module ysyx_26040117_CSR(clk,rst,
@@ -1184,6 +1207,18 @@ module ysyx_26040117_arbiter(clk,rst,
     wire [31:0] ifu_araddr,lsu_araddr;
     wire [2:0] ifu_arsize,lsu_arsize,lsu_awsize;
     wire [7:0] ifu_arlen;
+
+    wire arvalid,rready;
+    wire [31:0] araddr;
+    wire arready,rvalid;
+    wire [31:0] rdata;
+    wire[1:0] rresp;
+    wire[2:0] arsize;
+    wire rlast;
+    wire [3:0]arid,rid;
+    wire [7:0]arlen;
+
+    wire lsu_fire,ifu_fire,resp_ifu,resp_lsu;
     assign {ifu_arsize,ifu_arvalid,ifu_araddr,ifu_arlen,ifu_rready}=IFU_MEM_wrapper;
     assign {lsu_arsize,lsu_awsize,lsu_arvalid,lsu_araddr,lsu_rready}=LSU_MEM_wrapper[110:71];
     assign MEM_IFU_wrapper={ifu_fire&&arready,resp_ifu&&rvalid,rdata,rlast};
@@ -1208,21 +1243,11 @@ module ysyx_26040117_arbiter(clk,rst,
             default:next_state=state;
         endcase
     end
-    wire lsu_fire,ifu_fire;
     assign lsu_fire=(state==IDLE&&lsu_arvalid)||state==WAIT_LSU;
     assign ifu_fire=(state==IDLE&&ifu_arvalid&&!lsu_arvalid)||state==WAIT_IFU;
     //read
-    wire arvalid,rready;
-    wire [31:0] araddr;
-    wire arready,rvalid;
-    wire [31:0] rdata;
-    wire[1:0] rresp;
-    wire[2:0] arsize;
-    wire rlast;
-    wire [3:0]arid,rid;
-    wire [7:0]arlen;
-    wire resp_ifu=!rid[0];
-    wire resp_lsu=rid[0];
+    assign resp_ifu=!rid[0];
+    assign resp_lsu=rid[0];
     assign {arsize,araddr}=lsu_fire?{lsu_arsize,lsu_araddr}:{ifu_arsize,ifu_araddr};
     assign arvalid=(lsu_fire&&lsu_arvalid)||(ifu_fire&&ifu_arvalid);
     assign rready=(resp_lsu&&lsu_rready)||(resp_ifu&&ifu_rready);
@@ -1289,6 +1314,42 @@ module ysyx_26040117_Xbar(clk,rst,
     output bvalid;
     input bready;
     output[1:0] bresp;
+    //AXI-lite
+    wire         io_master_awready;
+    wire         io_master_awvalid;
+    wire [31:0]  io_master_awaddr;
+    wire [3:0]   io_master_awid;
+    wire [7:0]   io_master_awlen;
+    wire [2:0]   io_master_awsize;
+    wire [1:0]   io_master_awburst;
+
+    wire         io_master_wready;
+    wire         io_master_wvalid;
+    wire [31:0]  io_master_wdata;
+    wire [3:0]   io_master_wstrb;
+    wire         io_master_wlast;
+
+    wire         io_master_bready;
+    wire         io_master_bvalid;
+    wire [1:0]   io_master_bresp;
+    wire [3:0]   io_master_bid;
+
+    wire         io_master_arready;
+    wire         io_master_arvalid;
+    wire [31:0]  io_master_araddr;
+    wire [3:0]   io_master_arid;
+    wire [7:0]   io_master_arlen;
+    wire [2:0]   io_master_arsize;
+    wire [1:0]   io_master_arburst;
+
+    wire         io_master_rready;
+    wire         io_master_rvalid;
+    wire [1:0]   io_master_rresp;
+    wire [31:0]  io_master_rdata;
+    wire         io_master_rlast;
+    wire [3:0]   io_master_rid;
+
+
     //aw_choose
     wire dec_soc_w,sel_soc_w,dec_clint_w,sel_clint_w;
     reg reg_soc_w,reg_clint_w,w_routed;
@@ -1345,6 +1406,8 @@ module ysyx_26040117_Xbar(clk,rst,
         .bvalid(clint_bvalid),.bready(bready),.bresp(clint_bresp)
 );
     //output
+    reg hold_soc;
+    wire sel_clint=clint_rvalid&&!hold_soc;
     assign arready=(dec_clint_r&&clint_arready)||(dec_soc_r&&io_master_arready);
     assign rvalid=sel_clint?clint_rvalid:io_master_rvalid;
     assign rdata =sel_clint?clint_rdata :io_master_rdata;
@@ -1359,48 +1422,12 @@ module ysyx_26040117_Xbar(clk,rst,
     assign wready=(sel_clint_w&&clint_wready)||(sel_soc_w&&io_master_wready);
     assign bvalid=clint_bvalid||io_master_bvalid;
     assign bresp=clint_bvalid?clint_bresp:io_master_bresp;
-    reg hold_soc;
-    wire sel_clint=clint_rvalid&&!hold_soc;
     always @(posedge clk) begin
         if(rst)
             hold_soc<=1'b0;
         else
             hold_soc<=!sel_clint&&io_master_rvalid&&!rready;
     end
-    //AXI-lite
-    wire         io_master_awready;
-    wire         io_master_awvalid;
-    wire [31:0]  io_master_awaddr;
-    wire [3:0]   io_master_awid;
-    wire [7:0]   io_master_awlen;
-    wire [2:0]   io_master_awsize;
-    wire [1:0]   io_master_awburst;
-
-    wire         io_master_wready;
-    wire         io_master_wvalid;
-    wire [31:0]  io_master_wdata;
-    wire [3:0]   io_master_wstrb;
-    wire         io_master_wlast;
-
-    wire         io_master_bready;
-    wire         io_master_bvalid;
-    wire [1:0]   io_master_bresp;
-    wire [3:0]   io_master_bid;
-
-    wire         io_master_arready;
-    wire         io_master_arvalid;
-    wire [31:0]  io_master_araddr;
-    wire [3:0]   io_master_arid;
-    wire [7:0]   io_master_arlen;
-    wire [2:0]   io_master_arsize;
-    wire [1:0]   io_master_arburst;
-
-    wire         io_master_rready;
-    wire         io_master_rvalid;
-    wire [1:0]   io_master_rresp;
-    wire [31:0]  io_master_rdata;
-    wire         io_master_rlast;
-    wire [3:0]   io_master_rid;
     //decomposition
     assign {io_master_awready,io_master_wready,io_master_bvalid,io_master_bresp,io_master_bid,io_master_arready,
         io_master_rvalid,io_master_rresp,io_master_rdata,io_master_rlast,io_master_rid}=master_wrapper_in;
@@ -1492,6 +1519,7 @@ module ysyx_26040117_CLINT(clk,rst,
                 w_received<=1'b1;
         end
     end
+    reg [31:0]mtime_lo,mtime_hi;
     always @(posedge clk) begin
         if(rst) rvalid<=1'b0;
         else if(rfire) 
@@ -1505,7 +1533,6 @@ module ysyx_26040117_CLINT(clk,rst,
         end
     end
     //function
-    reg [31:0]mtime_lo,mtime_hi;
     reg lo_wrap;
     always @(posedge clk) begin
         if(rst)begin
