@@ -67,7 +67,9 @@ module ysyx_26040117_iverilog(
                 io_master_rid<=io_master_arid;
         end
     end
-    reg[31:0] mem[0:4194303];
+    localparam MEM_WIDTH=20;
+    localparam MEM_DEPTH=2**MEM_WIDTH;
+    reg[31:0] mem[0:MEM_DEPTH-1];
     initial begin
         $readmemh("build/iverilog.hex",mem);
     end
@@ -75,18 +77,18 @@ module ysyx_26040117_iverilog(
         if(reset)
             io_master_rdata<=0;
         else if(arfire)
-            io_master_rdata<=mem[io_master_araddr[23:2]];
+            io_master_rdata<=mem[io_master_araddr[2 +: MEM_WIDTH]];
     end
     wire[31:0]data_replace,data_origin;
     wire [31:0]mask_replace,mask_origin;
     assign mask_replace={{8{io_master_wstrb[3]}},{8{io_master_wstrb[2]}},{8{io_master_wstrb[1]}},{8{io_master_wstrb[0]}}};
     assign mask_origin=~mask_replace;
-    assign data_origin=mem[io_master_awaddr[23:2]]&mask_origin;
+    assign data_origin=mem[io_master_awaddr[2 +: MEM_WIDTH]]&mask_origin;
     assign data_replace=io_master_wdata&mask_replace;
     always @(posedge clock) begin
         if(!reset&&awfire&&wfire)begin
             if(io_master_awaddr>=32'h80000000&&io_master_awaddr<=32'h9fffffff)
-                mem[io_master_awaddr[23:2]]<=data_origin|data_replace;
+                mem[io_master_awaddr[2 +: MEM_WIDTH]]<=data_origin|data_replace;
             else if(io_master_awaddr==32'h10000000)begin
                 if(io_master_wstrb[0])
                     $write("%c",io_master_wdata[7:0]);

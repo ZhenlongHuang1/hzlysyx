@@ -22,7 +22,8 @@ extern VerilatedVcdC* tfp;
 #define DEXU_REDIRECT  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__redirect_valid
 #define DEXU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__aux
 #define DLSU_WBU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__LSU_WBU_fire
-#define DLSU_MMIO      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__is_mimo
+#define DLSU_ADDR      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__result
+#define DLSU_ISMEM      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__is_mem
 #define DWBU_IFU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_INFO dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_info
 #define DWBU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
@@ -38,7 +39,8 @@ extern VerilatedVcdC* tfp;
 #define DEXU_REDIRECT dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__redirect_valid
 #define DEXU_AUX dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__aux
 #define DLSU_WBU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__LSU_WBU_fire
-#define DLSU_MMIO dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__is_mimo
+#define DLSU_ADDR dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__result
+#define DLSU_ISMEM dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__is_mem
 #define DWBU_IFU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_INFO dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_info
 #define DWBU_AUX dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__csr_addr

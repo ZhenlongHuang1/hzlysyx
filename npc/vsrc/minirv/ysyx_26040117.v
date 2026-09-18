@@ -1,6 +1,4 @@
 
-//`define ysyx_26040117_STA_MODE
-
 module ysyx_26040117 #(
     parameter [31:0] RESET_VECTOR=32'h3000_0000
 )(
@@ -856,7 +854,8 @@ module ysyx_26040117_LSU (clk,rst,
     //FIFO
     reg [84:0] wrapper_reg;
     wire register_wen_ok,register_wen_load,register_wen,type_fence_i,is_store,is_load;
-    wire[31:0] aux,result;
+    wire[31:0] aux;
+    wire [31:0]result/* verilator public_flat_rd */;
     wire [2:0]funct3;
     wire [6:0]trap_info;
     wire [4:0]rd;
@@ -883,7 +882,9 @@ module ysyx_26040117_LSU (clk,rst,
     assign EXU_LSU_fire=EXU_LSU_ready&&EXU_LSU_valid;
     assign LSU_WBU_fire=LSU_WBU_ready&&LSU_WBU_valid;
     assign EXU_LSU_ready=!lsu_valid||LSU_WBU_fire;
-    assign LSU_WBU_valid=lsu_valid&&(!(is_load||is_store)|| 
+    wire is_mem/* verilator public_flat_rd */;
+    assign is_mem=is_load||is_store;
+    assign LSU_WBU_valid=lsu_valid&&(!is_mem|| 
             (is_load&&!arvalid&&rvalid)||
             (is_store&&!awvalid&&!wvalid&&bvalid)
     );
@@ -1000,18 +1001,6 @@ module ysyx_26040117_LSU (clk,rst,
             endcase
         end
     end
-`ifndef ysyx_26040117_STA_MODE
-    //difftest
-    wire[31:0] addr=result;
-    wire is_mimo/* verilator public_flat_rd */;
-    wire is_mrom,is_sram,is_flash,is_psram,is_sdram;
-    assign is_sdram=addr >= 32'ha0000000 && addr <= 32'hbfffffff;
-    assign is_psram=addr >= 32'h80000000 && addr <= 32'h9fffffff;
-    assign is_flash=addr >= 32'h30000000 && addr <= 32'h3fffffff;
-    assign is_mrom =addr >= 32'h20000000 && addr <= 32'h20000fff;
-    assign is_sram =addr >= 32'h0f000000 && addr <= 32'h0f001fff;
-    assign is_mimo =(is_load||is_store)&&!(is_mrom||is_sram||is_flash||is_psram||is_sdram);
-`endif
 endmodule
 module ysyx_26040117_WBU(clk,rst,
     LSU_WBU_ready,LSU_WBU_valid,LSU_wrapper,
@@ -1084,15 +1073,6 @@ module ysyx_26040117_WBU(clk,rst,
             $finish;
         end
     end
-`else `ifndef ysyx_26040117_STA_MODE
-        wire ebreak=trap_info[2]&&(trap_info[6:3]==4'd3);
-        import "DPI-C" function void npc_trap();
-        always@(posedge clk)begin
-            if(ebreak&&!rst&&WBU_IFU_fire)begin
-                npc_trap();
-            end
-        end
-    `endif
 `endif
 endmodule
 module ysyx_26040117_CSR(clk,rst,

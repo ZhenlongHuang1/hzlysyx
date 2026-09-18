@@ -91,7 +91,7 @@ sim_i:
 	@mkdir -p $(OBJ_DIR)
 	riscv64-linux-gnu-objcopy -I binary -O elf32-littleriscv -B riscv "$(IMG)" build/iverilog-image.o
 	riscv64-linux-gnu-objcopy -O verilog --verilog-data-width=4 build/iverilog-image.o build/iverilog.hex
-	iverilog -g2012 -Dysyxsoc_26040117_STA_MODE -s $(TOPNAME) -o build/iverilog.vvp $(VSRCS) 
+	iverilog -g2012 -Dysyx_26040117_STA_MODE -s $(TOPNAME) -o build/iverilog.vvp $(VSRCS) 
 	vvp build/iverilog.vvp
 sim-iverilog:
 	$(MAKE) sim_i SIM_ENV=iverilog

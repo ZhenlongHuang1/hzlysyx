@@ -33,7 +33,14 @@ static Debug_info exu_debug,lsu_debug,wbu_debug;
 static void debug_update(){
     if(DLSU_WBU_fire){
         wbu_debug=lsu_debug;
-        wbu_debug.skip_ref=DLSU_MMIO;
+        wbu_debug.skip_ref=0;
+        if(DLSU_ISMEM){
+            if((DLSU_ADDR>=0xa0000000&&DLSU_ADDR<=0xbfffffff)||
+               (DLSU_ADDR>=0x80000000&&DLSU_ADDR<=0x9fffffff)||
+               (DLSU_ADDR>=0x30000000&&DLSU_ADDR<=0x3fffffff)||
+               (DLSU_ADDR>=0x0f000000&&DLSU_ADDR<=0x0f001fff))
+                wbu_debug.skip_ref=1;
+        }
     }
     if(DEXU_LSU_fire){
         lsu_debug=exu_debug;
@@ -162,6 +169,8 @@ static void execute(uint64_t n){
         cpu_pc=wbu_debug.pc;
         inst=wbu_debug.inst;
         int trap_info=DWBU_TRAP_INFO;
+        if((trap_info>>2)==0x00111)
+            npc_trap();
         cpu_dnpc=(trap_info&0x6)?DWBU_TRAP_DNPC:wbu_debug.dnpc;
         uint32_t old_cpu_pc=cpu_pc;
 #ifdef CONFIG_DIFFTEST
