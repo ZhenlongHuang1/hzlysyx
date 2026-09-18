@@ -75,9 +75,14 @@ module ysyx_26040117_iverilog(
     end
     always @(posedge clock) begin
         if(reset)
-            io_master_rdata<=0;
-        else if(arfire)
-            io_master_rdata<=mem[io_master_araddr[2 +: MEM_WIDTH]];
+            io_master_rdata <= 32'b0;
+        else if(arfire) begin
+            case(io_master_araddr)
+                32'h30000000: io_master_rdata <= 32'h800002b7;//lui t0, 0x80000
+                32'h30000004: io_master_rdata <= 32'h00028067;//jalr zero, 0(t0)
+                default:io_master_rdata <= mem[io_master_araddr[2 +: MEM_WIDTH]];
+            endcase
+        end
     end
     wire[31:0]data_replace,data_origin;
     wire [31:0]mask_replace,mask_origin;
@@ -90,14 +95,16 @@ module ysyx_26040117_iverilog(
             if(io_master_awaddr>=32'h80000000&&io_master_awaddr<=32'h9fffffff)
                 mem[io_master_awaddr[2 +: MEM_WIDTH]]<=data_origin|data_replace;
             else if(io_master_awaddr==32'h10000000)begin
-                if(io_master_wstrb[0])
+                if(io_master_wstrb[0])begin
                     $write("%c",io_master_wdata[7:0]);
+                    $fflush();
+                end
             end
         end
     end
 
 
-    ysyx_26040117 #(.RESET_VECTOR(32'h8000_0000))cpu (
+    ysyx_26040117 cpu (
     .clock                   (clock),
     .reset                   (reset),
     .io_interrupt            (1'h0),	
