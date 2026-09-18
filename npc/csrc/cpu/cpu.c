@@ -169,7 +169,7 @@ static void execute(uint64_t n){
         cpu_pc=wbu_debug.pc;
         inst=wbu_debug.inst;
         int trap_info=DWBU_TRAP_INFO;
-        if((trap_info>>2)==0x00111)
+        if((trap_info>>2)==0b00111)
             npc_trap();
         cpu_dnpc=(trap_info&0x6)?DWBU_TRAP_DNPC:wbu_debug.dnpc;
         uint32_t old_cpu_pc=cpu_pc;
