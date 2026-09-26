@@ -45,7 +45,7 @@ static void debug_update(){
     }
     if(DEXU_LSU_fire){
         lsu_debug=exu_debug;
-        lsu_debug.dnpc=DEXU_REDIRECT?DEXU_AUX:(exu_debug.pc+4);
+        lsu_debug.dnpc=DEXU_REDIRECT?DEXU_AUX:exu_debug.dnpc;
     }
     if(DIDU_EXU_fire){
         exu_debug.pc=DIDU_PC;

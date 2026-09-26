@@ -19,31 +19,31 @@ extern VerilatedVcdC* tfp;
 #define DIDU_INST      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__inst_out
 #define DIDU_PC        dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__IDU1__DOT__pc_out
 #define DEXU_LSU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__EXU_LSU_fire
-#define DEXU_REDIRECT  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__redirect_valid
+#define DEXU_REDIRECT  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__actual_taken
 #define DEXU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__EXU1__DOT__aux
 #define DLSU_WBU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__LSU_WBU_fire
 #define DLSU_ADDR      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__result
-#define DLSU_ISMEM      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__is_mem
+#define DLSU_ISMEM     dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__is_mem
 #define DWBU_IFU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_INFO dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_info
-#define DWBU_CSR_ADDR       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
+#define DWBU_CSR_ADDR  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
 #define DWBU_TRAP_DNPC dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_dnpc
 
 
 #else
-#define cpu_gpr(i) dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Register1__DOT__rf[i]
-#define DIDU_EXU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__IDU_EXU_fire
-#define DIDU_INST dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__inst_out
-#define DIDU_PC dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__pc_out
-#define DEXU_LSU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__EXU_LSU_fire
-#define DEXU_REDIRECT dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__redirect_valid
-#define DEXU_AUX dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__aux
-#define DLSU_WBU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__LSU_WBU_fire
-#define DLSU_ADDR dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__result
-#define DLSU_ISMEM dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__is_mem
-#define DWBU_IFU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
+#define cpu_gpr(i)     dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Register1__DOT__rf[i]
+#define DIDU_EXU_fire  dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__IDU_EXU_fire
+#define DIDU_INST      dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__inst_out
+#define DIDU_PC        dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__IDU1__DOT__pc_out
+#define DEXU_LSU_fire  dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__EXU_LSU_fire
+#define DEXU_REDIRECT  dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__actual_taken
+#define DEXU_AUX       dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__EXU1__DOT__aux
+#define DLSU_WBU_fire  dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__LSU_WBU_fire
+#define DLSU_ADDR      dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__result
+#define DLSU_ISMEM     dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__is_mem
+#define DWBU_IFU_fire  dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_INFO dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_info
-#define DWBU_CSR_ADDR dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__csr_addr
+#define DWBU_CSR_ADDR  dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__csr_addr
 #define DWBU_TRAP_DNPC dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_dnpc
 #endif
 extern uint32_t cpu_pc,cpu_dnpc;

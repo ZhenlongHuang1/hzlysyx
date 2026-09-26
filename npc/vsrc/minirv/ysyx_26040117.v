@@ -727,7 +727,7 @@ module ysyx_26040117_EXU(clk,rst,
     //EXU-LSU
     input EXU_LSU_ready;
     output EXU_LSU_valid;
-    output [31:0] exu_redirect_pc/* verilator public_flat_rd */;
+    output [31:0] exu_redirect_pc;
     output [84:0] EXU_wrapper;
     
     
@@ -751,7 +751,7 @@ module ysyx_26040117_EXU(clk,rst,
 
     assign EXU_wrapper={register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,aux_num2,mytype[6:5],funct[2:0]};
     //EXU-IFU/IDU
-    output redirect_valid/* verilator public_flat_rd */;
+    output redirect_valid;
     output[38:0] EXU_IDU_wrapper;
     assign EXU_IDU_wrapper={result,EXU_LSU_valid&&register_wen,EXU_LSU_valid&&register_wen_ok,rd};
     //EXU-BTB
@@ -822,7 +822,8 @@ module ysyx_26040117_EXU(clk,rst,
     assign aux0=aux_num1+aux_num2;
     assign aux={aux0[31:1],aux0[0]&&~mytype[3]};
     //redirect
-    wire actual_taken,mispredict;
+    wire actual_taken/* verilator public_flat_rd */;
+    wire mispredict;
     assign actual_taken=(|mytype[3:2])||(mytype[4]&&branch_decision);
     assign mispredict=mytype[3]||(actual_taken^pred_taken);
     assign redirect_valid=mispredict&&EXU_LSU_fire;
