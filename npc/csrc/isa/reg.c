@@ -8,7 +8,7 @@ const char *regs[] = {
 };
 void isa_reg_display(CPU_state* dut_r) {
     int i;
-    for(i=0;i<15;i++){
+    for(i=0;i<16;i++){
         printf("%-4s 0x%08X\n",regs[i],dut_r->gpr[i]);
     }
     printf("pc   0x%08X\n",dut_r->pc);
