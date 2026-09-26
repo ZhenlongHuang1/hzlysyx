@@ -54,10 +54,10 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
             Log("Write memory at addr=" FMT_PADDR ",data="FMT_WORD,addr,data);
     #endif
 }
-
+void iringbuf_print();
 static void out_of_bound(paddr_t addr) {
-  panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
-      addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
+    panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
+    iringbuf_print();
 }
 
 void init_mem() {
