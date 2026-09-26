@@ -5,7 +5,7 @@ BUILD_DIR =./build
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
 CELLS ?= $(YOSYS_HOME)/pdk/nangate45/sim/cells.v
 NETLIST ?= $(SYN_DIR)/ysyx_26040117-900MHz/ysyx_26040117.netlist.v.sim
-VSRCS := $(shell find $(abspath ./vsrc/minirv) -name "*.v")
+VSRCS := vsrc/minirv/ysyx_26040117.v
 ifeq ($(SIM_ENV),ysyxsoc)
 TOPNAME=ysyxSoCFull
 VSRCS += $(shell find $(YSYXSOC_HOME)/perip -name "*.v")
@@ -93,7 +93,6 @@ sim: $(BIN)
 	@echo "$(BIN) $(ARGS) $(IMG)"
 	$(BIN) $(ARGS) $(IMG)
 
-iv-image=$(basename $(abspath $(IMG))).elf
 sim_i:
 	@mkdir -p $(OBJ_DIR)
 	riscv64-linux-gnu-objcopy -I binary -O elf32-littleriscv -B riscv "$(IMG)" build/iverilog-image.o
@@ -110,7 +109,9 @@ sim-npc:
 	$(MAKE) sim SIM_ENV=npc
 gdb: $(BIN)
 	gdb --args $(BIN) $(ARGS) $(IMG)
-
+verilog:
+	@mkdir -p build
+	@cp vsrc/minirv/ysyx_26040117.v build/ysyx_26040117.v
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
