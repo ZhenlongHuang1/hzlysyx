@@ -43,7 +43,9 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 
     IFDEF(CONFIG_ITRACE,strcpy(iringbuf[iringbuf_index],_this->logbuf);
-        iringbuf_index=(iringbuf_index+1)%16);
+        iringbuf_index=(iringbuf_index+1)%16;)
+    IFNDEF(CONFIG_ITRACE,sprintf(iringbuf[iringbuf_index],"%08x",_this->isa.inst);
+            iringbuf_index=(iringbuf_index+1)%16;)
 
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 #ifdef CONFIG_WATCHPOINT
