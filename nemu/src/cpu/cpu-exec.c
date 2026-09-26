@@ -37,28 +37,10 @@ static char ftrace_buf[1024][128]={};
 static int ftrace_cnt=0;
 static int depth=0;
 void device_update();
-void icache_record(uint32_t pc){
-    static FILE *fp=NULL;
-    if(fp==NULL)
-        fp=fopen("build/icache_record.txt","w"); 
-    fprintf(fp,"%x\n",pc);
-
-}
-void branch_record(uint32_t pc,uint32_t inst,uint32_t dnpc){
-    uint32_t opcode=inst&0x7f;
-    if(opcode!=0x63&&opcode!=0x6f&&opcode!=0x67) return;
-    static FILE *fp=NULL;
-    if(fp==NULL){
-        fp=fopen("build/btrace.txt","w");
-    }
-    fprintf(fp,"%08x %08x %08x\n",pc,inst,dnpc);
-}
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
-    //IFDEF(CONFIG_ITRACE, icache_record(_this->pc);) 
-    IFDEF(CONFIG_ITRACE, branch_record(_this->pc,_this->isa.inst,dnpc);)
 
     IFDEF(CONFIG_ITRACE,strcpy(iringbuf[iringbuf_index],_this->logbuf);
         iringbuf_index=(iringbuf_index+1)%16);
