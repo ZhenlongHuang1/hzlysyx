@@ -8,7 +8,7 @@
 #define CONFIG_MTRACE_END   0x00000000
 
 //itrace
-#define CONFIG_ITRACE 1
+//#define CONFIG_ITRACE 1
 //ftrace
 //#define CONFIG_FTRACE 1
 //difftest
