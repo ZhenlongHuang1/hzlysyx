@@ -26,7 +26,7 @@ extern VerilatedVcdC* tfp;
 #define DLSU_ISMEM      dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__LSU1__DOT__is_mem
 #define DWBU_IFU_fire  dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_INFO dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_info
-#define DWBU_AUX       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
+#define DWBU_CSR_ADDR       dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__csr_addr
 #define DWBU_TRAP_DNPC dut->rootp->ysyx_26040117_SIM__DOT__cpu__DOT__WBU1__DOT__trap_dnpc
 
 
@@ -43,7 +43,7 @@ extern VerilatedVcdC* tfp;
 #define DLSU_ISMEM dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__LSU1__DOT__is_mem
 #define DWBU_IFU_fire dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__WBU_IFU_fire
 #define DWBU_TRAP_INFO dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_info
-#define DWBU_AUX dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__csr_addr
+#define DWBU_CSR_ADDR dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__csr_addr
 #define DWBU_TRAP_DNPC dut->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__WBU1__DOT__trap_dnpc
 #endif
 extern uint32_t cpu_pc,cpu_dnpc;
