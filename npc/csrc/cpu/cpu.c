@@ -34,14 +34,14 @@ static void debug_update(){
     if(DLSU_WBU_fire){
         wbu_debug=lsu_debug;
         wbu_debug.skip_ref=0;
-        /*
         if(DLSU_ISMEM){
+            wbu_debug.skip_ref=1;
             if((DLSU_ADDR>=0xa0000000&&DLSU_ADDR<=0xbfffffff)||
                (DLSU_ADDR>=0x80000000&&DLSU_ADDR<=0x9fffffff)||
                (DLSU_ADDR>=0x30000000&&DLSU_ADDR<=0x3fffffff)||
                (DLSU_ADDR>=0x0f000000&&DLSU_ADDR<=0x0f001fff))
-                wbu_debug.skip_ref=1;
-        }*/
+                wbu_debug.skip_ref=0;
+        }
     }
     if(DEXU_LSU_fire){
         lsu_debug=exu_debug;
