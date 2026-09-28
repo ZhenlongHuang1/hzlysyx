@@ -13,4 +13,5 @@
 /fceux-am
 /am-kernels
 /nvboard
-!/patch/*
+/rt-thread-am-master/
+/ysyxSoc/
