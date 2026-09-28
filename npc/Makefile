@@ -1,6 +1,6 @@
 SIM_ENV ?=ysyxsoc
 YSYXSOC_HOME := $(abspath ../ysyxSoc)
-YOSYS_HOME=$(HOME)/Desktop/yosys-sta
+YOSYS_HOME=$(HOME)/Desktop/yosys-sta #need change
 BUILD_DIR =./build
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
 CELLS ?= $(YOSYS_HOME)/pdk/nangate45/sim/cells.v
@@ -88,6 +88,8 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 lint:
 	$(VERILATOR) --lint-only -Wall -Wno-DECLFILENAME -Wno-UNUSED --top-module ysyx_26040117 vsrc/minirv/ysyx_26040117.v
 all: default
+run:
+	$(BIN) $(ARGS) $(IMG)
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "$(BIN) $(ARGS) $(IMG)"

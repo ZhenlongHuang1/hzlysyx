@@ -27,28 +27,6 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-#if 0
-    FILE *fp=fopen("/home/hzl/Desktop/ysyx-workbench/nemu/input","r");
-    char ptr[65536],str[65536];
-    bool success;
-    int i=0,sum=0;
-    word_t result;
-    while(fgets(ptr,65536,fp)){
-        sscanf(ptr,"%u %[^\n]",&result,str);
-        word_t ret=expr(str,&success);
-        if(success==false){
-            printf("Error express:%u %s\n",result,str);
-            return 0;
-        }else if(ret!=result){
-            printf("Wrong function:%u\n%u\n%s\n",ret,result,str);
-            return 0;
-        }else
-            i++;
-        sum++;
-    }
-    fclose(fp);
-    printf("Right expression execuation:%d/%d\n",i,sum);
-#endif
   /* Start engine. */
   engine_start();
 
