@@ -21,10 +21,10 @@
 #if defined(__ARCH_X86_NEMU)
 # define DEVICE_BASE 0x0
 #else
-# define DEVICE_BASE 0xb0000000
+# define DEVICE_BASE 0x10000000
 #endif
 
-#define SERIAL_PORT     (0x10000000)
+#define SERIAL_PORT     (DEVICE_BASE + 0x00003f8)
 #define KBD_ADDR        (DEVICE_BASE + 0x0000060)
 #define RTC_ADDR        (DEVICE_BASE + 0x0000048)
 #define VGACTL_ADDR     (DEVICE_BASE + 0x0000100)
