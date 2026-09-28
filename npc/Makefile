@@ -88,7 +88,7 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 lint:
 	$(VERILATOR) --lint-only -Wall -Wno-DECLFILENAME -Wno-UNUSED --top-module ysyx_26040117 vsrc/minirv/ysyx_26040117.v
 all: default
-run:
+run:$(BIN)
 	$(BIN) $(ARGS) $(IMG)
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
@@ -132,7 +132,7 @@ syn:
 		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR)
 
 MICROBENCH_HOME ?= $(abspath ../am-kernels/benchmarks/microbench)
-.PHONY: default all sim sim_i sim-ysyxsoc sim-npc lint gdb clean sta syn perf sim-iverilog-netlist sim-iverilog
+.PHONY: default all sim sim_i sim-ysyxsoc sim-npc lint gdb clean sta syn perf sim-iverilog-netlist sim-iverilog run
 perf:
 	$(MAKE) -C $(MICROBENCH_HOME) \
 		ARCH=riscv32e-ysyxsoc  \
