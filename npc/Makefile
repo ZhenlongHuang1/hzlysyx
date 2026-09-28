@@ -101,7 +101,7 @@ sim_i:
 	vvp build/iverilog.vvp
 sim-iverilog:
 	$(MAKE) sim_i SIM_ENV=iverilog
-sim-iverilog-netlist:
+sim-iverilog-netlist: sta
 	$(MAKE) sim_i SIM_ENV=iverilog-netlist
 sim-ysyxsoc: 
 	$(MAKE) sim SIM_ENV=ysyxsoc

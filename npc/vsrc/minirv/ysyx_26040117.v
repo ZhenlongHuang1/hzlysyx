@@ -186,6 +186,7 @@ module ysyx_26040117 #(
         .WBU_IFU_ready(WBU_IFU_ready),.srcd(srcd),.fence_i(fence_i),.trap_dnpc(trap_dnpc),.trap_redirect_valid(trap_redirect_valid),.rd(wbu_register_rd),.register_wen_out(wbu_register_wen),
         .WBU_IDU_wrapper(WBU_IDU_wrapper)
     );
+
 endmodule
 module ysyx_26040117_IFU (
     redirect_valid,dnpc,fence_i,
