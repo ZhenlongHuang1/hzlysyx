@@ -20,6 +20,8 @@ CPU_state cpu_dut={{0},FLASH_START};
 #endif
 uint32_t cpu_pc=0,cpu_dnpc=0,inst;
 static char logbuf[128]={};
+static char iringbuf[16][128]={};
+static int iringbuf_index=0;
 static bool g_print_step=false;
 //ftrace
 static char ftrace_buf[1024][128]={};
@@ -33,11 +35,19 @@ static Debug_info exu_debug,lsu_debug,wbu_debug;
 static void debug_update(){
     if(DLSU_WBU_fire){
         wbu_debug=lsu_debug;
-        wbu_debug.skip_ref=DLSU_MMIO;
+        wbu_debug.skip_ref=0;
+        if(DLSU_ISMEM){
+            wbu_debug.skip_ref=1;
+            if((DLSU_ADDR>=0xa0000000&&DLSU_ADDR<=0xbfffffff)||
+               (DLSU_ADDR>=0x80000000&&DLSU_ADDR<=0x9fffffff)||
+               (DLSU_ADDR>=0x30000000&&DLSU_ADDR<=0x3fffffff)||
+               (DLSU_ADDR>=0x0f000000&&DLSU_ADDR<=0x0f001fff))
+                wbu_debug.skip_ref=0;
+        }
     }
     if(DEXU_LSU_fire){
         lsu_debug=exu_debug;
-        lsu_debug.dnpc=DEXU_REDIRECT?DEXU_AUX:(exu_debug.pc+4);
+        lsu_debug.dnpc=DEXU_REDIRECT?DEXU_AUX:exu_debug.dnpc;
     }
     if(DIDU_EXU_fire){
         exu_debug.pc=DIDU_PC;
@@ -55,7 +65,22 @@ void get_cpu_state(CPU_state *cpu_dut){
 }
 static void trace_and_difftest(uint32_t pc){
     if(g_print_step){IFDEF(CONFIG_ITRACE,puts(logbuf));}
+    IFDEF(CONFIG_ITRACE,strcpy(iringbuf[iringbuf_index],logbuf);
+        iringbuf_index=(iringbuf_index+1)%16);
     IFDEF(CONFIG_DIFFTEST, difftest_step(pc, cpu_pc));
+}
+void iringbuf_print(){
+    int i;
+    int index;
+    printf("Instruction Ring Buffer Trace:\n");
+    for(i=0;i<16;i++){
+        index=(iringbuf_index+i)%16;
+        if(i==15){//这个下标指向下一个
+            printf(" --> %s\n",iringbuf[index]);
+        }else {
+            printf("     %s\n",iringbuf[index]);
+        }
+    }
 }
 extern "C" void npc_trap(){
     IFDEF(CONFIG_DIFFTEST,difftest_skip_ref();) 
@@ -105,7 +130,6 @@ static void itrace_record(uint32_t pc,uint32_t inst){
     p+=1;
     void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
     disassemble(p,logbuf+sizeof(logbuf)-p,pc,(uint8_t *)(&inst),4);
-
 #endif
 }
 static void ftrace_record(uint32_t pc,uint32_t dnpc,int is_return){
@@ -162,11 +186,13 @@ static void execute(uint64_t n){
         cpu_pc=wbu_debug.pc;
         inst=wbu_debug.inst;
         int trap_info=DWBU_TRAP_INFO;
+        if((trap_info>>2)==0b00111)
+            npc_trap();
         cpu_dnpc=(trap_info&0x6)?DWBU_TRAP_DNPC:wbu_debug.dnpc;
         uint32_t old_cpu_pc=cpu_pc;
 #ifdef CONFIG_DIFFTEST
         int skip_ref=wbu_debug.skip_ref;
-        uint32_t csr_addr=BITS(inst,31,20);
+        uint32_t csr_addr=DWBU_CSR_ADDR;
         if((trap_info&0x1)&&
            (csr_addr==0x0||csr_addr==0x1||
             csr_addr==0x6||csr_addr==0x7)){
@@ -206,5 +232,8 @@ void cpu_exec(uint64_t n){
                 (npc_state.halt_ret==0?ANSI_FG_GREEN"HIT GOOD TRAP" ANSI_NONE:
                 ANSI_FG_RED "HITBAD TRAP" ANSI_NONE)),
                 npc_state.halt_pc,logbuf);
+            if(npc_state.state==NPC_ABORT)
+                iringbuf_print();
+
     }
 }

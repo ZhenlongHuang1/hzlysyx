@@ -66,6 +66,10 @@ static int imm_2_csr(word_t imm){
         case 0x300:return MSTATUS;
         case 0x341:return MEPC;
         case 0x342:return MCAUSE;
+        case 0xb00:return MCYCLE_LO;
+        case 0xb80:return MCYCLE_HI;
+        case 0xf11:return MVENDORID;
+        case 0xf12:return MARCHID;
     }
     return MEPC;
 }

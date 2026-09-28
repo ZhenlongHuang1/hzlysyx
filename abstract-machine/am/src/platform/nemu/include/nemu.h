@@ -21,7 +21,7 @@
 #if defined(__ARCH_X86_NEMU)
 # define DEVICE_BASE 0x0
 #else
-# define DEVICE_BASE 0xb0000000
+# define DEVICE_BASE 0x10000000
 #endif
 
 #define SERIAL_PORT     (DEVICE_BASE + 0x00003f8)

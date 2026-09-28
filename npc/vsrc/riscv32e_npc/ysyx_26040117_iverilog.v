@@ -1,4 +1,4 @@
-module ysyx_26040117_SIM(
+module ysyx_26040117_iverilog(
     input clock,
     input reset
 );
@@ -67,18 +67,50 @@ module ysyx_26040117_SIM(
                 io_master_rid<=io_master_arid;
         end
     end
-    import "DPI-C" function void paddr_read(input int addr, output int data);
-    always @(posedge clock) begin
-        if(!reset&&arfire) paddr_read(io_master_araddr,io_master_rdata);
+    localparam MEM_WIDTH=20;
+    localparam MEM_DEPTH=2**MEM_WIDTH;
+    reg[31:0] mem[0:MEM_DEPTH-1];
+    initial begin
+        $readmemh("build/iverilog.hex",mem);
     end
-    import "DPI-C" function void paddr_write(input int addr, input int data,input int mask);
     always @(posedge clock) begin
-        if(!reset&&awfire&&wfire) paddr_write(io_master_awaddr,io_master_wdata,{28'd0,io_master_wstrb});
-
+        if(reset)
+            io_master_rdata <= 32'b0;
+        else if(arfire) begin
+            case(io_master_araddr)
+                32'h30000000: io_master_rdata <= 32'h800002b7;//lui t0, 0x80000
+                32'h30000004: io_master_rdata <= 32'h00028067;//jalr zero, 0(t0)
+                default:io_master_rdata <= mem[io_master_araddr[2 +: MEM_WIDTH]];
+            endcase
+        end
+    end
+    wire[31:0]data_replace,data_origin;
+    wire [31:0]mask_replace,mask_origin;
+    assign mask_replace={{8{io_master_wstrb[3]}},{8{io_master_wstrb[2]}},{8{io_master_wstrb[1]}},{8{io_master_wstrb[0]}}};
+    assign mask_origin=~mask_replace;
+    assign data_origin=mem[io_master_awaddr[2 +: MEM_WIDTH]]&mask_origin;
+    assign data_replace=io_master_wdata&mask_replace;
+    always @(posedge clock) begin
+        if(!reset&&awfire&&wfire)begin
+            if(io_master_awaddr>=32'h80000000&&io_master_awaddr<=32'h9fffffff)
+                mem[io_master_awaddr[2 +: MEM_WIDTH]]<=data_origin|data_replace;
+            else if(io_master_awaddr==32'h10000000)begin
+                if(io_master_wstrb[0])begin
+                    $write("%c",io_master_wdata[7:0]);
+                    $fflush();
+                end
+            end
+        end
+    end
+    always@(posedge clock)begin
+        if(!reset&&cpu.WBU1.WBU_IFU_fire&&(cpu.WBU1.trap_info==7'b0011100))begin
+            $display("EBREAK finish") ;
+            $finish;
+        end
     end
 
 
-    ysyx_26040117 #(.RESET_VECTOR(32'h8000_0000))cpu (
+    ysyx_26040117 cpu (
     .clock                   (clock),
     .reset                   (reset),
     .io_interrupt            (1'h0),	

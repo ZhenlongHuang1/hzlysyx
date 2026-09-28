@@ -64,9 +64,7 @@ SECTIONS {
   } > sdram : bss
 
   _heap_start = ALIGN(4);
-  _heap_end = ORIGIN(sdram) + LENGTH(sdram);
-
-  _stack_top = _ssbl_vma_end;
-  _stack_pointer = ORIGIN(sram) + LENGTH(sram);
-  ASSERT(_ssbl_vma_end < _stack_pointer , "SSBL clash stack")
+  _stack_pointer = ORIGIN(sdram) + LENGTH(sdram);
+  _stack_top = _stack_pointer-32k;
+  _heap_end = _stack_top;
 }

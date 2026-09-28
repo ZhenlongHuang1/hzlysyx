@@ -44,11 +44,20 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                         case 'd':
                                 is_signed = (*ptr == 'd');
                                 if (mylong == 0) {
-                                    tmp = is_signed?va_arg(ap, int):va_arg(ap, unsigned int);
+                                    if(is_signed)
+                                        tmp = va_arg(ap,int);
+                                    else
+                                        tmp = va_arg(ap, unsigned int);
                                 } else if (mylong == 1) {
-                                    tmp = is_signed?va_arg(ap, long):va_arg(ap, unsigned long);
+                                    if(is_signed)
+                                        tmp = va_arg(ap, long);
+                                    else
+                                        tmp = va_arg(ap, unsigned long);
                                 } else {
-                                    tmp = is_signed?va_arg(ap, long long):va_arg(ap, unsigned long long);
+                                    if(is_signed)
+                                        tmp = va_arg(ap, long long);
+                                    else 
+                                        tmp = va_arg(ap, unsigned long long);
                                 }
                                 num+=intcatstr(out+num,tmp,fc,width,(*ptr)=='d'?10:((*ptr=='x')?16:8),is_signed);
                                 flag=0;
