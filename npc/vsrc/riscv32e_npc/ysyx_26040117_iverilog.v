@@ -102,12 +102,6 @@ module ysyx_26040117_iverilog(
             end
         end
     end
-    always@(posedge clock)begin
-        if(!reset&&cpu.WBU1.WBU_IFU_fire&&(cpu.WBU1.trap_info==7'b0011100))begin
-            $display("EBREAK finish") ;
-            $finish;
-        end
-    end
 
 
     ysyx_26040117 cpu (
