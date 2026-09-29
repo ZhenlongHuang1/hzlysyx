@@ -780,7 +780,7 @@ module ysyx_26040117_EXU(clk,rst,
     wire carry,sless,less;
     wire[31:0] t_no_cin,result0;
     assign t_no_cin={32{sub}}^num2;
-    assign {carry,result0}=num1+t_no_cin+sub;//adder
+    assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+{32'd0,sub};//adder
     assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
     assign less=~carry;
     
@@ -1131,7 +1131,7 @@ module ysyx_26040117_CSR(clk,rst,
         end else begin
             mcycle_lo<=mcycle_lo+32'd1;
             lo_wrap<=(mcycle_lo==32'hfffffffe);
-            mcycle_hi<=mcycle_hi+lo_wrap;
+            mcycle_hi<=mcycle_hi+{31'd0,lo_wrap};
             if(wen&&trap_info[0]&&!trap_info[2])begin
                 if(csr_addr==CSR_MCYCLE_LO) begin 
                     mcycle_lo<=wdata;
