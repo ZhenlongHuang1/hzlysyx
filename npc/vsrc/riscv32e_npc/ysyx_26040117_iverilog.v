@@ -70,7 +70,10 @@ module ysyx_26040117_iverilog(
     localparam MEM_WIDTH=20;
     localparam MEM_DEPTH=2**MEM_WIDTH;
     reg[31:0] mem[0:MEM_DEPTH-1];
+    integer i;
     initial begin
+        for(i=0;i<MEM_DEPTH;i=i+1)
+            mem[i]=32'b0;
         $readmemh("build/iverilog.hex",mem);
     end
     always @(posedge clock) begin

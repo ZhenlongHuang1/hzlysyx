@@ -2,9 +2,9 @@ SIM_ENV ?=ysyxsoc
 YSYXSOC_HOME := $(abspath ../ysyxSoC)
 YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 BUILD_DIR =./build
-SYN_DIR=$(abspath $(BUILD_DIR)/syn)
+STA_DIR=$(abspath $(BUILD_DIR)/sta)
 CELLS ?= $(YOSYS_HOME)/pdk/nangate45/sim/cells.v
-NETLIST ?= $(SYN_DIR)/ysyx_26040117-900MHz/ysyx_26040117.netlist.v.sim
+NETLIST ?= $(STA_DIR)/ysyx_26040117-900MHz/ysyx_26040117.netlist.v.sim
 VSRCS := vsrc/minirv/ysyx_26040117.v
 ifeq ($(SIM_ENV),ysyxsoc)
 TOPNAME=ysyxSoCFull
@@ -97,13 +97,13 @@ sim: $(BIN)
 
 sim_i:
 	@mkdir -p $(OBJ_DIR)
-	riscv64-linux-gnu-objcopy -I binary -O elf32-littleriscv -B riscv "$(IMG)" build/iverilog-image.o
-	riscv64-linux-gnu-objcopy -O verilog --verilog-data-width=4 build/iverilog-image.o build/iverilog.hex
+	riscv64-linux-gnu-objcopy -I binary -O verilog --verilog-data-width=4 --reverse-bytes=4 $(IMG) build/iverilog.hex
 	iverilog -g2012 -s $(TOPNAME) -o build/iverilog.vvp $(VSRCS) 
 	vvp build/iverilog.vvp
 sim-iverilog:
 	$(MAKE) sim_i SIM_ENV=iverilog
-sim-iverilog-netlist: sta
+sim-iverilog-netlist:
+	$(MAKE) sta STA_PDK=nangate45
 	$(MAKE) sim_i SIM_ENV=iverilog-netlist
 sim-ysyxsoc: 
 	$(MAKE) sim SIM_ENV=ysyxsoc
@@ -117,19 +117,20 @@ verilog:
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
-SYN_TOP = ysyx_26040117
+STA_TOP = ysyx_26040117
 STA_FREQ_MHZ ?= 900
-SYN_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
+STA_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
+STA_PDK ?=icsprout55
 CLK_PORT_NAME=clock
 sta:
-	@mkdir -p $(SYN_DIR)
-	$(MAKE) -C $(YOSYS_HOME) sta PDK=nangate45 DESIGN=$(SYN_TOP) \
-		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR) \
+	@mkdir -p $(STA_DIR)
+	$(MAKE) -C $(YOSYS_HOME) sta PDK=$(STA_PDK) DESIGN=$(STA_TOP) \
+		RTL_FILES="$(STA_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(STA_DIR) \
 		2>&1 | tee sta.log
 syn:
-	@mkdir -p $(SYN_DIR)
-	$(MAKE) -C $(YOSYS_HOME) syn PDK=nangate45 DESIGN=$(SYN_TOP) \
-		RTL_FILES="$(SYN_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(SYN_DIR)
+	@mkdir -p $(STA_DIR)
+	$(MAKE) -C $(YOSYS_HOME) syn PDK=$(STA_PDK) DESIGN=$(STA_TOP) \
+		RTL_FILES="$(STA_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(STA_DIR)
 
 MICROBENCH_HOME ?= $(abspath ../am-kernels/benchmarks/microbench)
 .PHONY: default all sim sim_i sim-ysyxsoc sim-npc lint gdb clean sta syn perf sim-iverilog-netlist sim-iverilog run
