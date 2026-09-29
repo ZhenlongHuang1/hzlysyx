@@ -1,5 +1,5 @@
 SIM_ENV ?=ysyxsoc
-YSYXSOC_HOME := $(abspath ../ysyxSoc)
+YSYXSOC_HOME := $(abspath ../ysyxSoC)
 YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 BUILD_DIR =./build
 SYN_DIR=$(abspath $(BUILD_DIR)/syn)
