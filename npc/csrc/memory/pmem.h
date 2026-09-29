@@ -8,7 +8,7 @@
 #define FLASH_START 0x30000000u
 #define FLASH_SIZE  0x1000000u>>2
 #define PSRAM_START 0x80000000u
-#define PSRAM_SIZE  0x400000u
+#define PSRAM_SIZE  0x2000000u
 #define SDRAM_START 0xa0000000u
 #define SDRAM_SIZE  0x2000000u
 extern uint32_t mrom[MROM_SIZE];
