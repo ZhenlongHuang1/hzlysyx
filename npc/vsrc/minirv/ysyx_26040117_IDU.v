@@ -70,37 +70,32 @@ module ysyx_26040117_IDU(clk,rst,
         endcase
     end
     wire issue_pause=type_fence_i||type_mret||exception_valid;
-    reg[1:0] buf_count;
-    assign IFU_IDU_ready=(state==IDLE)&&(buf_count!=2'd2);
-    assign IDU_EXU_valid=(state==IDLE)&&(buf_count!=2'd0)&&!raw; 
+    reg buf_empty;
+    assign IFU_IDU_ready=(state==IDLE)&&buf_empty;
+    assign IDU_EXU_valid=(state==IDLE)&&(!buf_empty||IFU_IDU_valid)&&!raw; 
     //FIFO
-    reg[62:0] idu_buf[1:0];
+    reg[62:0] idu_buf;
     wire [29:0]pc_word;
     always @(posedge clk) begin
         if(rst||redirect_valid)begin
-            buf_count<=2'd0;
+            buf_empty<=1'b1;
         end else if((IDU_EXU_fire&&issue_pause))begin
-            buf_count<=2'd0;
+            if(buf_empty)
+                idu_buf<={pred_taken,inst,pc[31:2]};
+            buf_empty<=1'b1;
         end else begin
             case({IFU_IDU_fire,IDU_EXU_fire})
                 2'b10:begin 
-                    if(buf_count==2'd0)
-                        idu_buf[0]<={pred_taken,inst,pc[31:2]};
-                    else 
-                        idu_buf[1]<={pred_taken,inst,pc[31:2]};
-                    buf_count<=buf_count+2'd1;
+                    idu_buf<={pred_taken,inst,pc[31:2]};
+                    buf_empty<=1'b0;
                 end
-                2'b01:begin 
-                    if(buf_count==2'd2)
-                        idu_buf[0]<=idu_buf[1];
-                    buf_count<=buf_count-2'd1;
-                end
-                2'b11:idu_buf[0]<={pred_taken,inst,pc[31:2]};
+                2'b01:buf_empty<=1'b1;
+                2'b11:buf_empty<=1'b1;
                 default:;
             endcase
         end
     end
-    assign {pred_taken_out,inst_out,pc_word}=idu_buf[0];
+    assign {pred_taken_out,inst_out,pc_word}=(buf_empty&&(state==IDLE))?{pred_taken,inst,pc[31:2]}:idu_buf;
     assign pc_out={pc_word,2'b00};
     //function logic
     wire type_I,type_S,type_B,type_U,type_J,type_R,type_I_compute,type_U_LUI,type_U_AUIPC,type_I_JALR,type_I_LOAD,type_I_privil;
