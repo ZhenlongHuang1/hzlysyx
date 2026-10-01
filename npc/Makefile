@@ -4,8 +4,8 @@ YOSYS_HOME=$(HOME)/Desktop/yosys-sta
 BUILD_DIR =./build
 STA_DIR=$(abspath $(BUILD_DIR)/sta)
 CELLS ?= $(YOSYS_HOME)/pdk/nangate45/sim/cells.v
-NETLIST ?= $(STA_DIR)/ysyx_26040117-900MHz/ysyx_26040117.netlist.v.sim
-VSRCS := vsrc/minirv/ysyx_26040117.v
+NETLIST ?= $(STA_DIR)/ysyx_26040117-500MHz/ysyx_26040117.netlist.v.sim
+VSRCS := $(shell find $(abspath ./vsrc/minirv) -name "*.v")
 ifeq ($(SIM_ENV),ysyxsoc)
 TOPNAME=ysyxSoCFull
 VSRCS += $(shell find $(YSYXSOC_HOME)/perip -name "*.v")
@@ -113,14 +113,27 @@ gdb: $(BIN)
 	gdb --args $(BIN) $(ARGS) $(IMG)
 verilog:
 	@mkdir -p build
-	@cp vsrc/minirv/ysyx_26040117.v build/ysyx_26040117.v
+	@cat vsrc/minirv/ysyx_26040117.v \
+		vsrc/minirv/ysyx_26040117_IFU.v \
+		vsrc/minirv/ysyx_26040117_ICache.v \
+		vsrc/minirv/ysyx_26040117_BTB.v \
+		vsrc/minirv/ysyx_26040117_IDU.v \
+		vsrc/minirv/ysyx_26040117_RegisterFile.v \
+		vsrc/minirv/ysyx_26040117_EXU.v \
+		vsrc/minirv/ysyx_26040117_LSU.v \
+		vsrc/minirv/ysyx_26040117_WBU.v \
+		vsrc/minirv/ysyx_26040117_CSR.v \
+		vsrc/minirv/ysyx_26040117_arbiter.v \
+		vsrc/minirv/ysyx_26040117_Xbar.v \
+		vsrc/minirv/ysyx_26040117_CLINT.v \
+		> build/ysyx_26040117.v
 clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
 STA_TOP = ysyx_26040117
-STA_FREQ_MHZ ?= 900
+STA_FREQ_MHZ ?= 500
 STA_VSRCS = $(shell find $(abspath ./vsrc/minirv) -name "*.v")
-STA_PDK ?=icsprout55
+STA_PDK ?=nangate45
 CLK_PORT_NAME=clock
 sta:
 	@mkdir -p $(STA_DIR)
@@ -133,7 +146,7 @@ syn:
 		RTL_FILES="$(STA_VSRCS)" CLK_FREQ_MHZ=$(STA_FREQ_MHZ) CLK_PORT_NAME=$(CLK_PORT_NAME) O=$(STA_DIR)
 
 MICROBENCH_HOME ?= $(abspath ../am-kernels/benchmarks/microbench)
-.PHONY: default all sim sim_i sim-ysyxsoc sim-npc lint gdb clean sta syn perf sim-iverilog-netlist sim-iverilog run
+.PHONY: default all sim sim_i sim-ysyxsoc sim-npc lint gdb clean sta syn perf sim-iverilog-netlist sim-iverilog run verilog
 perf:
 	$(MAKE) -C $(MICROBENCH_HOME) \
 		ARCH=riscv32e-ysyxsoc  \
