@@ -66,7 +66,6 @@ module ysyx_26040117_EXU(clk,rst,
     assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+{32'd0,sub};//adder
     assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
     assign less=~carry;
-    
     wire[31:0] num1_rev,shift_rev;
     wire signed [32:0] shift_src={funct[3]&funct[2]&num1[31],funct[2]?num1:num1_rev};
     wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
@@ -77,6 +76,11 @@ module ysyx_26040117_EXU(clk,rst,
             assign shift_rev[i]=shift_tmp[31-i];
         end
     endgenerate
+    /*
+    wire signed [32:0] shift_src={funct[3]&num1[31],num1};
+    wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
+    wire [31:0] shift_rev=num1<<num2[4:0];
+    */
     always @(*) begin
         result=result0;//load,store,jal,jalr
         if(mytype[8]||mytype[7])begin

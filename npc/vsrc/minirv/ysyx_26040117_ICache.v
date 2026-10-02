@@ -97,6 +97,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     
     wire  [OFFSET_WIDTH-3:0] offset_reg;
     reg  [OFFSET_WIDTH-3:0] offset_count;
+    //r channel
     reg[29:0] hit_rdata;
     integer i;
     always @(*) begin
