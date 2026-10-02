@@ -7,7 +7,7 @@ module ysyx_26040117_RegisterFile #(ADDR_WIDTH = 4, DATA_WIDTH = 32) (clk,
     input [ADDR_WIDTH-1:0] waddr,raddr1,raddr2;
     input [DATA_WIDTH-1:0] wdata;
     output reg[DATA_WIDTH-1:0] rdata1,rdata2;
-    reg [DATA_WIDTH-1:0] rf [2**ADDR_WIDTH-1:1];
+    reg [DATA_WIDTH-1:0] rf [2**ADDR_WIDTH-1:0];
     always @(posedge clk) begin
         if (wen&&(waddr != 0))begin
             rf[waddr] <= wdata;

@@ -67,8 +67,16 @@ module ysyx_26040117_EXU(clk,rst,
     assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
     assign less=~carry;
     
-    wire signed [32:0] shift_src={funct[3]&num1[31],num1};
+    wire[31:0] num1_rev,shift_rev;
+    wire signed [32:0] shift_src={funct[3]&funct[2]&num1[31],funct[2]?num1:num1_rev};
     wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
+    genvar i;
+    generate 
+        for(i=0;i<32;i++)begin:shift_reverse
+            assign num1_rev[i]=num1[31-i];
+            assign shift_rev[i]=shift_tmp[31-i];
+        end
+    endgenerate
     always @(*) begin
         result=result0;//load,store,jal,jalr
         if(mytype[8]||mytype[7])begin
@@ -79,7 +87,7 @@ module ysyx_26040117_EXU(clk,rst,
                 3'b100:result=num1^num2;//XORI,XOR
                 3'b110:result=num1|num2;//ORI,OR
                 3'b111:result=num1&num2;//ANDI,AND
-                3'b001:result=num1<<(num2[4:0]);//SLLI,SLL
+                3'b001:result=shift_rev;//SLLI,SLL
                 3'b101:result=shift_tmp[31:0];//1:SRAI,SRA;0:SRLI,SRL
                 default:result=32'd0;
             endcase
