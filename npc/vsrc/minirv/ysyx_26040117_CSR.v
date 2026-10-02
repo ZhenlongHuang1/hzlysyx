@@ -18,7 +18,7 @@ module ysyx_26040117_CSR(clk,rst,
     input [31:0]result;
     output reg[31:0]rdata;
     output [31:0] trap_dnpc;
-    reg[31:0]mcycle_lo,mcycle_hi;
+    //reg[31:0]mcycle_lo,mcycle_hi;
     reg mie,mpie;
     reg[31:0]wdata;
     reg[29:0]mepc,mtvec;
@@ -27,8 +27,8 @@ module ysyx_26040117_CSR(clk,rst,
     assign trap_dnpc=trap_info[2]?{mtvec,2'd0}:{mepc,2'd0};
     always @(*)begin
         case(csr_addr)
-            CSR_MCYCLE_LO:rdata=mcycle_lo;
-            CSR_MCYCLE_HI:rdata=mcycle_hi;
+            //CSR_MCYCLE_LO:rdata=mcycle_lo;
+            //CSR_MCYCLE_HI:rdata=mcycle_hi;
             CSR_MEPC:     rdata={mepc,2'd0};
             CSR_MSTATUS:  rdata={19'd0, 2'b11, 3'd0, mpie, 3'd0, mie, 3'd0};
             CSR_MCAUSE:   rdata={28'd0,mcause};
@@ -45,6 +45,7 @@ module ysyx_26040117_CSR(clk,rst,
             default:wdata=0;
         endcase
     end
+    /*
     reg lo_wrap;
     always @(posedge clk) begin
         if(rst)begin
@@ -64,6 +65,7 @@ module ysyx_26040117_CSR(clk,rst,
             end
         end
     end
+    */
     always @(posedge clk) begin
         if(rst)begin
             mie<=1'b0;
