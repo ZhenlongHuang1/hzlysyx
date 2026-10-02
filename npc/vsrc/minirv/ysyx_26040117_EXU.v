@@ -82,6 +82,10 @@ module ysyx_26040117_EXU(clk,rst,
     wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
     wire [31:0] shift_rev=num1<<num2[4:0];
     */
+    wire [31:0] num_and,num_or,num_xor;
+    assign num_and=num1&num2;
+    assign num_or=num1|num2;
+    assign num_xor=num_or&(~num_and);
     always @(*) begin
         result=result0;//load,store,jal,jalr
         if(mytype[8]||mytype[7])begin
@@ -89,9 +93,9 @@ module ysyx_26040117_EXU(clk,rst,
                 3'b000:result=result0;//ADDI,ADD
                 3'b010:result={31'd0,sless};//SLTI,SLT
                 3'b011:result={31'd0,less};//SLTIU,SLTU
-                3'b100:result=num1^num2;//XORI,XOR
-                3'b110:result=num1|num2;//ORI,OR
-                3'b111:result=num1&num2;//ANDI,AND
+                3'b100:result=num_xor;//XORI,XOR
+                3'b110:result=num_or;//ORI,OR
+                3'b111:result=num_and;//ANDI,AND
                 3'b001:result=shift_rev;//SLLI,SLL
                 3'b101:result=shift_tmp[31:0];//1:SRAI,SRA;0:SRLI,SRL
                 default:result=32'd0;

@@ -133,9 +133,9 @@ module ysyx_26040117_LSU (clk,rst,
     assign bready=lsu_valid&&is_store&&!wvalid&&!awvalid&&LSU_WBU_ready;
     //write function
     wire[3:0] aw_mask;
-    assign wdata={32{funct3[1:0]==2'b00}}&{4{aux[7:0]}}| //sb
-                 {32{funct3[1:0] == 2'b01}}&{2{aux[15:0]}}| // sh
-                 aux;//sw
+    assign wdata=({32{funct3[1:0]==2'b00}}&{4{aux[7:0]}})|//sb
+                 ({32{funct3[1:0]==2'b01}}&{2{aux[15:0]}})|// sh
+                 ({32{funct3[1]}}&aux);//sw
     assign {awaddr,awsize}={result,{1'b0,funct3[1:0]}};
     assign aw_mask={awsize[1],awsize[1],awsize[1]|awsize[0],1'b1};
     assign wstrb=aw_mask<<awaddr[1:0];
