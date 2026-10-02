@@ -21,7 +21,6 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     wire[31:0] s2_araddr,araddr;
     wire fence_i,redirect_valid;
     reg flush_pending,fence_done,s1_btb_valid;
-    assign rfire=rvalid&&rready;
 
     assign {fence_i,redirect_valid,dnpc,idu_pc,rready}=IFU_ICACHE_wrapper;
     assign ICACHE_IFU_wrapper={s1_btb_valid,fence_done,rvalid,s2_araddr,rdata};
@@ -98,12 +97,11 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     
     wire  [OFFSET_WIDTH-3:0] offset_reg;
     reg  [OFFSET_WIDTH-3:0] offset_count;
-    wire refill_data_en=rfire_MEM&&((offset_count==offset_reg)||!is_sdram_reg);
     reg[29:0] hit_rdata;
     integer i;
     always @(*) begin
+        hit_rdata=30'd0;
         for(i=0;i<DATA_DEPTH;i++)begin
-            hit_rdata=30'd0;
             hit_rdata=hit_rdata|(data_array[i]&{30{{req_index,req_offset}==i[INDEX_WIDTH+OFFSET_WIDTH-3:0]}});
         end
     end
@@ -111,6 +109,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         if(out_ready)
             rdata<=miss_pending?{rdata_MEM[31:2],2'b11}:{hit_rdata,2'b11};
     end
+    wire refill_data_en=rfire_MEM&&((offset_count==offset_reg)||!is_sdram_reg);
     always @(posedge clk) begin
         if(pipe_clear)begin
             rvalid<=1'd0;
@@ -124,6 +123,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             end
         end
     end
+    assign rfire=rvalid&&rready;
     //ICache
 
     wire[INDEX_WIDTH-1:0] index_reg;
