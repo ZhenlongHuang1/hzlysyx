@@ -99,9 +99,9 @@ module ysyx_26040117_EXU(clk,rst,
     end
     //branch function
     wire cmp_eq=num1==num2;
-    wire cmp_lts=$signed(num1)<$signed(num2);
     wire cmp_ltu=num1<num2;
-    //wire cmp_lts=(num1[31]^num2[31])?num1[31]:cmp_ltu;
+    //wire cmp_lts=$signed(num1)<$signed(num2);
+    wire cmp_lts=(num1[31]^num2[31])?num1[31]:cmp_ltu;
     /*
     wire cmp_eq=~(|result0);
     wire cmp_lts=sless;
