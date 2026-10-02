@@ -103,9 +103,9 @@ module ysyx_26040117_IDU(clk,rst,
     wire [31:0]immI,immS,immB,immU,immJ,imm;
     assign funct3_zero=~(|funct3);
     assign opcode=inst_out[6:0];
-    assign rd=inst_out[11:7];
-    assign rs1=inst_out[19:15];
-    assign rs2=inst_out[24:20];
+    assign rd={1'b0,inst_out[10:7]};
+    assign rs1={1'b0,inst_out[18:15]};
+    assign rs2={1'b0,inst_out[23:20]};
 
     assign mytype={type_R,type_I_compute,type_S,type_I_LOAD,type_B,type_I_JALR,type_J,type_U_AUIPC,type_U_LUI};
     assign type_I_compute=(opcode==7'b0010011);//ADDI~SRAI
