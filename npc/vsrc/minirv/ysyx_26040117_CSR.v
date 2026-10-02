@@ -20,7 +20,6 @@ module ysyx_26040117_CSR(clk,rst,
     output [31:0] trap_dnpc;
     //reg[31:0]mcycle_lo,mcycle_hi;
     reg mie,mpie;
-    reg[31:0]wdata;
     reg[29:0]mepc,mtvec;
     reg[3:0] mcause;
     //read
@@ -36,13 +35,6 @@ module ysyx_26040117_CSR(clk,rst,
             CSR_MVENDORID:rdata=32'h79737978;
             CSR_MARCHID:  rdata=32'h18d5735;
             default:rdata=32'h0;
-        endcase
-    end
-    always @(*)begin
-        case(funct3)//src1
-            3'b001:wdata=result;
-            3'b010:wdata=result|rdata;
-            default:wdata=0;
         endcase
     end
     /*
@@ -66,6 +58,7 @@ module ysyx_26040117_CSR(clk,rst,
         end
     end
     */
+    wire csrrs=funct3==3'b010;
     always @(posedge clk) begin
         if(rst)begin
             mie<=1'b0;
@@ -82,10 +75,10 @@ module ysyx_26040117_CSR(clk,rst,
                 mpie<=1'b1;
             end else if(trap_info[0])begin
                 case(csr_addr)
-                    CSR_MEPC:     mepc<=wdata[31:2];
-                    CSR_MSTATUS:  {mpie,mie}<={wdata[7],wdata[3]};
-                    CSR_MCAUSE:   mcause<=wdata[3:0];
-                    CSR_MTVEC:    mtvec<=wdata[31:2];
+                    CSR_MEPC:     mepc<=result[31:2]|(mepc&{30{csrrs}});
+                    CSR_MSTATUS:  {mpie,mie}<={result[7],result[3]}|({mpie,mie}&{2{csrrs}});
+                    CSR_MCAUSE:   mcause<=result[3:0]|(mcause&{4{csrrs}});
+                    CSR_MTVEC:    mtvec<=result[31:2]|(mtvec&{30{csrrs}}); 
                     default:;
                 endcase
             end

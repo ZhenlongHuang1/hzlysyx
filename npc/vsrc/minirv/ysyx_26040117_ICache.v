@@ -65,6 +65,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             s1_redirect<=1'b0;
         end
     end
+
     wire is_sdram =araddr[31:29]==3'b101;//SDRAM
     wire [OFFSET_WIDTH-3:0] req_offset;
     wire[INDEX_WIDTH-1:0] req_index;
@@ -196,6 +197,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         endcase
     end
     wire refill_done=(state==MISS_DATA)&&rfire_MEM&&rlast;
+    //fence
     always @(posedge clk) begin
         if(rst)
             {flush_pending,fence_done}<=2'b0;

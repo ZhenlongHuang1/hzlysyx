@@ -66,6 +66,7 @@ module ysyx_26040117_EXU(clk,rst,
     assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+{32'd0,sub};//adder
     assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
     assign less=~carry;
+
     wire[31:0] num1_rev,shift_rev;
     wire signed [32:0] shift_src={funct[3]&funct[2]&num1[31],funct[2]?num1:num1_rev};
     wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
@@ -99,9 +100,9 @@ module ysyx_26040117_EXU(clk,rst,
     end
     //branch function
     wire cmp_eq=num1==num2;
+    wire cmp_lts=$signed(num1)<$signed(num2);
     wire cmp_ltu=num1<num2;
-    //wire cmp_lts=$signed(num1)<$signed(num2);
-    wire cmp_lts=(num1[31]^num2[31])?num1[31]:cmp_ltu;
+    //wire cmp_lts=(num1[31]^num2[31])?num1[31]:cmp_ltu;
     /*
     wire cmp_eq=~(|result0);
     wire cmp_lts=sless;
