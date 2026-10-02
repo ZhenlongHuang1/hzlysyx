@@ -18,18 +18,18 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     reg rvalid;
     reg[31:0] rdata;
     wire [31:0] dnpc,idu_pc;
-    wire[31:0] araddr_reg,araddr;
+    wire[31:0] s2_araddr,araddr;
     wire fence_i,redirect_valid;
     reg flush_pending,fence_done,s1_btb_valid;
     assign rfire=rvalid&&rready;
 
     assign {fence_i,redirect_valid,dnpc,idu_pc,rready}=IFU_ICACHE_wrapper;
-    assign ICACHE_IFU_wrapper={s1_btb_valid,fence_done,rvalid,araddr_reg,rdata};
+    assign ICACHE_IFU_wrapper={s1_btb_valid,fence_done,rvalid,s2_araddr,rdata};
     wire fence_clear=rst||fence_i||flush_pending||fence_done;
     wire pipe_clear=redirect_valid||fence_clear;
     localparam IDLE=0,MISS_AR=1,MISS_DATA=2;
     reg[1:0] state,next_state;
-    reg[31:0] data_array[0:DATA_DEPTH-1];
+    reg[29:0] data_array[0:DATA_DEPTH-1];
     reg[31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_array[0:(2**INDEX_WIDTH)-1];
     reg[DATA_DEPTH-1:0] valid_array;
     //S1-FIFO 
@@ -74,7 +74,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign req_offset=araddr[OFFSET_WIDTH-1:2];
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    wire req_tag_match=(tag_array[req_index]==req_tag)&&(|valid_array[req_index*WORD_NUM +: WORD_NUM]);
+    wire req_tag_match=(tag_array[req_index]==req_tag);
     assign hit=valid_array[{req_index,req_offset}]&&req_tag_match;
     wire arvalid=s1_valid&&!pipe_clear;
     //BTB
@@ -99,9 +99,17 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     wire  [OFFSET_WIDTH-3:0] offset_reg;
     reg  [OFFSET_WIDTH-3:0] offset_count;
     wire refill_data_en=rfire_MEM&&((offset_count==offset_reg)||!is_sdram_reg);
+    reg[29:0] hit_rdata;
+    integer i;
+    always @(*) begin
+        for(i=0;i<DATA_DEPTH;i++)begin
+            hit_rdata=30'd0;
+            hit_rdata=hit_rdata|(data_array[i]&{30{{req_index,req_offset}==i[INDEX_WIDTH+OFFSET_WIDTH-3:0]}});
+        end
+    end
     always @(posedge clk) begin
         if(out_ready)
-            rdata<=miss_pending?rdata_MEM:data_array[{req_index,req_offset}];
+            rdata<=miss_pending?{rdata_MEM[31:2],2'b11}:{hit_rdata,2'b11};
     end
     always @(posedge clk) begin
         if(pipe_clear)begin
@@ -120,16 +128,16 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
 
     wire[INDEX_WIDTH-1:0] index_reg;
     wire [31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_reg;
-    reg[29:0]araddr_word_reg;
-    assign araddr_reg={araddr_word_reg,2'b00};
+    reg[29:0]araddr_reg;
+    assign s2_araddr={araddr_reg,2'b00};
     reg [INDEX_WIDTH+OFFSET_WIDTH-3:0] miss_pos;
     reg req_tag_match_reg;
 
-    assign tag_reg=araddr_reg[31:OFFSET_WIDTH+INDEX_WIDTH];
+    assign tag_reg=s2_araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
     assign {index_reg,offset_reg}=miss_pos;
     always @(posedge clk) begin
         if(s1_valid&&arready)begin 
-            araddr_word_reg<=araddr[31:2];
+            araddr_reg<=araddr[31:2];
         end
         if(s1_valid&&arready&&!hit)begin
             req_tag_match_reg<=req_tag_match;
@@ -161,7 +169,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
                         valid_array[index_reg*WORD_NUM +: WORD_NUM]<=0;
                 end
                 MISS_DATA:if(rfire_MEM)begin
-                            data_array[{index_reg,refill_offset}]<=rdata_MEM;
+                            data_array[{index_reg,refill_offset}]<=rdata_MEM[31:2];
                             valid_array[{index_reg,refill_offset}]<=1'b1;
                             if(is_sdram_reg&&!rlast)
                                 offset_count<=offset_count+1'b1;
@@ -210,7 +218,7 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign  rfire_MEM=rvalid_MEM&&rready_MEM;
     wire [7:0]arlen;
     assign arlen=is_sdram_reg?BURST_LEN:8'd0;
-    assign araddr_MEM=araddr_reg;
+    assign araddr_MEM=s2_araddr;
     assign arvalid_MEM=state==MISS_AR;
     assign rready_MEM=state==MISS_DATA;
     assign ICACHE_MEM_wrapper={3'b010,arvalid_MEM,araddr_MEM,arlen,rready_MEM};

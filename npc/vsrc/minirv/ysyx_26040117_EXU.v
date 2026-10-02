@@ -82,8 +82,8 @@ module ysyx_26040117_EXU(clk,rst,
         if(mytype[8]||mytype[7])begin
             case(funct[2:0])
                 3'b000:result=result0;//ADDI,ADD
-                3'b010:result={31'd0,sless};//SLTI,SLT
-                3'b011:result={31'd0,less};//SLTIU,SLTU
+                3'b010:result={31'd0,less};//SLTI,SLT
+                3'b011:result={31'd0,sless};//SLTIU,SLTU
                 3'b100:result=num1^num2;//XORI,XOR
                 3'b110:result=num1|num2;//ORI,OR
                 3'b111:result=num1&num2;//ANDI,AND

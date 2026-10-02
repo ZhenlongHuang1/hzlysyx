@@ -23,8 +23,6 @@ module ysyx_26040117_IDU(clk,rst,
     output IDU_EXU_valid;
     output[158:0]IDU_wrapper;
     
-
-
     wire [3:0] funct;
     wire [8:0] mytype;
     wire [31:0] num1,num2;
