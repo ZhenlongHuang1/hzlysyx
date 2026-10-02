@@ -43,25 +43,11 @@ module ysyx_26040117_CLINT(clk,rst,
             rid_reg<=arid[0];
     end
     //write
-    reg aw_received,w_received;
-    assign awready=!aw_received;
-    assign wready =!w_received;
-    assign bvalid=aw_received&&w_received;
+    assign awready=1'b0;
+    assign wready =1'b0;
+    assign bvalid=1'b0;;
     assign bresp =2'b00;
-    always @(posedge clk) begin
-        if(rst)begin
-            aw_received<=1'b0;
-            w_received <=1'b0;
-        end else if(bvalid&&bready)begin
-            aw_received<=1'b0;
-            w_received <=1'b0;
-        end else begin
-            if(awvalid&&awready)
-                aw_received<=1'b1;
-            if(wvalid&&wready)
-                w_received<=1'b1;
-        end
-    end
+
     reg [31:0]mtime_lo,mtime_hi;
     always @(posedge clk) begin
         if(rst) rvalid<=1'b0;
