@@ -96,7 +96,6 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign  arfire=arvalid&&arready;
     reg is_sdram_reg;
     
-    wire  [OFFSET_WIDTH-3:0] offset_reg;
     reg  [OFFSET_WIDTH-3:0] offset_count;
     //r channel
     reg[29:0] hit_rdata;
@@ -111,14 +110,13 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
         if(out_ready)
             rdata<=miss_pending?{rdata_MEM[31:2],2'b11}:{hit_rdata,2'b11};
     end
-    wire refill_data_en=rfire_MEM&&((offset_count==offset_reg)||!is_sdram_reg);
     always @(posedge clk) begin
         if(pipe_clear)begin
             rvalid<=1'd0;
         end else begin
             if(hit&&arfire)begin 
                 rvalid<=1'b1;
-            end else if(refill_data_en&&miss_pending)begin
+            end else if(rfire_MEM&&miss_pending)begin
                 rvalid<=1'b1;//delay rfire -fence_i
             end else if(rfire)begin
                 rvalid<=1'b0;
@@ -128,22 +126,20 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
     assign rfire=rvalid&&rready;
     //ICache
 
-    wire[INDEX_WIDTH-1:0] index_reg;
+    reg[INDEX_WIDTH-1:0] index_reg;
     wire [31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_reg;
     reg[29:0]araddr_reg;
     assign s2_araddr={araddr_reg,2'b00};
-    reg [INDEX_WIDTH+OFFSET_WIDTH-3:0] miss_pos;
     reg req_tag_match_reg;
 
     assign tag_reg=s2_araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    assign {index_reg,offset_reg}=miss_pos;
     always @(posedge clk) begin
         if(s1_valid&&arready)begin 
             araddr_reg<=araddr[31:2];
         end
         if(s1_valid&&arready&&!hit)begin
             req_tag_match_reg<=req_tag_match;
-            miss_pos<=araddr[INDEX_WIDTH+OFFSET_WIDTH-1:2];
+            index_reg<=req_index;
         end
     end
     always @(posedge clk) begin
@@ -151,10 +147,9 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
             miss_pending<=1'b0;
         else if(s1_valid&&arready&&!hit)
             miss_pending<=1'b1;
-        else if(refill_data_en)
+        else if(rfire_MEM)
             miss_pending<=1'b0;
     end
-    wire [OFFSET_WIDTH-3:0] refill_offset=is_sdram_reg?offset_count:offset_reg;
     always @(posedge clk) begin
         if(rst||fence_i||flush_pending) begin
             valid_array<=0;
@@ -171,8 +166,8 @@ module ysyx_26040117_ICache#(RESET_VECTOR=32'h30000000)(
                         valid_array[index_reg*WORD_NUM +: WORD_NUM]<=0;
                 end
                 MISS_DATA:if(rfire_MEM)begin
-                            data_array[{index_reg,refill_offset}]<=rdata_MEM[31:2];
-                            valid_array[{index_reg,refill_offset}]<=1'b1;
+                            data_array[{index_reg,offset_count}]<=rdata_MEM[31:2];
+                            valid_array[{index_reg,offset_count}]<=1'b1;
                             if(is_sdram_reg&&!rlast)
                                 offset_count<=offset_count+1'b1;
                         end
