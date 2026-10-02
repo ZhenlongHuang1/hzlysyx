@@ -84,16 +84,9 @@ module ysyx_26040117_LSU (clk,rst,
     reg[31:0] rdata_out;
     wire[1:0] raddr_shift;
     assign raddr_shift=araddr[1:0];
-    reg[7:0] load_byte;
+    wire[7:0] load_byte;
     wire[15:0]load_half=raddr_shift[1]?rdata[31:16]:rdata[15:0];
-    always @(*) begin
-        case(raddr_shift)
-            2'b00:load_byte=rdata[7:0];
-            2'b01:load_byte=rdata[15:8];
-            2'b10:load_byte=rdata[23:16];
-            2'b11:load_byte=rdata[31:24];
-        endcase
-    end
+    assign load_byte=raddr_shift[0]?load_half[15:8]:load_half[7:0];
     always @(*) begin
         case(funct3)
             3'b000:rdata_out={{24{load_byte[7]}},load_byte};
