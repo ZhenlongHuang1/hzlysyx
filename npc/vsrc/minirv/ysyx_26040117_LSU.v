@@ -12,7 +12,7 @@ module ysyx_26040117_LSU (clk,rst,
     //LSU-WBU
     input LSU_WBU_ready;
     output LSU_WBU_valid;
-    output [51:0]LSU_wrapper;
+    output [49:0]LSU_wrapper;
     //LSU-IDU
     output [38:0] LSU_IDU_wrapper;
     //LSU-MEM
@@ -29,14 +29,16 @@ module ysyx_26040117_LSU (clk,rst,
     wire [4:0]rd;
     wire [31:0] result_out;
     reg[2:0] csr_addr;
+    wire csrrs;
     wire EXU_LSU_fire,LSU_WBU_fire/* verilator public_flat_rd */;
     always @(posedge clk) begin
         if(EXU_LSU_fire)begin
             wrapper_reg<=EXU_wrapper;
         end
     end
+    assign csrrs=funct3==3'b010;
     assign {register_wen_load,register_wen_ok,register_wen,type_fence_i,trap_info,rd,result,aux,is_store,is_load,funct3}=wrapper_reg;
-    assign LSU_wrapper={register_wen,type_fence_i,trap_info,rd,result_out,csr_addr,funct3};
+    assign LSU_wrapper={register_wen,type_fence_i,trap_info,rd,result_out,csr_addr,csrrs};
     wire rvalid,arready,rready,bvalid;;
     reg arvalid,awvalid,wvalid;
     reg lsu_valid;

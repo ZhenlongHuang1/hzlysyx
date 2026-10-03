@@ -1,5 +1,5 @@
 module ysyx_26040117_CSR(clk,rst,
-    wen,trap_info,funct3,csr_addr,result,
+    wen,trap_info,csrrs,csr_addr,result,
     rdata,trap_dnpc
 );
     localparam CSR_MCYCLE_LO = 3'd0;
@@ -12,7 +12,7 @@ module ysyx_26040117_CSR(clk,rst,
     localparam CSR_MARCHID   = 3'd7;
     input clk,rst;
     input wen;
-    input [2:0]funct3;//0:csrr,1:ecall,2:mret
+    input csrrs;
     input [6:0] trap_info;
     input [2:0]csr_addr;
     input [31:0]result;
@@ -58,7 +58,6 @@ module ysyx_26040117_CSR(clk,rst,
         end
     end
     */
-    wire csrrs=funct3==3'b010;
     always @(posedge clk) begin
         if(rst)begin
             mie<=1'b0;

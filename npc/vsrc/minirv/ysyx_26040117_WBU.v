@@ -7,7 +7,7 @@ module ysyx_26040117_WBU(clk,rst,
     //LSU-WBU
     input LSU_WBU_valid;
     output LSU_WBU_ready;
-    input [51:0]LSU_wrapper;
+    input [49:0]LSU_wrapper;
     //WBU-IFU
     input WBU_IFU_ready;
     output[31:0] srcd;
@@ -38,16 +38,16 @@ module ysyx_26040117_WBU(clk,rst,
     assign LSU_WBU_ready=1;
     assign WBU_IFU_valid=state==WAIT;
     //FIFO
-    reg [51:0] LSU_wrapper_reg;
+    reg [49:0] LSU_wrapper_reg;
     wire [31:0] result;
-    wire [2:0] funct3;
+    wire csrrs;
     wire type_fence_i;
     wire [6:0]trap_info/* verilator public_flat_rd */;//0:csrr,1:ecall,2:mret,
     wire [2:0] csr_addr/* verilator public_flat_rd */;
     always @(posedge clk) begin
         LSU_wrapper_reg<=LSU_wrapper;
     end
-    assign {register_wen,type_fence_i,trap_info,rd,result,csr_addr,funct3}=LSU_wrapper_reg;
+    assign {register_wen,type_fence_i,trap_info,rd,result,csr_addr,csrrs}=LSU_wrapper_reg;
 
     //function
     wire [31:0] csr_rdata;
@@ -57,7 +57,7 @@ module ysyx_26040117_WBU(clk,rst,
     assign fence_i=type_fence_i&&(WBU_IFU_fire);
     //Control Status Register
     ysyx_26040117_CSR CSR1(.clk(clk),.rst(rst),
-        .wen(WBU_IFU_fire),.trap_info(trap_info),.funct3(funct3),.csr_addr(csr_addr),.result(result),
+        .wen(WBU_IFU_fire),.trap_info(trap_info),.csrrs(csrrs),.csr_addr(csr_addr),.result(result),
         .rdata(csr_rdata),.trap_dnpc(trap_dnpc)
     );
     //ebreak

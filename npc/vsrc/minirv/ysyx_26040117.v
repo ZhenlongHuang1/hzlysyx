@@ -165,7 +165,7 @@ module ysyx_26040117 #(
     );
     //Load-Store Unit
     wire LSU_WBU_ready,LSU_WBU_valid;
-    wire[51:0] LSU_wrapper;
+    wire[49:0] LSU_wrapper;
     wire [40:0]MEM_LSU_wrapper;
     wire [110:0]LSU_MEM_wrapper;
     ysyx_26040117_LSU LSU1(.clk(clock),.rst(reset),
