@@ -28,14 +28,14 @@ module ysyx_26040117_IFU#(RESET_VECTOR=32'h30000000)(clk,rst,
 
     wire rvalid,rready,arready,arvalid;
     reg s1_redirect,s1_btb_valid;
-    wire s1_valid=!(flush_pending||fence_done);
-    wire [31:0] araddr;
     wire flush_pending,fence_done;
-    wire cache_clear=rst||fence_i||flush_pending;
-    wire pipe_clear=redirect_valid||cache_clear||fence_done;
+    wire s1_valid=!(flush_pending||fence_done);
+    wire cache_clear=rst||fence_i;
+    wire pipe_clear=cache_clear||redirect_valid;
     assign arvalid=s1_valid&&!pipe_clear;
     wire arfire=arvalid&&arready;
     reg[29:0] s1_snpc,s1_dnpc;
+    wire [31:0] araddr;
     always @(posedge clk) begin
         if(redirect_valid)
             s1_dnpc<=dnpc[31:2];
@@ -73,9 +73,6 @@ module ysyx_26040117_IFU#(RESET_VECTOR=32'h30000000)(clk,rst,
     assign rready=IFU_IDU_ready;
     assign IFU_IDU_valid=rvalid;
     //取指
-    wire [31:0] rpc,rdata;
     assign IFU_MEM_wrapper={fence_i,pipe_clear,cache_clear,s1_valid,arvalid,araddr,rready};
-    assign {flush_pending,fence_done,arready,rvalid,rpc,rdata}=MEM_IFU_wrapper;
-    assign inst=rdata;
-    assign pc=rpc;
+    assign {flush_pending,fence_done,arready,rvalid,pc,inst}=MEM_IFU_wrapper;
 endmodule

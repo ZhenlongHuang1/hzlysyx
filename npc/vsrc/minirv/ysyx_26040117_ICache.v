@@ -24,17 +24,18 @@ module ysyx_26040117_ICache(
     reg[29:0] data_array[0:DATA_DEPTH-1];
     reg[31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_array[0:(2**INDEX_WIDTH)-1];
     reg[DATA_DEPTH-1:0] valid_array;
-    //S1
-    wire is_sdram =araddr[31:29]==3'b101;//SDRAM
+    //ifu-interface
     wire [OFFSET_WIDTH-3:0] req_offset;
     wire[INDEX_WIDTH-1:0] req_index;
     wire[31-OFFSET_WIDTH-INDEX_WIDTH:0] req_tag;
-    wire hit;
+    wire req_tag_match,hit,is_sdram;
+    reg req_tag_match_reg,is_sdram_reg;
     assign req_offset=araddr[OFFSET_WIDTH-1:2];
     assign req_index=araddr[OFFSET_WIDTH +: INDEX_WIDTH];
     assign req_tag=araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
-    wire req_tag_match=(tag_array[req_index]==req_tag);
+    assign req_tag_match=(tag_array[req_index]==req_tag);
     assign hit=valid_array[{req_index,req_offset}]&&req_tag_match;
+    assign is_sdram =araddr[31:29]==3'b101;//SDRAM
 
     wire arready_MEM,arvalid_MEM,arfire_MEM;
     wire rready_MEM,rvalid_MEM,rfire_MEM,rlast;
@@ -44,9 +45,7 @@ module ysyx_26040117_ICache(
     wire out_ready=!rvalid||rready;
     assign  arready=out_ready&&((state==IDLE)||((state==MISS_DATA)&&!miss_pending&&hit));
     assign  arfire=arvalid&&arready;
-    reg is_sdram_reg;
     
-    reg  [OFFSET_WIDTH-3:0] offset_count;
     //r channel
     reg[29:0] hit_rdata;
     integer i;
@@ -73,16 +72,25 @@ module ysyx_26040117_ICache(
             end
         end
     end
+    always @(posedge clk) begin
+        if(pipe_clear)
+            miss_pending<=1'b0;
+        else if(arfire&&!hit)
+            miss_pending<=1'b1;
+        else if(rfire_MEM)
+            miss_pending<=1'b0;
+    end
     assign rfire=rvalid&&rready;
+
     //ICache
 
     reg[INDEX_WIDTH-1:0] index_reg;
-    wire [31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_reg;
+    reg[OFFSET_WIDTH-3:0] offset_count;
     reg[29:0]araddr_reg;
+    wire [31-OFFSET_WIDTH-INDEX_WIDTH:0] tag_reg;
     assign s2_araddr={araddr_reg,2'b00};
-    reg req_tag_match_reg;
-
     assign tag_reg=s2_araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
+
     always @(posedge clk) begin
         if(s1_valid&&arready)begin 
             araddr_reg<=araddr[31:2];
@@ -93,21 +101,11 @@ module ysyx_26040117_ICache(
         end
     end
     always @(posedge clk) begin
-        if(pipe_clear)
-            miss_pending<=1'b0;
-        else if(s1_valid&&arready&&!hit)
-            miss_pending<=1'b1;
-        else if(rfire_MEM)
-            miss_pending<=1'b0;
-    end
-    always @(posedge clk) begin
         if(cache_clear) begin
             valid_array<=0;
-            is_sdram_reg<=1'b0;
-        end else begin
+        end else if(!flush_pending)begin
             case(state)
                 IDLE:if(s1_valid&&arready&&!hit)begin
-                        is_sdram_reg<=is_sdram;
                         offset_count<=req_offset;
                 end
                 MISS_AR:begin
@@ -125,6 +123,12 @@ module ysyx_26040117_ICache(
             endcase
         end
     end
+    always @(posedge clk) begin
+        if(rst)
+            is_sdram_reg<=1'b0;
+        else if(arfire&&!hit)
+            is_sdram_reg<=is_sdram;
+    end
     //state machine
     always @(posedge clk) begin
         if(rst)
@@ -141,8 +145,8 @@ module ysyx_26040117_ICache(
             default:next_state=IDLE;
         endcase
     end
-    wire refill_done=(state==MISS_DATA)&&rfire_MEM&&rlast;
     //fence
+    wire refill_done=(state==MISS_DATA)&&rfire_MEM&&rlast;
     always @(posedge clk) begin
         if(rst)
             {flush_pending,fence_done}<=2'b0;
