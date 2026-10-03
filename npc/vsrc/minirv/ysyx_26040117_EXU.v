@@ -66,10 +66,15 @@ module ysyx_26040117_EXU(clk,rst,
     assign {carry,result0}={1'b0,num1}+{1'b0,t_no_cin}+{32'd0,sub};//adder
     assign sless=(num1[31]^num2[31])?num1[31]:result0[31];
     assign less=~carry;
-
+    //sll,sra,srl
     wire[31:0] num1_rev,shift_rev;
     wire signed [32:0] shift_src={funct[3]&funct[2]&num1[31],funct[2]?num1:num1_rev};
-    wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
+    wire [31:0] shift_16=num2[4]?{{16{shift_src[32]}},shift_src[31:16]}:shift_src[31:0];
+    wire [31:0] shift_8 =num2[3]?{{8{shift_src[32]}},shift_16[31:8]}:shift_16;
+    wire [31:0] shift_4 =num2[2]?{{4{shift_src[32]}},shift_8[31:4]}:shift_8;
+    wire [31:0] shift_2 =num2[1]?{{2{shift_src[32]}},shift_4[31:2]}:shift_4;
+    wire [31:0] shift_tmp =num2[0]?{{1{shift_src[32]}},shift_2[31:1]}:shift_2;
+    //wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
     genvar i;
     generate 
         for(i=0;i<32;i++)begin:shift_reverse
@@ -77,11 +82,8 @@ module ysyx_26040117_EXU(clk,rst,
             assign shift_rev[i]=shift_tmp[31-i];
         end
     endgenerate
-    /*
-    wire signed [32:0] shift_src={funct[3]&num1[31],num1};
-    wire [32:0] shift_tmp=$signed(shift_src)>>>num2[4:0];
-    wire [31:0] shift_rev=num1<<num2[4:0];
-    */
+
+    //and-or-xor
     wire [31:0] num_and,num_or;
     assign num_and=num1&num2;
     assign num_or=num1|num2;
