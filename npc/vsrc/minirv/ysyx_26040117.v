@@ -110,20 +110,20 @@ module ysyx_26040117 #(
     wire WBU_IFU_ready=1;
     wire [34:0]MEM_ICACHE_wrapper;
     wire [44:0]ICACHE_MEM_wrapper;
-    wire [66:0] ICACHE_IFU_wrapper;
-    wire [66:0] IFU_ICACHE_wrapper;
-    ysyx_26040117_IFU IFU1(
+    wire [67:0] ICACHE_IFU_wrapper;
+    wire [37:0] IFU_ICACHE_wrapper;
+    ysyx_26040117_IFU #(.RESET_VECTOR(RESET_VECTOR)) IFU1(.clk(clock),.rst(reset),
         .redirect_valid(redirect_valid),.dnpc(redirect_dnpc),.fence_i(fence_i),
         .IFU_IDU_ready(IFU_IDU_ready),.IFU_IDU_valid(IFU_IDU_valid),.inst(inst),.pc(ifu_idu_pc),.fence_done(fence_done),.pred_taken(pred_taken),
         .idu_pc(idu_ifu_pc),
-        .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper)
+        .MEM_IFU_wrapper(ICACHE_IFU_wrapper),.IFU_MEM_wrapper(IFU_ICACHE_wrapper),
+        .btb_araddr(btb_araddr),.btb_hit(btb_hit),.btb_target(btb_target)
     );
     wire [31:0] btb_araddr,btb_target;
     wire btb_hit;
-    ysyx_26040117_ICache #(.RESET_VECTOR(RESET_VECTOR))ICache1(.clk(clock),.rst(reset),
+    ysyx_26040117_ICache ICache1(.clk(clock),.rst(reset),
         .IFU_ICACHE_wrapper(IFU_ICACHE_wrapper),.ICACHE_IFU_wrapper(ICACHE_IFU_wrapper),
-        .MEM_ICACHE_wrapper(MEM_ICACHE_wrapper),.ICACHE_MEM_wrapper(ICACHE_MEM_wrapper),
-        .btb_araddr(btb_araddr),.btb_hit(btb_hit),.btb_target(btb_target)
+        .MEM_ICACHE_wrapper(MEM_ICACHE_wrapper),.ICACHE_MEM_wrapper(ICACHE_MEM_wrapper)
     );
     wire [31:0] exu_btb_waddr,exu_btb_wtarget;
     wire exu_btb_wen;
